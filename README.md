@@ -205,5 +205,5 @@ DSO was developed at the Technical University of Munich and Intel.
 The open-source version is licensed under the GNU General Public License
 Version 3 (GPLv3).
 For commercial purposes, we also offer a professional version, see
-[http://vision.in.tum.de/lsdslam](http://vision.in.tum.de/lsdslam) for
+[http://vision.in.tum.de/dso](http://vision.in.tum.de/dso) for
 details.
