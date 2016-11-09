@@ -81,6 +81,7 @@ endif ()
 # decide if we have openCV
 if (OpenCV_FOUND)
 	message("--- found OpenCV, compiling dso_opencv library.")
+	include_directories( ${OpenCV_INCLUDE_DIRS} )
 	set(dso_opencv_SOURCE_FILES 
 	  ${PROJECT_SOURCE_DIR}/src/IOWrapper/OpenCV/ImageDisplay_OpenCV.cpp
 	  ${PROJECT_SOURCE_DIR}/src/IOWrapper/OpenCV/ImageRW_OpenCV.cpp)
