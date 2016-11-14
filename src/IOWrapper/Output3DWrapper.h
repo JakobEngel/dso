@@ -24,6 +24,7 @@
 
 
 #pragma once
+#include <vector>
 #include <string>
 
 #include "util/NumType.h"
