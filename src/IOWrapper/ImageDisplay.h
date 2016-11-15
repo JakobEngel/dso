@@ -24,6 +24,7 @@
 
 
 #pragma once
+#include <vector>
 #include "util/NumType.h"
 #include "util/MinimalImage.h"
 
