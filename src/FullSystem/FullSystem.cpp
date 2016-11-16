@@ -156,7 +156,6 @@ FullSystem::FullSystem()
 	ef = new EnergyFunctional();
 	ef->red = &this->treadReduce;
 
-	outputWrapper=0;
 	isLost=false;
 	initFailed=false;
 
@@ -275,7 +274,8 @@ Vec4 FullSystem::trackNewCoarse(FrameHessian* fh)
 	assert(allFrameHistory.size() > 0);
 	// set pose initialization.
 
-	if(outputWrapper != 0) outputWrapper->pushLiveFrame(fh);
+    for(IOWrap::Output3DWrapper* ow : outputWrapper)
+        ow->pushLiveFrame(fh);
 
 
 
@@ -292,7 +292,6 @@ Vec4 FullSystem::trackNewCoarse(FrameHessian* fh)
 		FrameShell* sprelast = allFrameHistory[allFrameHistory.size()-3];
 		SE3 slast_2_sprelast;
 		SE3 lastF_2_slast;
-		AffLight slast_2_lastF;
 		{	// lock on global pose consistency!
 			boost::unique_lock<boost::mutex> crlock(shellPoseMutex);
 			slast_2_sprelast = sprelast->camToWorld.inverse() * slast->camToWorld;
@@ -446,7 +445,8 @@ Vec4 FullSystem::trackNewCoarse(FrameHessian* fh)
 	if(coarseTracker->firstCoarseRMSE < 0)
 		coarseTracker->firstCoarseRMSE = achievedRes[0];
 
-	printf("Coarse Tracker tracked ab = %f %f (exp %f). Res %f!\n", aff_g2l.a, aff_g2l.b, fh->ab_exposure, achievedRes[0]);
+    if(!setting_debugout_runquiet)
+        printf("Coarse Tracker tracked ab = %f %f (exp %f). Res %f!\n", aff_g2l.a, aff_g2l.b, fh->ab_exposure, achievedRes[0]);
 
 
 
@@ -552,8 +552,10 @@ void FullSystem::activatePointsMT()
 
 	if(currentMinActDist < 0) currentMinActDist = 0;
 	if(currentMinActDist > 4) currentMinActDist = 4;
-	printf("SPARSITY:  MinActDist %f (need %d points, have %d points)!\n",
-			currentMinActDist, (int)(setting_desiredPointDensity), ef->nPoints);
+
+    if(!setting_debugout_runquiet)
+        printf("SPARSITY:  MinActDist %f (need %d points, have %d points)!\n",
+                currentMinActDist, (int)(setting_desiredPointDensity), ef->nPoints);
 
 
 
@@ -822,8 +824,9 @@ void FullSystem::addActiveFrame( ImageAndExposure* image, int id )
 	FrameShell* shell = new FrameShell();
 	shell->camToWorld = SE3(); 		// no lock required, as fh is not used anywhere yet.
 	shell->aff_g2l = AffLight(0,0);
-	shell->marginalizedAt = shell->id = allFrameHistory.size();
-	shell->timestamp = image->timestamp;
+    shell->marginalizedAt = shell->id = allFrameHistory.size();
+    shell->timestamp = image->timestamp;
+    shell->incoming_id = id;
 	fh->shell = shell;
 	allFrameHistory.push_back(shell);
 
@@ -895,8 +898,9 @@ void FullSystem::addActiveFrame( ImageAndExposure* image, int id )
 
 
 
-		if(outputWrapper!=0 && setting_render_display3D)
-			outputWrapper->publishCamPose(fh->shell, &Hcalib);
+
+        for(IOWrap::Output3DWrapper* ow : outputWrapper)
+            ow->publishCamPose(fh->shell, &Hcalib);
 
 
 
@@ -1146,8 +1150,8 @@ void FullSystem::makeKeyFrame( FrameHessian* fh)
 
 
 
-		coarseTracker_forNewKF->debugPlotIDepthMap("id_predicted", &minIdJetVisTracker, &maxIdJetVisTracker, outputWrapper);
-
+        coarseTracker_forNewKF->debugPlotIDepthMap(&minIdJetVisTracker, &maxIdJetVisTracker, outputWrapper);
+        coarseTracker_forNewKF->debugPlotIDepthMapFloat(outputWrapper);
 	}
 
 
@@ -1176,13 +1180,12 @@ void FullSystem::makeKeyFrame( FrameHessian* fh)
 
 
 
-	if(outputWrapper!=0 && setting_render_display3D)
-	{
 
-		outputWrapper->publishGraph(ef->connectivityMap);
-		outputWrapper->publishKeyframes(frameHessians, false, &Hcalib);
-
-	}
+    for(IOWrap::Output3DWrapper* ow : outputWrapper)
+    {
+        ow->publishGraph(ef->connectivityMap);
+        ow->publishKeyframes(frameHessians, false, &Hcalib);
+    }
 
 
 
@@ -1195,7 +1198,7 @@ void FullSystem::makeKeyFrame( FrameHessian* fh)
 
 
 	printLogLine();
-	printEigenValLine();
+    //printEigenValLine();
 
 }
 
@@ -1232,8 +1235,9 @@ void FullSystem::initializeFromInitializer(FrameHessian* newFrame)
 	// randomly sub-select the points I need.
 	float keepPercentage = setting_desiredPointDensity / coarseInitializer->numPoints[0];
 
-	printf("Initialization: keep %.1f%% (need %d, have %d)!\n", 100*keepPercentage,
-			(int)(setting_desiredPointDensity), coarseInitializer->numPoints[0] );
+    if(!setting_debugout_runquiet)
+        printf("Initialization: keep %.1f%% (need %d, have %d)!\n", 100*keepPercentage,
+                (int)(setting_desiredPointDensity), coarseInitializer->numPoints[0] );
 
 	for(int i=0;i<coarseInitializer->numPoints[0];i++)
 	{
@@ -1333,22 +1337,19 @@ void FullSystem::printLogLine()
 {
 	if(frameHessians.size()==0) return;
 
-
-
-
-
-	printf("LOG %d: %.3f fine. Res: %d A, %d L, %d M; (%'d / %'d) forceDrop. a=%f, b=%f. Window %d (%d)\n",
-			allKeyFramesHistory.back()->id,
-			statistics_lastFineTrackRMSE,
-			ef->resInA,
-			ef->resInL,
-			ef->resInM,
-			(int)statistics_numForceDroppedResFwd,
-			(int)statistics_numForceDroppedResBwd,
-			allKeyFramesHistory.back()->aff_g2l.a,
-			allKeyFramesHistory.back()->aff_g2l.b,
-			frameHessians.back()->shell->id - frameHessians.front()->shell->id,
-			(int)frameHessians.size());
+    if(!setting_debugout_runquiet)
+        printf("LOG %d: %.3f fine. Res: %d A, %d L, %d M; (%'d / %'d) forceDrop. a=%f, b=%f. Window %d (%d)\n",
+                allKeyFramesHistory.back()->id,
+                statistics_lastFineTrackRMSE,
+                ef->resInA,
+                ef->resInL,
+                ef->resInM,
+                (int)statistics_numForceDroppedResFwd,
+                (int)statistics_numForceDroppedResBwd,
+                allKeyFramesHistory.back()->aff_g2l.a,
+                allKeyFramesHistory.back()->aff_g2l.b,
+                frameHessians.back()->shell->id - frameHessians.front()->shell->id,
+                (int)frameHessians.size());
 
 
 	if(!setting_logStuff) return;

@@ -189,7 +189,7 @@ void CoarseTracker::makeCoarseDepthL0(std::vector<FrameHessian*> frameHessians)
 	}
 
 
-	// dilate idepth by 1 (2 on lower levels).
+    // dilate idepth by 1.
 	for(int lvl=0; lvl<2; lvl++)
 	{
 		int numIts = 1;
@@ -388,7 +388,7 @@ Vec6 CoarseTracker::calcRes(int lvl, SE3 refToNew, AffLight aff_g2l, float cutof
 	float maxEnergy = 2*setting_huberTH*cutoffTH-setting_huberTH*setting_huberTH;	// energy for r=setting_coarseCutoffTH.
 
 
-	MinimalImageB3* resImage;
+    MinimalImageB3* resImage = 0;
 	if(debugPlot)
 	{
 		resImage = new MinimalImageB3(wl,hl);
@@ -602,7 +602,9 @@ bool CoarseTracker::trackNewestCoarse(
 		{
 			levelCutoffRepeat*=2;
 			resOld = calcRes(lvl, refToNew_current, aff_g2l_current, setting_coarseCutoffTH*levelCutoffRepeat);
-			printf("INCREASING cutoff to %f (ratio is %f)!\n", setting_coarseCutoffTH*levelCutoffRepeat, resOld[5]);
+
+            if(!setting_debugout_runquiet)
+                printf("INCREASING cutoff to %f (ratio is %f)!\n", setting_coarseCutoffTH*levelCutoffRepeat, resOld[5]);
 		}
 
 		calcGSSSE(lvl, H, b, refToNew_current, aff_g2l_current);
@@ -750,11 +752,9 @@ bool CoarseTracker::trackNewestCoarse(
 
 
 
-void CoarseTracker::debugPlotIDepthMap(std::string name, float* minID_pt, float* maxID_pt, IOWrap::Output3DWrapper* wrap)
+void CoarseTracker::debugPlotIDepthMap(float* minID_pt, float* maxID_pt, std::vector<IOWrap::Output3DWrapper*> &wraps)
 {
-	if(!setting_render_displayDepth) return;
-	if(disableAllDisplay) return;
-	if(w[1] == 0) return;
+    if(w[1] == 0) return;
 
 
 	int lvl = 0;
@@ -834,8 +834,11 @@ void CoarseTracker::debugPlotIDepthMap(std::string name, float* minID_pt, float*
 					//mf.at(idx) = makeJet3B(id);
 				}
 			}
-		//IOWrap::displayImage("coarseDepth LVL0", &mf, false);
-		if(wrap != 0) wrap->pushDepthImage(&mf);
+        //IOWrap::displayImage("coarseDepth LVL0", &mf, false);
+
+
+        for(IOWrap::Output3DWrapper* ow : wraps)
+            ow->pushDepthImage(&mf);
 
 		if(debugSaveImages)
 		{
@@ -845,6 +848,17 @@ void CoarseTracker::debugPlotIDepthMap(std::string name, float* minID_pt, float*
 		}
 
 	}
+}
+
+
+
+void CoarseTracker::debugPlotIDepthMapFloat(std::vector<IOWrap::Output3DWrapper*> &wraps)
+{
+    if(w[1] == 0) return;
+    int lvl = 0;
+    MinimalImageF mim(w[lvl], h[lvl], idepth[lvl]);
+    for(IOWrap::Output3DWrapper* ow : wraps)
+        ow->pushDepthImageFloat(&mim, lastRef);
 }
 
 
@@ -1028,14 +1042,6 @@ void CoarseDistanceMap::growDistBFS(int bfsNum)
 		}
 	}
 }
-void CoarseDistanceMap::debugPlotDistMap(std::string name)
-{
-//	if(disableAllDisplay) return;
-//	if(w[0] == 0) return;
-//	cv::Mat wrap = 0.8*cv::Mat(h[1], w[1], CV_64F, const_cast<float*>(fwdWarpedIDDistFinal)) / (float)10;
-//	IOWrap::displayImage(name.c_str(), wrap, false);
-}
-
 
 
 void CoarseDistanceMap::addIntoDistFinal(int u, int v)

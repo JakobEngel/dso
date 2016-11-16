@@ -292,11 +292,12 @@ bool FullSystem::doStepFromBackup(float stepfacC,float stepfacT,float stepfacR,f
 
 
 
-	printf("STEPS: A %.1f; B %.1f; R %.1f; T %.1f. \t",
-			sqrtf(sumA) / (0.0005*setting_thOptIterations),
-			sqrtf(sumB) / (0.00005*setting_thOptIterations),
-			sqrtf(sumR) / (0.00005*setting_thOptIterations),
-			sqrtf(sumT)*sumNID / (0.00005*setting_thOptIterations));
+    if(!setting_debugout_runquiet)
+        printf("STEPS: A %.1f; B %.1f; R %.1f; T %.1f. \t",
+                sqrtf(sumA) / (0.0005*setting_thOptIterations),
+                sqrtf(sumB) / (0.00005*setting_thOptIterations),
+                sqrtf(sumR) / (0.00005*setting_thOptIterations),
+                sqrtf(sumT)*sumNID / (0.00005*setting_thOptIterations));
 
 
 	EFDeltaValid=false;
@@ -445,7 +446,9 @@ float FullSystem::optimize(int mnumOptIts)
 			}
 			numPoints++;
 		}
-	printf("OPTIMIZE %d pts, %d active res, %d lin res!\n",ef->nPoints,(int)activeResiduals.size(), numLRes);
+
+    if(!setting_debugout_runquiet)
+        printf("OPTIMIZE %d pts, %d active res, %d lin res!\n",ef->nPoints,(int)activeResiduals.size(), numLRes);
 
 
 	Vec3 lastEnergy = linearizeAll(false);
@@ -462,9 +465,11 @@ float FullSystem::optimize(int mnumOptIts)
 		applyRes_Reductor(true,0,activeResiduals.size(),0,0);
 
 
-
-	printf("Initial Error       \t");
-	printOptRes(lastEnergy, lastEnergyL, lastEnergyM, 0, 0, frameHessians.back()->aff_g2l().a, frameHessians.back()->aff_g2l().b);
+    if(!setting_debugout_runquiet)
+    {
+        printf("Initial Error       \t");
+        printOptRes(lastEnergy, lastEnergyL, lastEnergyM, 0, 0, frameHessians.back()->aff_g2l().a, frameHessians.back()->aff_g2l().b);
+    }
 
 	debugPlotTracking();
 
@@ -509,15 +514,17 @@ float FullSystem::optimize(int mnumOptIts)
 
 
 
-		printf("%s %d (L %.2f, dir %.2f, ss %.1f): \t",
+        if(!setting_debugout_runquiet)
+        {
+            printf("%s %d (L %.2f, dir %.2f, ss %.1f): \t",
 				(newEnergy[0] +  newEnergy[1] +  newEnergyL + newEnergyM <
 						lastEnergy[0] + lastEnergy[1] + lastEnergyL + lastEnergyM) ? "ACCEPT" : "REJECT",
 				iteration,
 				log10(lambda),
 				incDirChange,
 				stepsize);
-		printOptRes(newEnergy, newEnergyL, newEnergyM , 0, 0, frameHessians.back()->aff_g2l().a, frameHessians.back()->aff_g2l().b);
-
+            printOptRes(newEnergy, newEnergyL, newEnergyM , 0, 0, frameHessians.back()->aff_g2l().a, frameHessians.back()->aff_g2l().b);
+        }
 
 		if(setting_forceAceptStep || (newEnergy[0] +  newEnergy[1] +  newEnergyL + newEnergyM <
 				lastEnergy[0] + lastEnergy[1] + lastEnergyL + lastEnergyM))

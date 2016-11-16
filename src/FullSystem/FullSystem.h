@@ -149,7 +149,7 @@ public:
 	void printFrameLifetimes();
 	// contains pointers to active frames
 
-	IOWrap::Output3DWrapper* outputWrapper;
+    std::vector<IOWrap::Output3DWrapper*> outputWrapper;
 
 	bool isLost;
 	bool initFailed;

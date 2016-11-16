@@ -82,7 +82,7 @@ public:
 
 
 	void setFirst(	CalibHessian* HCalib, FrameHessian* newFrameHessian);
-	bool trackFrame(FrameHessian* newFrameHessian, IOWrap::Output3DWrapper* wrap);
+    bool trackFrame(FrameHessian* newFrameHessian, std::vector<IOWrap::Output3DWrapper*> &wraps);
 	void calcTGrads(FrameHessian* newFrameHessian);
 
 	int frameID;
@@ -155,9 +155,7 @@ private:
 
 	void makeGradients(Eigen::Vector3f** data);
 
-	void debugPlot(int lvl, IOWrap::Output3DWrapper* wrap=0);
-	void debugPlotFull();
-	void debugPlotFullHessians();
+    void debugPlot(int lvl, std::vector<IOWrap::Output3DWrapper*> &wraps);
 	void makeNN();
 };
 
@@ -166,8 +164,8 @@ private:
 
 struct FLANNPointcloud
 {
-	inline FLANNPointcloud() {num=0; points=0;};
-	inline FLANNPointcloud(int n, Pnt* p) :  num(n), points(p) {};
+    inline FLANNPointcloud() {num=0; points=0;}
+    inline FLANNPointcloud(int n, Pnt* p) :  num(n), points(p) {}
 	int num;
 	Pnt* points;
 	inline size_t kdtree_get_point_count() const { return num; }

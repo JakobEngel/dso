@@ -113,7 +113,6 @@ struct FrameHessian
 	// constant info & pre-calculated values
 	//DepthImageWrap* frame;
 	FrameShell* shell;
-	ImageAndExposure* orgImg;	// only a pointer, allocation not managed from here.
 
 	Eigen::Vector3f* dI;				 // trace, fine tracking. Used for direction select (not for gradient histograms etc.)
 	Eigen::Vector3f* dIp[PYR_LEVELS];	 // coarse tracking / coarse initializer. NAN in [0] only.
@@ -121,7 +120,6 @@ struct FrameHessian
 	bool* overexposedMap;
 	bool* overexposedMapp[PYR_LEVELS];
 
-	Eigen::Vector3f* dI_OriginalImage;	// distorted, very original image.
 
 
 
@@ -241,8 +239,8 @@ struct FrameHessian
 
 		}
 
-		if(dI_OriginalImage!=0) delete[] dI_OriginalImage;
-		if(orgImg!=0) delete orgImg;
+
+
 		if(debugImage != 0) delete debugImage;
 	};
 	inline FrameHessian()
@@ -252,8 +250,8 @@ struct FrameHessian
 		frameID = -1;
 		efFrame = 0;
 		frameEnergyTH = 8*8*patternNum;
-		dI_OriginalImage=0;
-		orgImg=0;
+
+
 
 		statistics_pointsActivatedForThisFrame=0;
 		tracesCreatedForThisFrame=0;
@@ -335,14 +333,14 @@ struct CalibHessian
 
 
 	// normal mode: use the optimized parameters everywhere!
-	inline float& fxl() {return value_scaledf[0];};
-	inline float& fyl() {return value_scaledf[1];};
-	inline float& cxl() {return value_scaledf[2];};
-	inline float& cyl() {return value_scaledf[3];};
-	inline float& fxli() {return value_scaledi[0];};
-	inline float& fyli() {return value_scaledi[1];};
-	inline float& cxli() {return value_scaledi[2];};
-	inline float& cyli() {return value_scaledi[3];};
+    inline float& fxl() {return value_scaledf[0];}
+    inline float& fyl() {return value_scaledf[1];}
+    inline float& cxl() {return value_scaledf[2];}
+    inline float& cyl() {return value_scaledf[3];}
+    inline float& fxli() {return value_scaledi[0];}
+    inline float& fyli() {return value_scaledi[1];}
+    inline float& cxli() {return value_scaledi[2];}
+    inline float& cyli() {return value_scaledi[3];}
 
 
 

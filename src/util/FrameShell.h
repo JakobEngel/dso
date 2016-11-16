@@ -34,8 +34,9 @@ namespace dso
 class FrameShell
 {
 public:
-	int id;						// id in allFrameHistory. All frames that come in.
-	double timestamp;
+	int id; 			// INTERNAL ID, starting at zero.
+	int incoming_id;	// ID passed into DSO
+	double timestamp;		// timestamp passed into DSO.
 
 	// set once after tracking
 	SE3 camToTrackingRef;

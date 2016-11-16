@@ -351,8 +351,6 @@ ImageAndExposure* Undistort::undistort(const MinimalImage<T>* image_raw, float e
 	{
 		float* out_data = result->image;
 		float* in_data = photometricUndist->output->image;
-		bool* out_data_oe = result->overexposedMap;
-		bool* in_data_oe = photometricUndist->output->overexposedMap;
 
 		float* noiseMapX=0;
 		float* noiseMapY=0;
@@ -835,7 +833,6 @@ void Undistort::readFromFile(const char* configFileName, int nPars, std::string 
 
 	distortCoordinates(remapX, remapY, remapX, remapY, h*w);
 
-	bool hasBlackPixel=false;
 
 	for(int y=0;y<h;y++)
 		for(int x=0;x<w;x++)
@@ -858,7 +855,6 @@ void Undistort::readFromFile(const char* configFileName, int nPars, std::string 
 			{
 				remapX[x+y*w] = -1;
 				remapY[x+y*w] = -1;
-				hasBlackPixel=true;
 			}
 		}
 

@@ -151,6 +151,8 @@ there are many command line options available, see `main_dso_pangolin.cpp`. some
 - `end=X`: end at frame X
 - `speed=X`: force execution at X times real-time speed (0 = not enforcing real-time)
 - `save=1`: save lots of images for video creation
+- `quiet=1`: disable most console output (good for performance)
+- `sampleoutput=1`: register a "SampleOutputWrapper", printing some sample output data to the commandline. meant as example.
 
 
 
@@ -158,10 +160,26 @@ there are many command line options available, see `main_dso_pangolin.cpp`. some
 Some parameters can be reconfigured from the Pangolin GUI at runtime. Feel free to add more.
 
 
+#### 3.4 Accessing Data.
+The easiest way to access the Data (poses, pointclouds, etc.) computed by DSO (in real-time)
+is to create your own `Output3DWrapper`, and add it to the system, i.e., to `FullSystem.outputWrapper`.
+The respective member functions will be called on various occations (e.g., when a new KF is created, 
+when a new frame is tracked, etc.), exposing the relevant data.
+
+See `IOWrapper/Output3DWrapper.h` for a description of the different callbacks available,
+and some basic notes on where to find which data in the used classes.
+See `IOWrapper/OutputWrapper/SampleOutputWrapper.h` for an example implementation, which just prints
+some example data to the commandline (use the options `sampleoutput=1 quiet=1` to see the result).
+
+Note that these callbacks block the respective DSO thread, thus expensive computations should not
+be performed in the callbacks, a better practice is to just copy over / publish / output the data you need.
+
+Per default, `dso_dataset` writes all keyframe poses to a file `result.txt` at the end of a sequence,
+using the TUM RGB-D / TUM monoVO format ([timestamp x y z qx qy qz qw] of the cameraToWorld transformation).
 
 
 
-#### 3.4 Notes
+#### 3.5 Notes
 - the initializer is very slow, and does not work very reliably. Maybe replace by your own way to get an initialization.
 - see [https://github.com/JakobEngel/dso_ros](https://github.com/JakobEngel/dso_ros) for a minimal example project on how to use the library with your own input / output procedures.
 - see `settings.cpp` for a LOT of settings parameters. Most of which you shouldn't touch.

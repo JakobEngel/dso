@@ -96,10 +96,10 @@ void KeyFrameDisplay::setFromKF(FrameHessian* fh, CalibHessian* HCalib)
 	{
 		if(originalInputSparse != 0) delete originalInputSparse;
 		numSparseBufferSize = npoints+100;
-		originalInputSparse = new InputPointSparse<28>[numSparseBufferSize];
+        originalInputSparse = new InputPointSparse<MAX_RES_PER_POINT>[numSparseBufferSize];
 	}
 
-	InputPointSparse<28>* pc = originalInputSparse;
+    InputPointSparse<MAX_RES_PER_POINT>* pc = originalInputSparse;
 	numSparsePoints=0;
 	for(ImmaturePoint* p : fh->immaturePoints)
 	{
@@ -371,7 +371,7 @@ void KeyFrameDisplay::drawPC(float pointSize)
 	if(!bufferValid || numGLBufferGoodPoints==0)
 		return;
 
-	GLfloat LightColor[] = {1, 1, 1, 1};
+
 	glDisable(GL_LIGHTING);
 
 	glPushMatrix();

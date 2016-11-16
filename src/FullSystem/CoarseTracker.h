@@ -75,7 +75,8 @@ public:
 	int w[PYR_LEVELS];
 	int h[PYR_LEVELS];
 
-	void debugPlotIDepthMap(std::string name, float* minID, float* maxID, IOWrap::Output3DWrapper* wrap=0);
+    void debugPlotIDepthMap(float* minID, float* maxID, std::vector<IOWrap::Output3DWrapper*> &wraps);
+    void debugPlotIDepthMapFloat(std::vector<IOWrap::Output3DWrapper*> &wraps);
 
 	FrameHessian* lastRef;
 	AffLight lastRef_aff_g2l;
@@ -156,7 +157,7 @@ public:
 	int h[PYR_LEVELS];
 
 	void addIntoDistFinal(int u, int v);
-	void debugPlotDistMap(std::string name);
+
 
 private:
 

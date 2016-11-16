@@ -1,0 +1,9 @@
+
+
+
+========= 16.11.2016 ==========
+* Added Sample output wrapper IOWrapper/OutputWrapper/SampleOutputWrapper.h.
+* Added extensive comments to IOWrapper/Output3DWrapper.h.
+* Added support for multiple 3DOutputWrapper simulataneously.
+* Added options "quiet=1" and "sampleoutput=1".
+* Did some minor code cleaning.

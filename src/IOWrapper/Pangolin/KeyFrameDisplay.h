@@ -107,7 +107,7 @@ private:
 
 	int numSparsePoints;
 	int numSparseBufferSize;
-	InputPointSparse<28>* originalInputSparse;
+    InputPointSparse<MAX_RES_PER_POINT>* originalInputSparse;
 
 
 	bool bufferValid;

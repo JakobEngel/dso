@@ -75,8 +75,7 @@ void FullSystem::flagFramesForMarginalization(FrameHessian* newFH)
 		FrameHessian* fh = frameHessians[i];
 		int in = fh->pointHessians.size() + fh->immaturePoints.size();
 		int out = fh->pointHessiansMarginalized.size() + fh->pointHessiansOut.size();
-		int visInLast=0;
-		int outInLast=0;
+
 
 		Vec2 refToFh=AffLight::fromToVecExposure(frameHessians.back()->ab_exposure, fh->ab_exposure,
 				frameHessians.back()->aff_g2l(), fh->aff_g2l());
@@ -193,12 +192,12 @@ void FullSystem::marginalizeFrame(FrameHessian* frame)
 
 
 
-	if(outputWrapper!=0 && setting_render_display3D)
-	{
-		std::vector<FrameHessian*> v;
-		v.push_back(frame);
-		outputWrapper->publishKeyframes(v, true, &Hcalib);
-	}
+    {
+        std::vector<FrameHessian*> v;
+        v.push_back(frame);
+        for(IOWrap::Output3DWrapper* ow : outputWrapper)
+            ow->publishKeyframes(v, true, &Hcalib);
+    }
 
 
 	frame->shell->marginalizedAt = frameHessians.back()->shell->id;
