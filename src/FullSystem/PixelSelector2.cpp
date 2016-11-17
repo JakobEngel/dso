@@ -132,9 +132,6 @@ void PixelSelector::makeHists(const FrameHessian* const fh)
 
 			thsSmoothed[x+y*w32] = (sum/num) * (sum/num);
 
-
-			if(setting_fixGradTH > 0)
-				thsSmoothed[x+y*w32] = setting_fixGradTH*setting_fixGradTH;
 		}
 
 

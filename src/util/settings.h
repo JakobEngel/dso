@@ -76,7 +76,7 @@ extern double setting_solverModeDelta;
 
 extern float setting_minIdepthH_act;
 extern float setting_minIdepthH_marg;
-extern int setting_margPointVisWindow;
+
 
 
 extern float setting_maxIdepth;
@@ -93,28 +93,23 @@ extern int setting_minOptIterations;
 extern float setting_thOptIterations;
 extern float setting_outlierTH;
 extern float setting_outlierTHSumComponent;
-extern float setting_outlierSmoothnessTH; // higher -> more strict
-extern int setting_killOverexposed;
-extern int setting_killOverexposedMode;
+
+
+
 extern int setting_pattern;
 extern float setting_margWeightFac;
-extern int setting_discreteSeachItsOnPointActivation;
 extern int setting_GNItsOnPointActivation;
 
-extern float setting_SmoothnessErrorPixelTH;
-extern float setting_SmoothnessEMinInlierPercentage;
-extern float setting_SmoothnessEGoodInlierPercentage;
 
 extern float setting_minTraceQuality;
 extern int setting_minTraceTestRadius;
-extern float setting_reTrackThreshold1;
-extern float setting_reTrackThreshold2;
-extern float setting_reTrackThreshold3;
+extern float setting_reTrackThreshold;
+
 
 extern int   setting_minGoodActiveResForMarg;
 extern int   setting_minGoodResForMarg;
 extern int   setting_minInlierVotesForMarg;
-extern float setting_minRelBSForMarg;
+
 
 
 
@@ -122,18 +117,12 @@ extern int setting_photometricCalibration;
 extern bool setting_useExposure;
 extern float setting_affineOptModeA;
 extern float setting_affineOptModeB;
-extern float setting_affineOptModeA_huberTH;
-extern float setting_affineOptModeB_huberTH;
 extern int setting_gammaWeightsPixelSelect;
 
-extern bool setting_relinAlways;
-extern bool setting_fixCalib;
-extern bool setting_activateAllOnMarg;
+
+
 extern bool setting_forceAceptStep;
 
-
-extern float setting_useDepthWeightsCoarse;
-extern bool setting_dilateDoubleCoarse;
 
 
 extern float setting_huberTH;
@@ -150,17 +139,16 @@ extern float benchmark_initializerSlackFactor;
 
 extern float setting_frameEnergyTHConstWeight;
 extern float setting_frameEnergyTHN;
-extern float setting_frameEnergyTHFacMean;
+
 extern float setting_frameEnergyTHFacMedian;
 extern float setting_overallEnergyTHWeight;
 extern float setting_coarseCutoffTH;
 
 extern float setting_minGradHistCut;
 extern float setting_minGradHistAdd;
-extern float setting_fixGradTH;
 extern float setting_gradDownweightPerLevel;
 extern bool  setting_selectDirectionDistribution;
-extern int setting_pixelSelectionUseFast;
+
 
 
 extern float setting_trace_stepsize;
@@ -206,7 +194,6 @@ extern float freeDebugParam3;
 extern float freeDebugParam4;
 extern float freeDebugParam5;
 
-extern int benchmarkSpecialOption;
 
 void handleKey(char k);
 

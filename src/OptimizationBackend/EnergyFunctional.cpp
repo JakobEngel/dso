@@ -400,16 +400,8 @@ double EnergyFunctional::calcLEnergyF_MT()
 
 	double E = 0;
 	for(EFFrame* f : frames)
-	{
-		Vec8 hw = Vec8::Ones();
-		if(fabs((double)(f->delta_prior[6])) > setting_affineOptModeA_huberTH)
-			hw[6] = 1/fabs((double)(f->delta_prior[6]));
-		if(fabs((double)(f->delta_prior[7])) > setting_affineOptModeB_huberTH)
-			hw[7] = 1/fabs((double)(f->delta_prior[7]));
+        E += f->delta_prior.cwiseProduct(f->prior).dot(f->delta_prior);
 
-		// hw *residual*residual*(2-hw);
-		E += f->delta_prior.cwiseProduct(f->prior).cwiseProduct(hw).cwiseProduct(Vec8::Ones()*2-hw).dot(f->delta_prior);
-	}
 	E += cDeltaF.cwiseProduct(cPriorF).dot(cDeltaF);
 
 	red->reduce(boost::bind(&EnergyFunctional::calcLEnergyPt,
@@ -542,15 +534,9 @@ void EnergyFunctional::marginalizeFrame(EFFrame* fh)
 	}
 
 
-	Vec8 hw = Vec8::Ones();
-	if(fabs((double)(fh->delta_prior[6])) > setting_affineOptModeA_huberTH)
-		hw[6] = 1/fabs((double)(fh->delta_prior[6]));
-	if(fabs((double)(fh->delta_prior[7])) > setting_affineOptModeB_huberTH)
-		hw[7] = 1/fabs((double)(fh->delta_prior[7]));
-
 //	// marginalize. First add prior here, instead of to active.
-	HM.bottomRightCorner<8,8>().diagonal() += fh->prior.cwiseProduct(hw);
-	bM.tail<8>() += fh->prior.cwiseProduct(fh->delta_prior).cwiseProduct(hw);
+    HM.bottomRightCorner<8,8>().diagonal() += fh->prior;
+    bM.tail<8>() += fh->prior.cwiseProduct(fh->delta_prior);
 
 
 
@@ -934,7 +920,6 @@ void EnergyFunctional::makeIDX()
 		for(EFPoint* p : f->points)
 		{
 			allPoints.push_back(p);
-			p->hostIDX = p->host->idx;
 			for(EFResidual* r : p->residualsAll)
 			{
 				r->hostIDX = r->host->idx;

@@ -62,9 +62,6 @@ void FullSystem::linearizeAll_Reductor(bool fixLinearization, std::vector<PointF
 
 			if(r->efResidual->isActive())
 			{
-				if(!setting_relinAlways)
-					r->efResidual->fixLinearizationF(ef);
-
 				if(r->isNew)
 				{
 					PointHessian* p = r->point;
@@ -100,12 +97,12 @@ void FullSystem::setNewFrameEnergyTH()
 	allResVec.clear();
 	allResVec.reserve(activeResiduals.size()*2);
 	FrameHessian* newFrame = frameHessians.back();
-	float sumR=0;
+
 	for(PointFrameResidual* r : activeResiduals)
 		if(r->state_NewEnergyWithOutlier >= 0 && r->target == newFrame)
 		{
 			allResVec.push_back(r->state_NewEnergyWithOutlier);
-			sumR += r->state_NewEnergyWithOutlier;
+
 		}
 
 	if(allResVec.size()==0)
@@ -122,14 +119,13 @@ void FullSystem::setNewFrameEnergyTH()
 
 	std::nth_element(allResVec.begin(), allResVec.begin()+nthIdx, allResVec.end());
 	float nthElement = sqrtf(allResVec[nthIdx]);
-	float meanElement = sqrtf(sumR / (float)allResVec.size());
 
 
 
 
 
 
-	newFrame->frameEnergyTH = nthElement*setting_frameEnergyTHFacMedian + meanElement*setting_frameEnergyTHFacMean;
+    newFrame->frameEnergyTH = nthElement*setting_frameEnergyTHFacMedian;
 	newFrame->frameEnergyTH = 26.0f*setting_frameEnergyTHConstWeight + newFrame->frameEnergyTH*(1-setting_frameEnergyTHConstWeight);
 	newFrame->frameEnergyTH = newFrame->frameEnergyTH*newFrame->frameEnergyTH;
 	newFrame->frameEnergyTH *= setting_overallEnergyTHWeight*setting_overallEnergyTHWeight;
@@ -254,8 +250,7 @@ bool FullSystem::doStepFromBackup(float stepfacC,float stepfacT,float stepfacR,f
 				sumNID += fabsf(ph->idepth_backup);
 				numID++;
 
-				if(setting_relinAlways)
-					ph->setIdepthZero(ph->idepth_backup + step);
+                ph->setIdepthZero(ph->idepth_backup + step);
 			}
 		}
 	}
@@ -277,8 +272,7 @@ bool FullSystem::doStepFromBackup(float stepfacC,float stepfacT,float stepfacR,f
 				sumNID += fabsf(ph->idepth_backup);
 				numID++;
 
-				if(setting_relinAlways)
-					ph->setIdepthZero(ph->idepth_backup + stepfacD*ph->step);
+                ph->setIdepthZero(ph->idepth_backup + stepfacD*ph->step);
 			}
 		}
 	}
@@ -375,8 +369,7 @@ void FullSystem::loadSateBackup()
 		{
 			ph->setIdepth(ph->idepth_backup);
 
-			if(setting_relinAlways)
-				ph->setIdepthZero(ph->idepth_backup);
+            ph->setIdepthZero(ph->idepth_backup);
 		}
 
 	}

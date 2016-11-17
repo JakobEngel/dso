@@ -118,7 +118,6 @@ public:
 
 
 	// constant info (never changes in-between).
-	int hostIDX;
 	int idxInPoints;
 	EFFrame* host;
 

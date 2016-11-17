@@ -58,7 +58,6 @@ public:
 	// static values
 	float color[MAX_RES_PER_POINT];
 	float weights[MAX_RES_PER_POINT];
-	bool colorOverexposed[MAX_RES_PER_POINT];
 
 
 

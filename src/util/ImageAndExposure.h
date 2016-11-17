@@ -37,28 +37,16 @@ public:
 	float* image;			// irradiance. between 0 and 256
 	int w,h;				// width and height;
 	double timestamp;
-	bool* overexposedMap;	// true if source pixel was overexposed.
 	float exposure_time;	// exposure time in ms.
-
-	float* imageOriginal;			// irradiance. between 0 and 256
-	int wOrg,hOrg;				// width and height;
 	inline ImageAndExposure(int w_, int h_, double timestamp_=0) : w(w_), h(h_), timestamp(timestamp_)
 	{
 		image = new float[w*h];
-		overexposedMap = new bool[w*h];
 		exposure_time=1;
-
-		imageOriginal=0;
-		wOrg=hOrg=0;
 	}
 	inline ~ImageAndExposure()
 	{
 		delete[] image;
-		delete[] overexposedMap;
-
-		if(imageOriginal != 0) delete[] imageOriginal;
 	}
-
 
 	inline void copyMetaTo(ImageAndExposure &other)
 	{
@@ -68,19 +56,8 @@ public:
 	inline ImageAndExposure* getDeepCopy()
 	{
 		ImageAndExposure* img = new ImageAndExposure(w,h,timestamp);
-		img->wOrg = wOrg;
-		img->hOrg = hOrg;
 		img->exposure_time = exposure_time;
-
-
 		memcpy(img->image, image, w*h*sizeof(float));
-
-		if(imageOriginal != 0)
-		{
-			img->imageOriginal = new float[wOrg*hOrg];
-			memcpy(img->imageOriginal, imageOriginal, wOrg*hOrg*sizeof(float));
-		}
-
 		return img;
 	}
 };

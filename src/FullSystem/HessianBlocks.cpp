@@ -55,7 +55,6 @@ PointHessian::PointHessian(const ImmaturePoint* const rawPoint, CalibHessian* Hc
 
 	int n = patternNum;
 	memcpy(color, rawPoint->color, sizeof(float)*n);
-	memcpy(colorOverexposed, rawPoint->colorOverexposed, sizeof(bool)*n);
 	memcpy(weights, rawPoint->weights, sizeof(float)*n);
 	energyTH = rawPoint->energyTH;
 
@@ -126,23 +125,15 @@ void FrameHessian::release()
 }
 
 
-void FrameHessian::makeImages(float* color, bool* everexpMap, CalibHessian* HCalib)
+void FrameHessian::makeImages(float* color, CalibHessian* HCalib)
 {
 
 	for(int i=0;i<pyrLevelsUsed;i++)
 	{
 		dIp[i] = new Eigen::Vector3f[wG[i]*hG[i]];
 		absSquaredGrad[i] = new float[wG[i]*hG[i]];
-		overexposedMapp[i] = new bool[wG[i]*hG[i]];
 	}
 	dI = dIp[0];
-	overexposedMap = overexposedMapp[0];
-
-	if(everexpMap==0)
-		memset(this->overexposedMap, 0, wG[0]*hG[0]*sizeof(bool));
-	else
-		memcpy(this->overexposedMap, everexpMap, wG[0]*hG[0]*sizeof(bool));
-
 
 
 	// make d0
@@ -155,14 +146,14 @@ void FrameHessian::makeImages(float* color, bool* everexpMap, CalibHessian* HCal
 	{
 		int wl = wG[lvl], hl = hG[lvl];
 		Eigen::Vector3f* dI_l = dIp[lvl];
-		bool* ov_l = overexposedMapp[lvl];
+
 		float* dabs_l = absSquaredGrad[lvl];
 		if(lvl>0)
 		{
 			int lvlm1 = lvl-1;
 			int wlm1 = wG[lvlm1];
 			Eigen::Vector3f* dI_lm = dIp[lvlm1];
-			bool* ov_lm = overexposedMapp[lvlm1];
+
 
 
 			for(int y=0;y<hl;y++)
@@ -172,21 +163,6 @@ void FrameHessian::makeImages(float* color, bool* everexpMap, CalibHessian* HCal
 												dI_lm[2*x+1 + 2*y*wlm1][0] +
 												dI_lm[2*x   + 2*y*wlm1+wlm1][0] +
 												dI_lm[2*x+1 + 2*y*wlm1+wlm1][0]);
-
-					if(setting_killOverexposedMode == 1)
-					{
-						ov_l[x + y*wl] =        (ov_lm[2*x   + 2*y*wlm1] &&
-													ov_lm[2*x+1 + 2*y*wlm1] &&
-													ov_lm[2*x   + 2*y*wlm1+wlm1] &&
-													ov_lm[2*x+1 + 2*y*wlm1+wlm1]);
-					}
-					if(setting_killOverexposedMode == 2)
-					{
-						ov_l[x + y*wl] =        (ov_lm[2*x   + 2*y*wlm1] ||
-													ov_lm[2*x+1 + 2*y*wlm1] ||
-													ov_lm[2*x   + 2*y*wlm1+wlm1] ||
-													ov_lm[2*x+1 + 2*y*wlm1+wlm1]);
-					}
 				}
 		}
 

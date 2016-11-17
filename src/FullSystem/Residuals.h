@@ -54,7 +54,7 @@ struct FullJacRowT
 class PointFrameResidual
 {
 public:
-	EIGEN_MAKE_ALIGNED_OPERATOR_NEW;
+    EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
 	EFResidual* efResidual;
 
@@ -76,7 +76,7 @@ public:
 	FrameHessian* target;
 	RawResidualJacobian* J;
 
-	float centerDPixeldId;
+
 	bool isNew;
 
 

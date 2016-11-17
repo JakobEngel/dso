@@ -85,14 +85,12 @@ double PointFrameResidual::linearize(CalibHessian* HCalib)
 	FrameFramePrecalc* precalc = &(host->targetPrecalc[target->idx]);
 	float energyLeft=0;
 	const Eigen::Vector3f* dIl = target->dI;
-	const bool* targetOverMap = target->overexposedMap;
 	//const float* const Il = target->I;
 	const Mat33f &PRE_KRKiTll = precalc->PRE_KRKiTll;
 	const Vec3f &PRE_KtTll = precalc->PRE_KtTll;
 	const Mat33f &PRE_RTll_0 = precalc->PRE_RTll_0;
 	const Vec3f &PRE_tTll_0 = precalc->PRE_tTll_0;
 	const float * const color = point->color;
-	const bool * const refOver = point->colorOverexposed;
 	const float * const weights = point->weights;
 
 	Vec2f affLL = precalc->PRE_aff_mode;
@@ -143,8 +141,6 @@ double PointFrameResidual::linearize(CalibHessian* HCalib)
 		d_C_y[3] = (d_C_y[3]+1)*SCALE_C;
 
 
-		if(setting_fixCalib) d_C_y = d_C_x = Vec4f::Zero();
-
 		d_xi_x[0] = new_idepth*HCalib->fxl();
 		d_xi_x[1] = 0;
 		d_xi_x[2] = -new_idepth*u*HCalib->fxl();
@@ -194,27 +190,10 @@ double PointFrameResidual::linearize(CalibHessian* HCalib)
 		projectedTo[idx][1] = Kv;
 
 
-		Vec3f hitColor;
-		float residual;
-		float overexposedWeight=1;
-		if(setting_killOverexposedMode==0)
-		{
-			hitColor = (getInterpolatedElement33(dIl, Ku, Kv, wG[0]));
-			residual = hitColor[0] - (float)(affLL[0] * color[idx] + affLL[1]);
-		}
-		else
-		{
-				bool hitOver;
-				if(setting_killOverexposedMode==1)
-					hitColor = getInterpolatedElement33OverAnd(dIl, targetOverMap, Ku, Kv, wG[0], hitOver);
-				else
-					hitColor = getInterpolatedElement33OverOr(dIl, targetOverMap, Ku, Kv, wG[0], hitOver);
+        Vec3f hitColor = (getInterpolatedElement33(dIl, Ku, Kv, wG[0]));
+        float residual = hitColor[0] - (float)(affLL[0] * color[idx] + affLL[1]);
 
-				residual = hitColor[0] - (float)(affLL[0] * color[idx] + affLL[1]);
 
-				if(residual > 0 && refOver[idx]) overexposedWeight=0;
-				if(residual < 0 && hitOver) overexposedWeight=0;
-		}
 
 		float drdA = (color[idx]-b0);
 		if(!std::isfinite((float)hitColor[0]))
@@ -222,8 +201,8 @@ double PointFrameResidual::linearize(CalibHessian* HCalib)
 
 
 		float w = sqrtf(setting_outlierTHSumComponent / (setting_outlierTHSumComponent + hitColor.tail<2>().squaredNorm()));
-		w = 0.5*(w + weights[idx]);
-		w *= overexposedWeight;
+        w = 0.5f*(w + weights[idx]);
+
 
 
 		float hw = fabsf(residual) < setting_huberTH ? 1 : setting_huberTH / fabsf(residual);

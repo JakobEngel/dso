@@ -55,7 +55,7 @@ CoarseTracker::CoarseTracker(int ww, int hh) : lastRef_aff_g2l(0,0)
 		pc_v[lvl] = new float[wl*hl];
 		pc_idepth[lvl] = new float[wl*hl];
 		pc_color[lvl] = new float[wl*hl];
-		pc_overexposed[lvl] = new bool[wl*hl];
+
 	}
 
 	// warped buffers
@@ -87,7 +87,7 @@ CoarseTracker::~CoarseTracker()
 		delete[] pc_v[lvl] ;
 		delete[] pc_idepth[lvl];
 		delete[] pc_color[lvl];
-		delete[] pc_overexposed[lvl];
+
 
 	}
 
@@ -193,7 +193,7 @@ void CoarseTracker::makeCoarseDepthL0(std::vector<FrameHessian*> frameHessians)
 	for(int lvl=0; lvl<2; lvl++)
 	{
 		int numIts = 1;
-		if(setting_dilateDoubleCoarse) numIts=2;
+
 
 		for(int it=0;it<numIts;it++)
 		{
@@ -251,7 +251,6 @@ void CoarseTracker::makeCoarseDepthL0(std::vector<FrameHessian*> frameHessians)
 		float* weightSumsl = weightSums[lvl];
 		float* idepthl = idepth[lvl];
 		Eigen::Vector3f* dIRefl = lastRef->dIp[lvl];
-		bool* overRefl = lastRef->overexposedMapp[lvl];
 
 		int wl = w[lvl], hl = h[lvl];
 
@@ -260,7 +259,7 @@ void CoarseTracker::makeCoarseDepthL0(std::vector<FrameHessian*> frameHessians)
 		float* lpc_v = pc_v[lvl];
 		float* lpc_idepth = pc_idepth[lvl];
 		float* lpc_color = pc_color[lvl];
-		bool* lpc_over = pc_overexposed[lvl];
+
 
 		for(int y=2;y<hl-2;y++)
 			for(int x=2;x<wl-2;x++)
@@ -274,7 +273,7 @@ void CoarseTracker::makeCoarseDepthL0(std::vector<FrameHessian*> frameHessians)
 					lpc_v[lpc_n] = y;
 					lpc_idepth[lpc_n] = idepthl[i];
 					lpc_color[lpc_n] = dIRefl[i][0];
-					lpc_over[lpc_n] = overRefl[i];
+
 
 
 					if(!std::isfinite(lpc_color[lpc_n]) || !(idepthl[i]>0))
@@ -369,7 +368,6 @@ Vec6 CoarseTracker::calcRes(int lvl, SE3 refToNew, AffLight aff_g2l, float cutof
 	int wl = w[lvl];
 	int hl = h[lvl];
 	Eigen::Vector3f* dINewl = newFrame->dIp[lvl];
-	bool* overexposedNewl = newFrame->overexposedMapp[lvl];
 	float fxl = fx[lvl];
 	float fyl = fy[lvl];
 	float cxl = cx[lvl];
@@ -400,7 +398,7 @@ Vec6 CoarseTracker::calcRes(int lvl, SE3 refToNew, AffLight aff_g2l, float cutof
 	float* lpc_v = pc_v[lvl];
 	float* lpc_idepth = pc_idepth[lvl];
 	float* lpc_color = pc_color[lvl];
-	bool* lpc_over = pc_overexposed[lvl];
+
 
 	for(int i=0;i<nl;i++)
 	{
@@ -451,41 +449,12 @@ Vec6 CoarseTracker::calcRes(int lvl, SE3 refToNew, AffLight aff_g2l, float cutof
 		if(!(Ku > 2 && Kv > 2 && Ku < wl-3 && Kv < hl-3 && new_idepth > 0)) continue;
 
 
-		Vec3f hitColor;
+
 		float refColor = lpc_color[i];
-		float residual;
-		float hw;
-		if(setting_killOverexposedMode==0)
-		{
-			hitColor = getInterpolatedElement33(dINewl, Ku, Kv, wl);
-			if(!std::isfinite((float)hitColor[0])) continue;
-			residual = hitColor[0] - (float)(affLL[0] * refColor + affLL[1]);
-			hw = fabs(residual) < setting_huberTH ? 1 : setting_huberTH / fabs(residual);
-		}
-		else
-		{
-			bool hitOver;
-			bool refOver = lpc_over[i];
-			if(setting_killOverexposedMode==1)
-				hitColor = getInterpolatedElement33OverAnd(dINewl, overexposedNewl, Ku, Kv, wl, hitOver);
-			else
-				hitColor = getInterpolatedElement33OverOr(dINewl, overexposedNewl, Ku, Kv, wl, hitOver);
-
-			if(!std::isfinite(refColor) || !std::isfinite((float)hitColor[0])) continue;
-			residual = hitColor[0] - (float)(affLL[0] * refColor + affLL[1]);
-			hw = fabs(residual) < setting_huberTH ? 1 : setting_huberTH / fabs(residual);
-			if(residual > 0 && refOver)
-			{
-				if(debugPlot) resImage->setPixel4(lpc_u[i], lpc_v[i], Vec3b(255,255,0));
-				continue;
-			}
-			if(residual < 0 && hitOver)
-			{
-				if(debugPlot) resImage->setPixel4(lpc_u[i], lpc_v[i], Vec3b(0,255,0));
-				continue;
-			}
-		}
-
+        Vec3f hitColor = getInterpolatedElement33(dINewl, Ku, Kv, wl);
+        if(!std::isfinite((float)hitColor[0])) continue;
+        float residual = hitColor[0] - (float)(affLL[0] * refColor + affLL[1]);
+        float hw = fabs(residual) < setting_huberTH ? 1 : setting_huberTH / fabs(residual);
 
 
 		if(fabs(residual) > cutoffTH)

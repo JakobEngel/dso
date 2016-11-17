@@ -40,20 +40,11 @@ ImmaturePoint::ImmaturePoint(int u_, int v_, FrameHessian* host_, float type, Ca
 		int dx = patternP[idx][0];
 		int dy = patternP[idx][1];
 
-		Vec3f ptc;
-		bool ptcOver=false;
-		if(setting_killOverexposedMode==0)
-			ptc = getInterpolatedElement33BiLin(host->dI, u+dx, v+dy,wG[0]);
-		if(setting_killOverexposedMode==1)
-			ptc = getInterpolatedElement33OverAnd(host->dI, host->overexposedMap, u+dx, v+dy,wG[0], ptcOver);
-		else
-			ptc = getInterpolatedElement33OverOr(host->dI, host->overexposedMap, u+dx, v+dy,wG[0], ptcOver);
-
+        Vec3f ptc = getInterpolatedElement33BiLin(host->dI, u+dx, v+dy,wG[0]);
 
 
 
 		color[idx] = ptc[0];
-		colorOverexposed[idx] = ptcOver;
 		if(!std::isfinite(color[idx])) {energyTH=NAN; return;}
 
 

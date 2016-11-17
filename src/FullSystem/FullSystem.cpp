@@ -413,16 +413,9 @@ Vec4 FullSystem::trackNewCoarse(FrameHessian* fh)
 		}
 
 
+        if(haveOneGood &&  achievedRes[0] < lastCoarseRMSE[0]*setting_reTrackThreshold)
+            break;
 
-		//if(trackingIsGood)
-		{
-			if(haveOneGood && i<5 && achievedRes[0] < lastCoarseRMSE[0]*setting_reTrackThreshold1)
-				break;
-			else if(haveOneGood && i >= 5 && i < 15 && achievedRes[0] < lastCoarseRMSE[0]*setting_reTrackThreshold2)
-				break;
-			else if(haveOneGood && i >= 15 && achievedRes[0] < lastCoarseRMSE[0]*setting_reTrackThreshold3)
-				break;
-		}
 	}
 
 	if(!haveOneGood)
@@ -618,13 +611,6 @@ void FullSystem::activatePointsMT()
 				continue;
 			}
 
-			// if need to marginalize: activate it!
-			if(setting_activateAllOnMarg && (ph->host->flaggedForMarginalization || ph->lastTraceStatus == IPS_OOB))
-			{
-				toOptimize.push_back(ph);
-				continue;
-			}
-
 
 			// see if we need to activate point due to distance map.
 			Vec3f ptp = KRKi * Vec3f(ph->u, ph->v, 1) + Kt*(0.5f*(ph->idepth_max+ph->idepth_min));
@@ -672,7 +658,6 @@ void FullSystem::activatePointsMT()
 		{
 			newpoint->host->immaturePoints[ph->idxInImmaturePoints]=0;
 			newpoint->host->pointHessians.push_back(newpoint);
-			newpoint->host->statistics_pointsActivatedForThisFrame++;
 			ef->insertPoint(newpoint);
 			for(PointFrameResidual* r : newpoint->residuals)
 				ef->insertResidual(r);
@@ -772,7 +757,7 @@ void FullSystem::flagPointsForRemoval()
 							ngoodRes++;
 						}
 					}
-					if(ph->idepth_hessian > setting_minIdepthH_marg && ngoodRes >= setting_minInlierVotesForMarg)
+                    if(ph->idepth_hessian > setting_minIdepthH_marg)
 					{
 						flag_inin++;
 						ph->efPoint->stateFlag = EFPointStatus::PS_MARGINALIZE;
@@ -833,7 +818,7 @@ void FullSystem::addActiveFrame( ImageAndExposure* image, int id )
 
 	// =========================== make Images / derivatives etc. =========================
 	fh->ab_exposure = image->exposure_time;
-	fh->makeImages(image->image, image->overexposedMap, &Hcalib);
+    fh->makeImages(image->image, &Hcalib);
 
 
 
@@ -1263,8 +1248,7 @@ void FullSystem::initializeFromInitializer(FrameHessian* newFrame)
 		ef->insertPoint(ph);
 	}
 
-	firstFrame->tracesCreatedForThisFrame = firstFrame->pointHessians.size();
-	firstFrame->statistics_pointsActivatedForThisFrame = firstFrame->pointHessians.size();
+
 
 	SE3 firstToNew = coarseInitializer->thisToNext;
 	firstToNew.translation() /= rescaleFactor;
@@ -1312,7 +1296,7 @@ void FullSystem::makeNewTraces(FrameHessian* newFrame, float* gtDepth)
 		ImmaturePoint* impt = new ImmaturePoint(x,y,newFrame, selectionMap[i], &Hcalib);
 		if(!std::isfinite(impt->energyTH)) delete impt;
 		else newFrame->immaturePoints.push_back(impt);
-		newFrame->tracesCreatedForThisFrame++;
+
 	}
 	//printf("MADE %d IMMATURE POINTS!\n", (int)newFrame->immaturePoints.size());
 

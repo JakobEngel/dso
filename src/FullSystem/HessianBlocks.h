@@ -97,8 +97,8 @@ struct FrameFramePrecalc
 	float distanceLL;
 
 
-	inline ~FrameFramePrecalc() {};
-	inline FrameFramePrecalc() {host=target=0;};
+    inline ~FrameFramePrecalc() {}
+    inline FrameFramePrecalc() {host=target=0;}
 	void set(FrameHessian* host, FrameHessian* target, CalibHessian* HCalib);
 };
 
@@ -117,8 +117,8 @@ struct FrameHessian
 	Eigen::Vector3f* dI;				 // trace, fine tracking. Used for direction select (not for gradient histograms etc.)
 	Eigen::Vector3f* dIp[PYR_LEVELS];	 // coarse tracking / coarse initializer. NAN in [0] only.
 	float* absSquaredGrad[PYR_LEVELS];  // only used for pixel select (histograms etc.). no NAN.
-	bool* overexposedMap;
-	bool* overexposedMapp[PYR_LEVELS];
+
+
 
 
 
@@ -137,8 +137,7 @@ struct FrameHessian
 	std::vector<PointHessian*> pointHessiansMarginalized;	// contains all MARGINALIZED points (= fully marginalized, usually because point went OOB.)
 	std::vector<PointHessian*> pointHessiansOut;		// contains all OUTLIER points (= discarded.).
 	std::vector<ImmaturePoint*> immaturePoints;		// contains all OUTLIER points (= discarded.).
-	int statistics_pointsActivatedForThisFrame;
-	int tracesCreatedForThisFrame;
+
 
 	Mat66 nullspaces_pose;
 	Mat42 nullspaces_affine;
@@ -154,11 +153,11 @@ struct FrameHessian
 	Vec10 state_backup;
 
 
-	EIGEN_STRONG_INLINE const SE3 &get_worldToCam_evalPT() const {return worldToCam_evalPT;};
-	EIGEN_STRONG_INLINE const Vec10 &get_state_zero() const {return state_zero;};
-	EIGEN_STRONG_INLINE const Vec10 &get_state() const {return state;};
-	EIGEN_STRONG_INLINE const Vec10 &get_state_scaled() const {return state_scaled;};
-	EIGEN_STRONG_INLINE const Vec10 get_state_minus_stateZero() const {return get_state() - get_state_zero();};
+    EIGEN_STRONG_INLINE const SE3 &get_worldToCam_evalPT() const {return worldToCam_evalPT;}
+    EIGEN_STRONG_INLINE const Vec10 &get_state_zero() const {return state_zero;}
+    EIGEN_STRONG_INLINE const Vec10 &get_state() const {return state;}
+    EIGEN_STRONG_INLINE const Vec10 &get_state_scaled() const {return state_scaled;}
+    EIGEN_STRONG_INLINE const Vec10 get_state_minus_stateZero() const {return get_state() - get_state_zero();}
 
 
 	// precalc values
@@ -168,9 +167,9 @@ struct FrameHessian
 	MinimalImageB3* debugImage;
 
 
-	inline Vec6 w2c_leftEps() const {return get_state_scaled().head<6>();};
-	inline AffLight aff_g2l() const {return AffLight(get_state_scaled()[6], get_state_scaled()[7]);};
-	inline AffLight aff_g2l_0() const {return AffLight(get_state_zero()[6]*SCALE_A, get_state_zero()[7]*SCALE_B);};
+    inline Vec6 w2c_leftEps() const {return get_state_scaled().head<6>();}
+    inline AffLight aff_g2l() const {return AffLight(get_state_scaled()[6], get_state_scaled()[7]);}
+    inline AffLight aff_g2l_0() const {return AffLight(get_state_zero()[6]*SCALE_A, get_state_zero()[7]*SCALE_B);}
 
 
 
@@ -234,7 +233,6 @@ struct FrameHessian
 		for(int i=0;i<pyrLevelsUsed;i++)
 		{
 			delete[] dIp[i];
-			delete[] overexposedMapp[i];
 			delete[]  absSquaredGrad[i];
 
 		}
@@ -253,13 +251,11 @@ struct FrameHessian
 
 
 
-		statistics_pointsActivatedForThisFrame=0;
-		tracesCreatedForThisFrame=0;
 		debugImage=0;
 	};
 
 
-	void makeImages(float* color, bool* overexposedMap, CalibHessian* HCalib);
+    void makeImages(float* color, CalibHessian* HCalib);
 
 	inline Vec10 getPrior()
 	{
@@ -312,7 +308,7 @@ struct CalibHessian
 	VecC value_backup;
 	VecC value_minus_value_zero;
 
-	inline ~CalibHessian() {instanceCounter--;};
+    inline ~CalibHessian() {instanceCounter--;}
 	inline CalibHessian()
 	{
 
@@ -397,9 +393,6 @@ struct CalibHessian
 		if(c>250) c=250;
 		return Binv[c+1]-Binv[c];
 	}
-
-
-	Vec2f getAffLL(float host_exposure, float target_exposure, AffLight host_g2l, AffLight target_g2l);
 };
 
 
@@ -412,7 +405,6 @@ struct PointHessian
 	// static values
 	float color[MAX_RES_PER_POINT];			// colors in host frame
 	float weights[MAX_RES_PER_POINT];		// host-weights for respective residuals.
-	bool colorOverexposed[MAX_RES_PER_POINT];		// host-weights for respective residuals.
 
 
 
@@ -440,22 +432,22 @@ struct PointHessian
 	enum PtStatus {ACTIVE=0, INACTIVE, OUTLIER, OOB, MARGINALIZED};
 	PtStatus status;
 
-	inline void setPointStatus(PtStatus s) {status=s;};
+    inline void setPointStatus(PtStatus s) {status=s;}
 
 
 	inline void setIdepth(float idepth) {
 		this->idepth = idepth;
 		this->idepth_scaled = SCALE_IDEPTH * idepth;
-	};
+    }
 	inline void setIdepthScaled(float idepth_scaled) {
 		this->idepth = SCALE_IDEPTH_INVERSE * idepth_scaled;
 		this->idepth_scaled = idepth_scaled;
-	};
+    }
 	inline void setIdepthZero(float idepth) {
 		idepth_zero = idepth;
 		idepth_zero_scaled = SCALE_IDEPTH * idepth;
 		nullspaces_scale = -(idepth*1.001 - idepth/1.001)*500;
-	};
+    }
 
 
 	std::vector<PointFrameResidual*> residuals;					// only contains good residuals (not OOB and not OUTLIER). Arbitrary order.
@@ -464,7 +456,7 @@ struct PointHessian
 
 	void release();
 	PointHessian(const ImmaturePoint* const rawPoint, CalibHessian* Hcalib);
-	inline ~PointHessian() {assert(efPoint==0); release(); instanceCounter--;};
+    inline ~PointHessian() {assert(efPoint==0); release(); instanceCounter--;}
 
 
 	inline bool isOOB(const std::vector<FrameHessian*>& toKeep, const std::vector<FrameHessian*>& toMarg) const
@@ -496,8 +488,7 @@ struct PointHessian
 	inline bool isInlierNew()
 	{
 		return (int)residuals.size() >= setting_minGoodActiveResForMarg
-					&& numGoodResiduals >= setting_minGoodResForMarg
-					&& maxRelBaseline >= setting_minRelBSForMarg;
+                    && numGoodResiduals >= setting_minGoodResForMarg;
 	}
 
 };

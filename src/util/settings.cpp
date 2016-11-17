@@ -32,17 +32,20 @@ namespace dso
 int pyrLevelsUsed = PYR_LEVELS;
 
 
-float setting_keyframesPerSecond = 0;
-bool setting_realTimeMaxKF = false;
+/* Parameters controlling when KF's are taken */
+float setting_keyframesPerSecond = 0;   // if !=0, takes a fixed number of KF per second.
+bool setting_realTimeMaxKF = false;   // if true, takes as many KF's as possible (will break the system if the camera stays stationary)
 float setting_maxShiftWeightT= 0.04f * (640+480);
 float setting_maxShiftWeightR= 0.0f * (640+480);
 float setting_maxShiftWeightRT= 0.02f * (640+480);
-float setting_kfGlobalWeight = 1;
+float setting_kfGlobalWeight = 1;   // general weight on threshold, the larger the more KF's are taken (e.g., 2 = double the amount of KF's).
 float setting_maxAffineWeight= 2;
 
 
+/* initial hessian values to fix unobservable dimensions / priors on affine lighting parameters.
+ */
 float setting_idepthFixPrior = 50*50;
-float setting_idepthFixPriorMargFac = 600*600; // 30000*30000;
+float setting_idepthFixPriorMargFac = 600*600;
 float setting_initialRotPrior = 1e11;
 float setting_initialTransPrior = 1e10;
 float setting_initialAffBPrior = 1e14;
@@ -53,54 +56,57 @@ float setting_initialCalibHessian = 5e9;
 
 
 
+/* some modes for solving the resulting linear system (e.g. orthogonalize wrt. unobservable dimensions) */
 int setting_solverMode = SOLVER_FIX_LAMBDA | SOLVER_ORTHOGONALIZE_X_LATER;
 double setting_solverModeDelta = 0.00001;
+bool setting_forceAceptStep = true;
 
 
 
+/* some thresholds on when to activate / marginalize points */
 float setting_minIdepthH_act = 100;
 float setting_minIdepthH_marg = 50;
-int setting_margPointVisWindow=0;
 
 
-float setting_maxPixSearch = 0.027;
-float setting_desiredImmatureDensity = 1500;
-float setting_desiredPointDensity = 2000;
-float setting_minPointsRemaining = 0.05;
-float setting_maxLogAffFacInWindow = 0.7;
 
-int   setting_minFrames = 5;
-int   setting_maxFrames = 7;
+float setting_desiredImmatureDensity = 1500; // immature points per frame
+float setting_desiredPointDensity = 2000; // aimed total points in the active window.
+float setting_minPointsRemaining = 0.05;  // marg a frame if less than X% points remain.
+float setting_maxLogAffFacInWindow = 0.7; // marg a frame if factor between intensities to current frame is larger than 1/X or X.
+
+
+int   setting_minFrames = 5; // min frames in window.
+int   setting_maxFrames = 7; // max frames in window.
 int   setting_minFrameAge = 1;
-int   setting_maxOptIterations=6;
-int   setting_minOptIterations=1;
-float setting_thOptIterations=1.2;
+int   setting_maxOptIterations=6; // max GN iterations.
+int   setting_minOptIterations=1; // min GN iterations.
+float setting_thOptIterations=1.2; // factor on break threshold for GN iteration (larger = break earlier)
+
+
+
+
+
+/* Outlier Threshold on photometric energy */
 float setting_outlierTH = 12*12;					// higher -> less strict
-float setting_outlierSmoothnessTH = 0; 				// higher -> more strict
 float setting_outlierTHSumComponent = 50*50; 		// higher -> less strong gradient-based reweighting .
-int   setting_killOverexposed = 1000;
-int   setting_killOverexposedMode = 0;
-int setting_pattern = 8;						// 0=.; 1=+; 2=x; 3=full; 4=spread
-float setting_margWeightFac = 0.5*0.5;
-int setting_discreteSeachItsOnPointActivation = 0;
-int setting_GNItsOnPointActivation = 3;
 
 
-float setting_SmoothnessErrorPixelTH = 1000;
-float setting_SmoothnessEMinInlierPercentage = 0.25;
-float setting_SmoothnessEGoodInlierPercentage = 0.66;
-
-float setting_minTraceQuality = 3;
-int setting_minTraceTestRadius = 2;
-float setting_reTrackThreshold1 = 1.5;
-float setting_reTrackThreshold2 = 1.5;
-float setting_reTrackThreshold3 = 1.5;
 
 
-int   setting_minGoodActiveResForMarg=3;	// irrelevant
-int   setting_minGoodResForMarg=4;			// irrelevant
-int   setting_minInlierVotesForMarg=0;		// irrelevant
-float setting_minRelBSForMarg=0.00;			// irrelevant
+int setting_pattern = 8;						// point pattern used. DISABLED.
+float setting_margWeightFac = 0.5*0.5;          // factor on hessian when marginalizing, to account for inaccurate linearization points.
+
+
+/* when to re-track a frame */
+float setting_reTrackThreshold = 1.5; // (larger = re-track more often)
+
+
+
+/* require some minimum number of residuals for a point to become valid */
+int   setting_minGoodActiveResForMarg=3;
+int   setting_minGoodResForMarg=4;
+
+
 
 
 
@@ -112,45 +118,45 @@ int setting_photometricCalibration = 2;
 bool setting_useExposure = true;
 float setting_affineOptModeA = 1e12; //-1: fix. >=0: optimize (with prior, if > 0).
 float setting_affineOptModeB = 1e8; //-1: fix. >=0: optimize (with prior, if > 0).
-float setting_affineOptModeA_huberTH = 10000;
-float setting_affineOptModeB_huberTH = 10000;
-int setting_gammaWeightsPixelSelect = 1;
+
+int setting_gammaWeightsPixelSelect = 1; // 1 = use original intensity for pixel selection; 0 = use gamma-corrected intensity.
 
 
 
-bool setting_relinAlways = true;
-bool setting_fixCalib = false;
 
-
-bool setting_activateAllOnMarg = false;
-bool setting_forceAceptStep = true;
+float setting_huberTH = 9; // Huber Threshold
 
 
 
-float setting_useDepthWeightsCoarse = -1;
-bool setting_dilateDoubleCoarse = false;
 
 
-float setting_huberTH = 9;	  	// done
-
-
-
+// parameters controlling adaptive energy threshold computation.
 float setting_frameEnergyTHConstWeight = 0.5;
 float setting_frameEnergyTHN = 0.7f;
-float setting_frameEnergyTHFacMean = 0.0;
 float setting_frameEnergyTHFacMedian = 1.5;
 float setting_overallEnergyTHWeight = 1;
 float setting_coarseCutoffTH = 20;
 
+
+
+
+
+// parameters controlling pixel selection
 float setting_minGradHistCut = 0.5;
 float setting_minGradHistAdd = 7;
-float setting_fixGradTH = -1;
 float setting_gradDownweightPerLevel = 0.75;
 bool  setting_selectDirectionDistribution = true;
-int setting_pixelSelectionUseFast=0;
 
 
 
+
+
+
+/* settings controling initial immature point tracking */
+float setting_maxPixSearch = 0.027; // max length of the ep. line segment searched during immature point tracking. relative to image resolution.
+float setting_minTraceQuality = 3;
+int setting_minTraceTestRadius = 2;
+int setting_GNItsOnPointActivation = 3;
 float setting_trace_stepsize = 1.0;				// stepsize for initial discrete search.
 int setting_trace_GNIterations = 3;				// max # GN iterations
 float setting_trace_GNThreshold = 0.1;				// GN stop after this stepsize.
@@ -160,6 +166,8 @@ float setting_trace_minImprovementFactor = 2;		// if pixel-interval is smaller t
 
 
 
+
+// for benchmarking different undistortion settings
 float benchmarkSetting_fxfyfac = 0;
 int benchmarkSetting_width = 0;
 int benchmarkSetting_height = 0;
@@ -185,7 +193,7 @@ bool setting_onlyLogKFPoses = true;
 bool setting_logStuff = true;
 
 
-int benchmarkSpecialOption = 0;
+
 bool goStepByStep = false;
 
 

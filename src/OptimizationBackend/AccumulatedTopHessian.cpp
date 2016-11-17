@@ -227,15 +227,8 @@ void AccumulatedTopHessianSSE::stitchDouble(MatXX &H, VecX &b, EnergyFunctional 
 		b.head<CPARS>() += EF->cPrior.cwiseProduct(EF->cDeltaF.cast<double>());
 		for(int h=0;h<nframes[tid];h++)
 		{
-			Vec8 hw = Vec8::Ones();
-			if(fabs((double)(EF->frames[h]->delta_prior[6])) > setting_affineOptModeA_huberTH)
-				hw[6] = 1/fabs((double)(EF->frames[h]->delta_prior[6]));
-			if(fabs((double)(EF->frames[h]->delta_prior[7])) > setting_affineOptModeB_huberTH)
-				hw[7] = 1/fabs((double)(EF->frames[h]->delta_prior[7]));
-
-
-			H.diagonal().segment<8>(CPARS+h*8) += EF->frames[h]->prior.cwiseProduct(hw);
-			b.segment<8>(CPARS+h*8) += EF->frames[h]->prior.cwiseProduct(EF->frames[h]->delta_prior).cwiseProduct(hw);
+            H.diagonal().segment<8>(CPARS+h*8) += EF->frames[h]->prior;
+            b.segment<8>(CPARS+h*8) += EF->frames[h]->prior.cwiseProduct(EF->frames[h]->delta_prior);
 		}
 	}
 }
@@ -298,15 +291,8 @@ void AccumulatedTopHessianSSE::stitchDoubleInternal(
 		b[tid].head<CPARS>() += EF->cPrior.cwiseProduct(EF->cDeltaF.cast<double>());
 		for(int h=0;h<nframes[tid];h++)
 		{
-			Vec8 hw = Vec8::Ones();
-			if(fabs((double)(EF->frames[h]->delta_prior[6])) > setting_affineOptModeA_huberTH)
-				hw[6] = 1/fabs((double)(EF->frames[h]->delta_prior[6]));
-			if(fabs((double)(EF->frames[h]->delta_prior[7])) > setting_affineOptModeB_huberTH)
-				hw[7] = 1/fabs((double)(EF->frames[h]->delta_prior[7]));
-
-
-			H[tid].diagonal().segment<8>(CPARS+h*8) += EF->frames[h]->prior.cwiseProduct(hw);
-			b[tid].segment<8>(CPARS+h*8) += EF->frames[h]->prior.cwiseProduct(EF->frames[h]->delta_prior).cwiseProduct(hw);
+            H[tid].diagonal().segment<8>(CPARS+h*8) += EF->frames[h]->prior;
+            b[tid].segment<8>(CPARS+h*8) += EF->frames[h]->prior.cwiseProduct(EF->frames[h]->delta_prior);
 
 		}
 	}

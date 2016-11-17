@@ -73,40 +73,6 @@ PointHessian* FullSystem::optimizeImmaturePoint(
 	float lastbd=0;
 	float currentIdepth=(point->idepth_max+point->idepth_min)*0.5f;
 
-	float searchStep=1;
-	for(int k=0;k<setting_discreteSeachItsOnPointActivation;k++)
-	{
-		// start of with a discrete search around the initialization.
-		float minE=1e10;
-		float minEid = currentIdepth;
-		float discreteStep=1000;
-		for(int i=0;i<nres;i++)
-		{
-			float idPerPix = 1.0f / point->getdPixdd(&Hcalib, residuals+i, currentIdepth);
-			if(idPerPix < discreteStep) discreteStep = idPerPix;
-		}
-
-		if(!std::isfinite(discreteStep) || discreteStep < 1e-8)
-			continue;
-
-		for(float delta=-8*discreteStep; delta <= 8*discreteStep; delta += discreteStep*searchStep)
-		{
-			float E = 0;
-			for(int i=0;i<nres;i++)
-			{
-				E += point->calcResidual(&Hcalib, 1, residuals+i, currentIdepth+delta);
-			}
-			if(E < minE)
-			{
-				minE = E;
-				minEid = currentIdepth+delta;
-			}
-		}
-
-		if(k==0 && fabsf(currentIdepth-minEid) > 4*searchStep)
-			return (PointHessian*)((long)(-1));
-		currentIdepth = minEid;
-	}
 
 
 

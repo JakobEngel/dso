@@ -106,7 +106,6 @@ private:
 	float* pc_v[PYR_LEVELS];
 	float* pc_idepth[PYR_LEVELS];
 	float* pc_color[PYR_LEVELS];
-	bool* pc_overexposed[PYR_LEVELS];
 	int pc_n[PYR_LEVELS];
 
 	// warped buffers
