@@ -927,10 +927,10 @@ UndistortOpenCV::~UndistortOpenCV()
 void UndistortOpenCV::distortCoordinates(float* in_x, float* in_y, float* out_x, float* out_y, int n) const
 {
 	// RADTAN
-	float fx = parsOrg[0];
-	float fy = parsOrg[1];
-	float cx = parsOrg[2];
-	float cy = parsOrg[3];
+	float fx = parsOrg[0] * wOrg;
+	float fy = parsOrg[1] * hOrg;
+	float cx = parsOrg[2] * wOrg - 0.5;
+	float cy = parsOrg[3] * hOrg - 0.5;
 	float k1 = parsOrg[4];
 	float k2 = parsOrg[5];
 	float r1 = parsOrg[6];
