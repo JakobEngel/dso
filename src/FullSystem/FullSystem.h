@@ -256,7 +256,7 @@ private:
 	Vec5 lastCoarseRMSE;
 
 
-	// ================== changed by mapper-thread. protected by trackMutex ===============
+	// ================== changed by mapper-thread. protected by mapMutex ===============
 	boost::mutex mapMutex;
 	std::vector<FrameShell*> allKeyFramesHistory;
 
