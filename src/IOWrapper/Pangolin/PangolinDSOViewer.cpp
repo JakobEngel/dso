@@ -39,7 +39,7 @@ namespace IOWrap
 
 
 
-PangolinDSOViewer::PangolinDSOViewer(int w, int h)
+PangolinDSOViewer::PangolinDSOViewer(int w, int h, bool startRunThread)
 {
 	this->w = w;
 	this->h = h;
@@ -64,7 +64,10 @@ PangolinDSOViewer::PangolinDSOViewer(int w, int h)
 	}
 
 	needReset = false;
-	runThread = boost::thread(&PangolinDSOViewer::run, this);
+
+
+    if(startRunThread)
+        runThread = boost::thread(&PangolinDSOViewer::run, this);
 
 }
 
@@ -134,7 +137,7 @@ void PangolinDSOViewer::run()
 	pangolin::Var<bool> settings_show3D("ui.show3D",true,true);
 	pangolin::Var<bool> settings_showLiveDepth("ui.showDepth",true,true);
 	pangolin::Var<bool> settings_showLiveVideo("ui.showVideo",true,true);
-	pangolin::Var<bool> settings_showLiveResidual("ui.showResidual",true,true);
+    pangolin::Var<bool> settings_showLiveResidual("ui.showResidual",false,true);
 
 	pangolin::Var<bool> settings_showFramesWindow("ui.showFramesWindow",false,true);
 	pangolin::Var<bool> settings_showFullTracking("ui.showFullTracking",false,true);
