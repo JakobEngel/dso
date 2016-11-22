@@ -787,7 +787,7 @@ void Undistort::readFromFile(const char* configFileName, int nPars, std::string 
 
 
 
-    if(parsOrg[0] < 10 && parsOrg[1] < 10)
+    if(parsOrg[2] < 1 && parsOrg[3] < 1)
     {
         printf("\n\nFound fx=%f, fy=%f, cx=%f, cy=%f.\n I'm assuming this is the \"relative\" calibration file format,"
                "and will rescale this by image width / height to fx=%f, fy=%f, cx=%f, cy=%f.\n\n",
@@ -884,11 +884,20 @@ void Undistort::readFromFile(const char* configFileName, int nPars, std::string 
 	}
 	else
 	{
+
+
+        if(outputCalibration[2] > 1 || outputCalibration[3] > 1)
+        {
+            printf("\n\n\nWARNING: given output calibration (%f %f %f %f) seems wrong. It needs to be relative to image width / height!\n\n\n",
+                   outputCalibration[0],outputCalibration[1],outputCalibration[2],outputCalibration[3]);
+        }
+
+
 		K.setIdentity();
-        K(0,0) = outputCalibration[0];
-        K(1,1) = outputCalibration[1];
-        K(0,2) = outputCalibration[2];
-        K(1,2) = outputCalibration[3];
+        K(0,0) = outputCalibration[0] * w;
+        K(1,1) = outputCalibration[1] * h;
+        K(0,2) = outputCalibration[2] * w - 0.5;
+        K(1,2) = outputCalibration[3] * h - 0.5;
 	}
 
 	if(benchmarkSetting_fxfyfac != 0)

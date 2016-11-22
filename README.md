@@ -103,30 +103,79 @@ However, it should be easy to adapt it to your needs, if required. The binary is
 
 - `vignette=XXX` where XXX is a monochrome 16bit or 8bit image containing the vignette as pixelwise attenuation factors. See TUM monoVO dataset for an example.
 
-- `calib=XXX` where XXX is a geometric camera calibration file. Currently supported:
+- `calib=XXX` where XXX is a geometric camera calibration file. See below.
+
+
+
+##### Geometric Calibration File.
+
+
+###### Calibration File for Pre-Rectified Images
+
+    Pinhole fx fy cx cy 0
+    in_width in_height
+    "crop" / "full" / "none" / "fx fy cx cy 0"
+    out_width out_height
 
 ###### Calibration File for FOV camera model:
 
-    fx fy cx cy omega
+    FOV fx fy cx cy omega
     in_width in_height
-    "crop" / "full" / "none" / "fx fy cx cy 0"
-    out_width out_height
-
-###### Calibration File for Pre-Rectified Images
-This one is with no radial distortion, as a special case of ATAN camera model but without the computational cost:
-
-    fx fy cx cy 0
-    in_width in_height
-    none
+    "crop" / "full" / "fx fy cx cy 0"
     out_width out_height
 
 
-###### Calibration File for OpenCV camera model
+###### Calibration File for Radio-Tangential camera model
 
-    fx fy cx cy d1 d2 d3 d4
+    RadTan fx fy cx cy k1 k2 r1 r2
     in_width in_height
-    "crop" / "full" / "none" / "fx fy cx cy 0"
+    "crop" / "full" / "fx fy cx cy 0"
     out_width out_height
+
+
+###### Calibration File for Equidistant camera model
+
+    Equidistant fx fy cx cy k1 k2 r1 r2
+    in_width in_height
+    "crop" / "full" / "fx fy cx cy 0"
+    out_width out_height
+
+
+(note: for backwards-compatibility, "Pinhole", "FOV" and "RadTan" can be omitted). See the respective
+`::distortCoordinates` implementation in  `Undistorter.cpp` for the exact corresponding projection function.
+Furthermore, it should be straight-forward to implement other camera models.
+
+
+**Explanation:**
+ Across all models `fx fy cx cy` denotes the focal length / principal point **relative to the image width / height**, 
+i.e., DSO computes the camera matrix `K` as
+
+		K(0,0) = width * fx
+		K(1,1) = width * fy
+		K(0,2) = width * cx - 0.5
+		K(1,2) = width * cy - 0.5
+For backwards-compatibility, if the given `cx` and `cy` are larger than 1, DSO assumes all four parameters to directly be the entries of K, 
+and ommits the above computation. 
+
+
+**That strange "0.5" offset:**
+ Internally, DSO uses the convention that the pixel at integer position (1,1) in the image 
+contains the integral over the continuous image function from (0.5,0.5) to (1.5,1.5), i.e., approximates a "point-sample" of the 
+continuous image functions at (1.0, 1.0).
+In turn, there seems to be no unifying convention across calibration toolboxes whether the pixel at integer position (1,1)
+contains the integral over (0.5,0.5) to (1.5,1.5), or the integral over (1,1) to (0,0). The above conversion assumes that 
+the given calibration in the calibration file uses the latter convention, and thus applies the -0.5 correction.
+Note that this also is taken into account when creating the scale-pyramid (see `globalCalib.cpp`).
+
+
+**Rectification modes:**
+ For image rectification, DSO either supports rectification to a user-defined pinhole model (`fx fy cx cy 0`),
+or has an option to automatically crop the image to the maximal rectangular, well-defined region (`crop`).
+`full` will preserve the full original field of view and is mainly meant for debugging - it will create black 
+borders in undefined image regions, which DSO does NOT ignore (i.e., this option will generate additional 
+outliers along those borders, and corrupt the scale-pyramid).
+
+
 
 
 #### 3.2 Commandline Options
