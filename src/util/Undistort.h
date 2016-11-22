@@ -108,25 +108,34 @@ class UndistortFOV : public Undistort
 {
 public:
 
-	UndistortFOV(const char* configFileName);
+    UndistortFOV(const char* configFileName, bool noprefix);
 	~UndistortFOV();
 	void distortCoordinates(float* in_x, float* in_y, float* out_x, float* out_y, int n) const;
 
 };
 
-class UndistortOpenCV : public Undistort
+class UndistortRadTan : public Undistort
 {
 public:
-	UndistortOpenCV(const char* configFileName);
-	~UndistortOpenCV();
-	void distortCoordinates(float* in_x, float* in_y, float* out_x, float* out_y, int n) const;
+    UndistortRadTan(const char* configFileName, bool noprefix);
+    ~UndistortRadTan();
+    void distortCoordinates(float* in_x, float* in_y, float* out_x, float* out_y, int n) const;
+
+};
+
+class UndistortEquidistant : public Undistort
+{
+public:
+    UndistortEquidistant(const char* configFileName, bool noprefix);
+    ~UndistortEquidistant();
+    void distortCoordinates(float* in_x, float* in_y, float* out_x, float* out_y, int n) const;
 
 };
 
 class UndistortPinhole : public Undistort
 {
 public:
-	UndistortPinhole(const char* configFileName);
+    UndistortPinhole(const char* configFileName, bool noprefix);
 	~UndistortPinhole();
 	void distortCoordinates(float* in_x, float* in_y, float* out_x, float* out_y, int n) const;
 
@@ -137,7 +146,7 @@ private:
 class UndistortKB : public Undistort
 {
 public:
-	UndistortKB(const char* configFileName);
+    UndistortKB(const char* configFileName, bool noprefix);
 	~UndistortKB();
 	void distortCoordinates(float* in_x, float* in_y, float* out_x, float* out_y, int n) const;
 
