@@ -637,6 +637,7 @@ bool CoarseTracker::trackNewestCoarse(
 			incScaled.segment<1>(6) *= SCALE_A;
 			incScaled.segment<1>(7) *= SCALE_B;
 
+            if(!std::isfinite(incScaled.sum())) incScaled.setZero();
 
 			SE3 refToNew_new = SE3::exp((Vec6)(incScaled.head<6>())) * refToNew_current;
 			AffLight aff_g2l_new = aff_g2l_current;
