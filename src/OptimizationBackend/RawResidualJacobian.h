@@ -31,6 +31,7 @@ namespace dso
 {
 struct RawResidualJacobian
 {
+	EIGEN_MAKE_ALIGNED_OPERATOR_NEW;
 	// ================== new structure: save independently =============.
 	EIGEN_ALIGN16 VecNRf resF;
 

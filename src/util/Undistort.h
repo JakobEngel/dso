@@ -40,6 +40,7 @@ namespace dso
 class PhotometricUndistorter
 {
 public:
+	EIGEN_MAKE_ALIGNED_OPERATOR_NEW;
 	PhotometricUndistorter(std::string file, std::string noiseImage, std::string vignetteImage, int w_, int h_);
 	~PhotometricUndistorter();
 
@@ -66,6 +67,7 @@ private:
 class Undistort
 {
 public:
+	EIGEN_MAKE_ALIGNED_OPERATOR_NEW;
 	virtual ~Undistort();
 
 	virtual void distortCoordinates(float* in_x, float* in_y, float* out_x, float* out_y, int n) const = 0;
@@ -107,6 +109,7 @@ protected:
 class UndistortFOV : public Undistort
 {
 public:
+	EIGEN_MAKE_ALIGNED_OPERATOR_NEW;
 
     UndistortFOV(const char* configFileName, bool noprefix);
 	~UndistortFOV();
@@ -117,6 +120,7 @@ public:
 class UndistortRadTan : public Undistort
 {
 public:
+	EIGEN_MAKE_ALIGNED_OPERATOR_NEW;
     UndistortRadTan(const char* configFileName, bool noprefix);
     ~UndistortRadTan();
     void distortCoordinates(float* in_x, float* in_y, float* out_x, float* out_y, int n) const;
@@ -126,6 +130,7 @@ public:
 class UndistortEquidistant : public Undistort
 {
 public:
+	EIGEN_MAKE_ALIGNED_OPERATOR_NEW;
     UndistortEquidistant(const char* configFileName, bool noprefix);
     ~UndistortEquidistant();
     void distortCoordinates(float* in_x, float* in_y, float* out_x, float* out_y, int n) const;
@@ -135,6 +140,7 @@ public:
 class UndistortPinhole : public Undistort
 {
 public:
+	EIGEN_MAKE_ALIGNED_OPERATOR_NEW;
     UndistortPinhole(const char* configFileName, bool noprefix);
 	~UndistortPinhole();
 	void distortCoordinates(float* in_x, float* in_y, float* out_x, float* out_y, int n) const;
@@ -146,6 +152,7 @@ private:
 class UndistortKB : public Undistort
 {
 public:
+	EIGEN_MAKE_ALIGNED_OPERATOR_NEW;
     UndistortKB(const char* configFileName, bool noprefix);
 	~UndistortKB();
 	void distortCoordinates(float* in_x, float* in_y, float* out_x, float* out_y, int n) const;

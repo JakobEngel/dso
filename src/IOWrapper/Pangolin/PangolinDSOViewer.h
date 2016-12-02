@@ -55,6 +55,7 @@ struct GraphConnection
 class PangolinDSOViewer : public Output3DWrapper
 {
 public:
+	EIGEN_MAKE_ALIGNED_OPERATOR_NEW;
     PangolinDSOViewer(int w, int h, bool startRunThread=true);
 	virtual ~PangolinDSOViewer();
 

@@ -347,7 +347,7 @@ Undistort* Undistort::getUndistorterForFile(std::string configFilename, std::str
 
     else if(std::sscanf(l1.c_str(), "FOV %f %f %f %f %f",
             &ic[0], &ic[1], &ic[2], &ic[3],
-            &ic[4], &ic[5], &ic[6], &ic[7]) == 5)
+            &ic[4]) == 5)
     {
         u = new UndistortFOV(configFilename.c_str(), false);
         if(!u->isValid()) {delete u; return 0; }
@@ -356,7 +356,7 @@ Undistort* Undistort::getUndistorterForFile(std::string configFilename, std::str
 
     else if(std::sscanf(l1.c_str(), "Pinhole %f %f %f %f %f",
             &ic[0], &ic[1], &ic[2], &ic[3],
-            &ic[4], &ic[5], &ic[6], &ic[7]) == 8)
+            &ic[4]) == 5)
     {
         u = new UndistortPinhole(configFilename.c_str(), false);
         if(!u->isValid()) {delete u; return 0; }

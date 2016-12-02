@@ -59,6 +59,7 @@ extern bool EFDeltaValid;
 
 class EnergyFunctional {
 public:
+	EIGEN_MAKE_ALIGNED_OPERATOR_NEW;
 	friend class EFFrame;
 	friend class EFPoint;
 	friend class EFResidual;

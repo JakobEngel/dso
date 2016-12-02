@@ -55,6 +55,7 @@ enum ImmaturePointStatus {
 class ImmaturePoint
 {
 public:
+	EIGEN_MAKE_ALIGNED_OPERATOR_NEW;
 	// static values
 	float color[MAX_RES_PER_POINT];
 	float weights[MAX_RES_PER_POINT];
