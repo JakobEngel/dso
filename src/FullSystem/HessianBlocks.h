@@ -165,7 +165,7 @@ struct FrameHessian
 	// precalc values
 	SE3 PRE_worldToCam;
 	SE3 PRE_camToWorld;
-	std::vector<FrameFramePrecalc> targetPrecalc;
+	std::vector<FrameFramePrecalc,Eigen::aligned_allocator<FrameFramePrecalc>> targetPrecalc;
 	MinimalImageB3* debugImage;
 
 
