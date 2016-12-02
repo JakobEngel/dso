@@ -43,6 +43,7 @@ struct FrameHessian;
 struct Pnt
 {
 public:
+	EIGEN_MAKE_ALIGNED_OPERATOR_NEW;
 	// index in jacobian. never changes (actually, there is no reason why).
 	float u,v;
 
@@ -77,12 +78,13 @@ public:
 
 class CoarseInitializer {
 public:
+	EIGEN_MAKE_ALIGNED_OPERATOR_NEW;
 	CoarseInitializer(int w, int h);
 	~CoarseInitializer();
 
 
 	void setFirst(	CalibHessian* HCalib, FrameHessian* newFrameHessian);
-    bool trackFrame(FrameHessian* newFrameHessian, std::vector<IOWrap::Output3DWrapper*> &wraps);
+	bool trackFrame(FrameHessian* newFrameHessian, std::vector<IOWrap::Output3DWrapper*> &wraps);
 	void calcTGrads(FrameHessian* newFrameHessian);
 
 	int frameID;
