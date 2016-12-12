@@ -28,6 +28,7 @@ set(CMAKE_CXX_FLAGS
    "${SSE_FLAGS} -O3 -g -std=c++0x -march=native"
 #   "${SSE_FLAGS} -O3 -g -std=c++0x -fno-omit-frame-pointer"
 )
+option(DSO_BUILD_STATIC_LIBRARY        "Build a static dso library, instead of shared" ON)
 
 if (MSVC)
      set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /EHsc")
@@ -109,9 +110,27 @@ endif()
 
 
 # compile main library.
-include_directories( ${CSPARSE_INCLUDE_DIR} ${CHOLMOD_INCLUDE_DIR}) 
-add_library(dso ${dso_SOURCE_FILES} ${dso_opencv_SOURCE_FILES} ${dso_pangolin_SOURCE_FILES})
+include_directories( ${CSPARSE_INCLUDE_DIR} ${CHOLMOD_INCLUDE_DIR})
 
+if (DSO_BUILD_STATIC_LIBRARY)
+    message("--- dso static library selected.")
+    add_library(dso ${dso_SOURCE_FILES} ${dso_opencv_SOURCE_FILES} ${dso_pangolin_SOURCE_FILES})
+    install (TARGETS dso ARCHIVE DESTINATION lib COMPONENT libraries)
+else()
+    message("--- dso dynamic library selected.")
+    add_library(dso SHARED ${dso_SOURCE_FILES} ${dso_opencv_SOURCE_FILES} ${dso_pangolin_SOURCE_FILES})
+    target_link_libraries(dso boost_system boost_thread cxsparse)
+    if (HAS_ZIPLIB)
+        target_link_libraries(dso ${LIBZIP_LIBRARY})
+    endif()
+    if (HAS_PANGOLIN)
+        target_link_libraries(dso ${Pangolin_LIBRARIES})
+    endif()
+    if (HAS_OPENCV)
+        target_link_libraries(dso ${OpenCV_LIBS})
+    endif()
+    install (TARGETS dso LIBRARY DESTINATION lib COMPONENT libraries)
+endif()
 #set_property( TARGET dso APPEND_STRING PROPERTY COMPILE_FLAGS -Wall )
 
 
@@ -129,4 +148,16 @@ if (OpenCV_FOUND AND Pangolin_FOUND)
 else()
 	message("--- not building dso_dataset, since either don't have openCV or Pangolin.")
 endif()
+
+file(GLOB dso_HEADER_FILES "${PROJECT_SOURCE_DIR}/src/FullSystem/*.h")
+
+install (FILES ${dso_HEADER_FILES} DESTINATION include/dso/FullSystem)
+
+file(GLOB dso_HEADER_FILES "${PROJECT_SOURCE_DIR}/src/OptimizationBackend/*.h")
+
+install (FILES ${dso_HEADER_FILES} DESTINATION include/dso/OptimizationBackend)
+
+file(GLOB dso_HEADER_FILES "${PROJECT_SOURCE_DIR}/src/util/*.h")
+
+install (FILES ${dso_HEADER_FILES} DESTINATION include/dso/util)
 
