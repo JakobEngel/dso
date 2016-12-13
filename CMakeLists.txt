@@ -10,6 +10,8 @@ set(BUILD_TYPE Release)
 
 set(EXECUTABLE_OUTPUT_PATH bin)
 set(LIBRARY_OUTPUT_PATH lib)
+set(INCLUDE_OUTPUT_PATH include/dso)
+set(CMAKE_OUTPUT_PATH ${LIBRARY_OUTPUT_PATH}/cmake/dso)
 set(CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake)
 
 # required libraries
@@ -112,7 +114,7 @@ include_directories( ${CSPARSE_INCLUDE_DIR} ${CHOLMOD_INCLUDE_DIR})
 if (DSO_BUILD_STATIC_LIBRARY)
     message("--- dso static library selected.")
     add_library(dso ${dso_SOURCE_FILES} ${dso_opencv_SOURCE_FILES} ${dso_pangolin_SOURCE_FILES})
-    install (TARGETS dso ARCHIVE DESTINATION lib COMPONENT libraries)
+    install (TARGETS dso ARCHIVE DESTINATION ${LIBRARY_OUTPUT_PATH} COMPONENT libraries)
 else()
     message("--- dso dynamic library selected.")
     add_library(dso SHARED ${dso_SOURCE_FILES} ${dso_opencv_SOURCE_FILES} ${dso_pangolin_SOURCE_FILES})
@@ -126,7 +128,7 @@ else()
     if (HAS_OPENCV)
         target_link_libraries(dso ${OpenCV_LIBS})
     endif()
-    install (TARGETS dso LIBRARY DESTINATION lib COMPONENT libraries)
+    install (TARGETS dso LIBRARY DESTINATION ${LIBRARY_OUTPUT_PATH} COMPONENT libraries)
 endif()
 #set_property( TARGET dso APPEND_STRING PROPERTY COMPILE_FLAGS -Wall )
 
@@ -142,13 +144,13 @@ endif()
 
 file(GLOB dso_HEADER_FILES "${PROJECT_SOURCE_DIR}/src/FullSystem/*.h")
 
-install (FILES ${dso_HEADER_FILES} DESTINATION include/dso/FullSystem)
+install (FILES ${dso_HEADER_FILES} DESTINATION ${INCLUDE_OUTPUT_PATH}/FullSystem)
 
 file(GLOB dso_HEADER_FILES "${PROJECT_SOURCE_DIR}/src/OptimizationBackend/*.h")
 
-install (FILES ${dso_HEADER_FILES} DESTINATION include/dso/OptimizationBackend)
+install (FILES ${dso_HEADER_FILES} DESTINATION ${INCLUDE_OUTPUT_PATH}/OptimizationBackend)
 
 file(GLOB dso_HEADER_FILES "${PROJECT_SOURCE_DIR}/src/util/*.h")
 
-install (FILES ${dso_HEADER_FILES} DESTINATION include/dso/util)
+install (FILES ${dso_HEADER_FILES} DESTINATION ${INCLUDE_OUTPUT_PATH}/util)
 
