@@ -12,6 +12,7 @@ set(EXECUTABLE_OUTPUT_PATH bin)
 set(LIBRARY_OUTPUT_PATH lib)
 set(INCLUDE_OUTPUT_PATH include/dso)
 set(CMAKE_OUTPUT_PATH ${LIBRARY_OUTPUT_PATH}/cmake/dso)
+set(PKGCONFIG_OUTPUT_PATH ${LIBRARY_OUTPUT_PATH}/pkgconfig)
 set(CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake)
 
 # required libraries
@@ -36,6 +37,10 @@ if (MSVC)
      set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /EHsc")
 endif (MSVC)
 
+if(NOT WIN32)
+    option(DSO_BUILD_PKGCONFIG "Build pkg-config .pc file for DSO" ON)
+endif(NOT WIN32)
+
 # Sources files
 set(dso_SOURCE_FILES
   ${PROJECT_SOURCE_DIR}/src/FullSystem/FullSystem.cpp
@@ -58,7 +63,7 @@ set(dso_SOURCE_FILES
   ${PROJECT_SOURCE_DIR}/src/util/globalCalib.cpp
 )
 
-
+set(DSO_BOOST_LIBRARIES ${Boost_SYSTEM_LIBRARY} ${Boost_THREAD_LIBRARY})
 
 include_directories(
   ${PROJECT_SOURCE_DIR}/src
@@ -162,4 +167,46 @@ install (FILES ${dso_HEADER_FILES} DESTINATION ${INCLUDE_OUTPUT_PATH}/Optimizati
 file(GLOB dso_HEADER_FILES "${PROJECT_SOURCE_DIR}/src/util/*.h")
 
 install (FILES ${dso_HEADER_FILES} DESTINATION ${INCLUDE_OUTPUT_PATH}/util)
+
+macro(libraries_for_pkgconfig VARNAME)
+    foreach(__lib ${ARGN})
+        string(STRIP __lib ${__lib})
+        string(SUBSTRING ${__lib} 0 1 __lib_is_absolute)
+        if (__lib_is_absolute STREQUAL "/")
+            get_filename_component(__lib_path ${__lib} PATH)
+            get_filename_component(__lib_name ${__lib} NAME_WE)
+            string(REGEX REPLACE "^lib" "" __lib_name "${__lib_name}")
+            set(${VARNAME} "${${VARNAME}} -L${__lib_path} -l${__lib_name}")
+        else()
+            set(${VARNAME} "${${VARNAME}} ${__lib}")
+        endif()
+    endforeach()
+endmacro()
+
+# Generate pkgconfig pc file
+if(DSO_BUILD_PKGCONFIG)
+    if(EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/dso.pc.in)
+        message("-- Found: ${CMAKE_CURRENT_SOURCE_DIR}/dso.pc.in")
+
+        # Set the target name
+        set(TARGET_NAME dso)
+
+        # Dependency for DSO
+        libraries_for_pkgconfig(${TARGET_NAME}_PKGCONFIG_LIBS
+            ${DSO_BOOST_LIBRARIES} ${LIBZIP_LIBRARY} ${Pangolin_LIBRARIES}
+            ${OpenCV_LIBS})
+
+        set(${TARGET_NAME}_PKGCONFIG_CFLAGS "${${TARGET_NAME}_PKGCONFIG_CFLAGS} ${BOOST_CFLAGS_OTHER}")
+
+        set(PKGCONFIG_REQUIRES eigen3)
+        set(PKGCONFIG_CFLAGS ${${TARGET_NAME}_PKGCONFIG_CFLAGS})
+        set(PKGCONFIG_LIBS ${${TARGET_NAME}_PKGCONFIG_LIBS})
+
+        configure_file(dso.pc.in dso.pc @ONLY)
+        install(FILES ${CMAKE_CURRENT_BINARY_DIR}/dso.pc DESTINATION ${PKGCONFIG_OUTPUT_PATH})
+    else()
+        message("-- pkg-config: ${CMAKE_CURRENT_SOURCE_DIR}/dso.pc.in is not available for configuration")
+    endif()
+
+endif(DSO_BUILD_PKGCONFIG)
 
