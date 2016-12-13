@@ -155,6 +155,10 @@ file(GLOB dso_HEADER_FILES "${PROJECT_SOURCE_DIR}/src/OptimizationBackend/*.h")
 
 install (FILES ${dso_HEADER_FILES} DESTINATION ${INCLUDE_OUTPUT_PATH}/OptimizationBackend)
 
+file(GLOB dso_HEADER_FILES "${PROJECT_SOURCE_DIR}/src/IOWrapper/*.h")
+
+install (FILES ${dso_HEADER_FILES} DESTINATION ${INCLUDE_OUTPUT_PATH}/IOWrapper)
+
 file(GLOB dso_HEADER_FILES "${PROJECT_SOURCE_DIR}/src/util/*.h")
 
 install (FILES ${dso_HEADER_FILES} DESTINATION ${INCLUDE_OUTPUT_PATH}/util)
