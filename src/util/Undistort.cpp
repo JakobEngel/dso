@@ -846,7 +846,7 @@ void Undistort::readFromFile(const char* configFileName, int nPars, std::string 
             if(outputCalibration[0] == -3)
                 outputCalibration[0] = -1;  // crop instead of none, since probably resolution changed.
         }
-		if(benchmarkSetting_width != 0)
+        if(benchmarkSetting_height != 0)
         {
 			h = benchmarkSetting_height;
             if(outputCalibration[0] == -3)
