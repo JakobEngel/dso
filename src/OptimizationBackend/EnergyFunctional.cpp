@@ -287,7 +287,7 @@ void EnergyFunctional::resubstituteF_MT(VecX x, CalibHessian* HCalib, bool MT)
 }
 
 void EnergyFunctional::resubstituteFPt(
-		VecCf xc, Mat18f* xAd, int min, int max, Vec10* stats, int tid)
+        const VecCf &xc, Mat18f* xAd, int min, int max, Vec10* stats, int tid)
 {
 	for(int k=min;k<max;k++)
 	{

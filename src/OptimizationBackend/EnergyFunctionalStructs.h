@@ -102,6 +102,7 @@ enum EFPointStatus {PS_GOOD=0, PS_MARGINALIZE, PS_DROP};
 class EFPoint
 {
 public:
+    EIGEN_MAKE_ALIGNED_OPERATOR_NEW;
 	EFPoint(PointHessian* d, EFFrame* host_) : data(d),host(host_)
 	{
 		takeData();
@@ -142,6 +143,7 @@ public:
 class EFFrame
 {
 public:
+    EIGEN_MAKE_ALIGNED_OPERATOR_NEW;
 	EFFrame(FrameHessian* d) : data(d)
 	{
 		takeData();
