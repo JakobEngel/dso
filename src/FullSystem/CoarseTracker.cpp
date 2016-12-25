@@ -48,7 +48,6 @@ T* allocAligned(int size, std::vector<T*> &rawPtrVec)
     T* ptr = new T[size + padT];
     rawPtrVec.push_back(ptr);
     T* alignedPtr = (T*)(( ((uintptr_t)(ptr+padT)) >> b) << b);
-    printf("%p %p!\n", ptr, alignedPtr);
     return alignedPtr;
 }
 
