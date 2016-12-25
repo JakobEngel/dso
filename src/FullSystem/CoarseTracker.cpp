@@ -39,34 +39,48 @@
 
 namespace dso
 {
+
+
+template<int b, typename T>
+T* allocAligned(int size, std::vector<T*> &rawPtrVec)
+{
+    const int padT = 1 + ((1 << b)/sizeof(T));
+    T* ptr = new T[size + padT];
+    rawPtrVec.push_back(ptr);
+    T* alignedPtr = (T*)(( ((uintptr_t)(ptr+padT)) >> b) << b);
+    printf("%p %p!\n", ptr, alignedPtr);
+    return alignedPtr;
+}
+
+
 CoarseTracker::CoarseTracker(int ww, int hh) : lastRef_aff_g2l(0,0)
 {
 	// make coarse tracking templates.
 	for(int lvl=0; lvl<pyrLevelsUsed; lvl++)
 	{
 		int wl = ww>>lvl;
-		int hl = hh>>lvl;
-		idepth[lvl] = new float[wl*hl];
-		weightSums[lvl] = new float[wl*hl];
-		weightSums_bak[lvl] = new float[wl*hl];
+        int hl = hh>>lvl;
 
+        idepth[lvl] = allocAligned<4,float>(wl*hl, ptrToDelete);
+        weightSums[lvl] = allocAligned<4,float>(wl*hl, ptrToDelete);
+        weightSums_bak[lvl] = allocAligned<4,float>(wl*hl, ptrToDelete);
 
-		pc_u[lvl] = new float[wl*hl];
-		pc_v[lvl] = new float[wl*hl];
-		pc_idepth[lvl] = new float[wl*hl];
-		pc_color[lvl] = new float[wl*hl];
+        pc_u[lvl] = allocAligned<4,float>(wl*hl, ptrToDelete);
+        pc_v[lvl] = allocAligned<4,float>(wl*hl, ptrToDelete);
+        pc_idepth[lvl] = allocAligned<4,float>(wl*hl, ptrToDelete);
+        pc_color[lvl] = allocAligned<4,float>(wl*hl, ptrToDelete);
 
 	}
 
 	// warped buffers
-	buf_warped_idepth = new float[ww*hh];
-	buf_warped_u = new float[ww*hh];
-	buf_warped_v = new float[ww*hh];
-	buf_warped_dx = new float[ww*hh];
-	buf_warped_dy = new float[ww*hh];
-	buf_warped_residual = new float[ww*hh];
-	buf_warped_weight = new float[ww*hh];
-	buf_warped_refColor = new float[ww*hh];
+    buf_warped_idepth = allocAligned<4,float>(ww*hh, ptrToDelete);
+    buf_warped_u = allocAligned<4,float>(ww*hh, ptrToDelete);
+    buf_warped_v = allocAligned<4,float>(ww*hh, ptrToDelete);
+    buf_warped_dx = allocAligned<4,float>(ww*hh, ptrToDelete);
+    buf_warped_dy = allocAligned<4,float>(ww*hh, ptrToDelete);
+    buf_warped_residual = allocAligned<4,float>(ww*hh, ptrToDelete);
+    buf_warped_weight = allocAligned<4,float>(ww*hh, ptrToDelete);
+    buf_warped_refColor = allocAligned<4,float>(ww*hh, ptrToDelete);
 
 
 	newFrame = 0;
@@ -77,29 +91,9 @@ CoarseTracker::CoarseTracker(int ww, int hh) : lastRef_aff_g2l(0,0)
 }
 CoarseTracker::~CoarseTracker()
 {
-	for(int lvl=0; lvl<pyrLevelsUsed; lvl++)
-	{
-		delete[] idepth[lvl];
-		delete[] weightSums[lvl];
-		delete[] weightSums_bak[lvl];
-
-		delete[] pc_u[lvl];
-		delete[] pc_v[lvl] ;
-		delete[] pc_idepth[lvl];
-		delete[] pc_color[lvl];
-
-
-	}
-
-	delete[]  buf_warped_idepth;
-	delete[]  buf_warped_u;
-	delete[]  buf_warped_v;
-	delete[]  buf_warped_dx;
-	delete[]  buf_warped_dy;
-	delete[]  buf_warped_residual;
-	delete[]  buf_warped_weight;
-	delete[]  buf_warped_refColor;
-
+    for(float* ptr : ptrToDelete)
+        delete[] ptr;
+    ptrToDelete.clear();
 }
 
 void CoarseTracker::makeK(CalibHessian* HCalib)

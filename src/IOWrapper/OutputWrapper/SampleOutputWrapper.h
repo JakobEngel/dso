@@ -56,16 +56,16 @@ public:
             printf("OUT: Destroyed SampleOutputWrapper\n");
         }
 
-        virtual void publishGraph(const std::map<long,Eigen::Vector2i> &connectivity)
+        virtual void publishGraph(const std::map<uint64_t,Eigen::Vector2i> &connectivity)
         {
             printf("OUT: got graph with %d edges\n", (int)connectivity.size());
 
             int maxWrite = 5;
 
-            for(const std::pair<long,Eigen::Vector2i> &p : connectivity)
+            for(const std::pair<uint64_t,Eigen::Vector2i> &p : connectivity)
             {
                 int idHost = p.first>>32;
-                int idTarget = p.first & 0xFFFFFFFF;
+                int idTarget = p.first & ((uint64_t)0xFFFFFFFF);
                 printf("OUT: Example Edge %d -> %d has %d active and %d marg residuals\n", idHost, idTarget, p.second[0], p.second[1]);
                 maxWrite--;
                 if(maxWrite==0) break;

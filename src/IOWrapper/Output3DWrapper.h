@@ -127,7 +127,7 @@ public:
          *  Calling:
          *  Always called, no overhead if not used.
          */
-        virtual void publishGraph(const std::map<long,Eigen::Vector2i> &connectivity) {}
+        virtual void publishGraph(const std::map<uint64_t,Eigen::Vector2i> &connectivity) {}
 
 
 

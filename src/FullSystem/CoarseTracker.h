@@ -119,6 +119,10 @@ private:
 	float* buf_warped_refColor;
 	int buf_warped_n;
 
+
+    std::vector<float*> ptrToDelete;
+
+
 	Accumulator9 acc;
 };
 
