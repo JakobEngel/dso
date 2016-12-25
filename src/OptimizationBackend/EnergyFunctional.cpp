@@ -418,7 +418,7 @@ EFResidual* EnergyFunctional::insertResidual(PointFrameResidual* r)
 	efr->idxInAll = r->point->efPoint->residualsAll.size();
 	r->point->efPoint->residualsAll.push_back(efr);
 
-	connectivityMap[(((long)efr->host->frameID) << 32) + ((long)efr->target->frameID)][0]++;
+    connectivityMap[(((uint64_t)efr->host->frameID) << 32) + ((uint64_t)efr->target->frameID)][0]++;
 
 	nResiduals++;
 	r->efResidual = efr;
@@ -450,9 +450,9 @@ EFFrame* EnergyFunctional::insertFrame(FrameHessian* fh, CalibHessian* Hcalib)
 
 	for(EFFrame* fh2 : frames)
 	{
-		connectivityMap[(((long)eff->frameID) << 32) + ((long)fh2->frameID)] = Eigen::Vector2i(0,0);
+        connectivityMap[(((uint64_t)eff->frameID) << 32) + ((uint64_t)fh2->frameID)] = Eigen::Vector2i(0,0);
 		if(fh2 != eff)
-			connectivityMap[(((long)fh2->frameID) << 32) + ((long)eff->frameID)] = Eigen::Vector2i(0,0);
+            connectivityMap[(((uint64_t)fh2->frameID) << 32) + ((uint64_t)eff->frameID)] = Eigen::Vector2i(0,0);
 	}
 
 	return eff;
@@ -488,7 +488,7 @@ void EnergyFunctional::dropResidual(EFResidual* r)
 		r->host->data->shell->statistics_outlierResOnThis++;
 
 
-	connectivityMap[(((long)r->host->frameID) << 32) + ((long)r->target->frameID)][0]--;
+    connectivityMap[(((uint64_t)r->host->frameID) << 32) + ((uint64_t)r->target->frameID)][0]--;
 	nResiduals--;
 	r->data->efResidual=0;
 	delete r;
@@ -628,7 +628,7 @@ void EnergyFunctional::marginalizePointsF()
 				p->priorF *= setting_idepthFixPriorMargFac;
 				for(EFResidual* r : p->residualsAll)
 					if(r->isActive())
-						connectivityMap[(((long)r->host->frameID) << 32) + ((long)r->target->frameID)][1]++;
+                        connectivityMap[(((uint64_t)r->host->frameID) << 32) + ((uint64_t)r->target->frameID)][1]++;
 				allPointsToMarg.push_back(p);
 			}
 		}
