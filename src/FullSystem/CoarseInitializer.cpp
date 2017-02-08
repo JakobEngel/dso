@@ -346,6 +346,16 @@ Vec3f CoarseInitializer::calcResAndGS(
 	acc9.initialize();
 	E.initialize();
 
+	EIGEN_ALIGN16 VecNRf dp0;
+	EIGEN_ALIGN16 VecNRf dp1;
+	EIGEN_ALIGN16 VecNRf dp2;
+	EIGEN_ALIGN16 VecNRf dp3;
+	EIGEN_ALIGN16 VecNRf dp4;
+	EIGEN_ALIGN16 VecNRf dp5;
+	EIGEN_ALIGN16 VecNRf dp6;
+	EIGEN_ALIGN16 VecNRf dp7;
+	EIGEN_ALIGN16 VecNRf dd;
+	EIGEN_ALIGN16 VecNRf r;
 
 	int npts = numPoints[lvl];
 	Pnt* ptsl = points[lvl];
@@ -363,16 +373,6 @@ Vec3f CoarseInitializer::calcResAndGS(
 			continue;
 		}
 
-		EIGEN_ALIGN16 VecNRf dp0;
-		EIGEN_ALIGN16 VecNRf dp1;
-		EIGEN_ALIGN16 VecNRf dp2;
-		EIGEN_ALIGN16 VecNRf dp3;
-		EIGEN_ALIGN16 VecNRf dp4;
-		EIGEN_ALIGN16 VecNRf dp5;
-		EIGEN_ALIGN16 VecNRf dp6;
-		EIGEN_ALIGN16 VecNRf dp7;
-		EIGEN_ALIGN16 VecNRf dd;
-		EIGEN_ALIGN16 VecNRf r;
 		JbBuffer_new[i].setZero();
 
 		// sum over all residuals.
