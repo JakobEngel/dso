@@ -363,16 +363,16 @@ Vec3f CoarseInitializer::calcResAndGS(
 			continue;
 		}
 
-		EIGEN_ALIGN16 VecNRf dp0;
-		EIGEN_ALIGN16 VecNRf dp1;
-		EIGEN_ALIGN16 VecNRf dp2;
-		EIGEN_ALIGN16 VecNRf dp3;
-		EIGEN_ALIGN16 VecNRf dp4;
-		EIGEN_ALIGN16 VecNRf dp5;
-		EIGEN_ALIGN16 VecNRf dp6;
-		EIGEN_ALIGN16 VecNRf dp7;
-		EIGEN_ALIGN16 VecNRf dd;
-		EIGEN_ALIGN16 VecNRf r;
+        EIGEN_ALIGN32 VecNRf dp0;
+        EIGEN_ALIGN32 VecNRf dp1;
+        EIGEN_ALIGN32 VecNRf dp2;
+        EIGEN_ALIGN32 VecNRf dp3;
+        EIGEN_ALIGN32 VecNRf dp4;
+        EIGEN_ALIGN32 VecNRf dp5;
+        EIGEN_ALIGN32 VecNRf dp6;
+        EIGEN_ALIGN32 VecNRf dp7;
+        EIGEN_ALIGN32 VecNRf dd;
+        EIGEN_ALIGN32 VecNRf r;
 		JbBuffer_new[i].setZero();
 
 		// sum over all residuals.
