@@ -391,7 +391,7 @@ double FullSystem::calcMEnergy()
 }
 
 
-void FullSystem::printOptRes(Vec3 res, double resL, double resM, double resPrior, double LExact, float a, float b)
+void FullSystem::printOptRes(const Vec3 &res, double resL, double resM, double resPrior, double LExact, float a, float b)
 {
 	printf("A(%f)=(AV %.3f). Num: A(%'d) + M(%'d); ab %f %f!\n",
 			res[0],
@@ -655,11 +655,11 @@ void FullSystem::removeOutliers()
 
 
 
-std::vector<VecX> FullSystem::getNullspaces(
-		std::vector<VecX> &nullspaces_pose,
-		std::vector<VecX> &nullspaces_scale,
-		std::vector<VecX> &nullspaces_affA,
-		std::vector<VecX> &nullspaces_affB)
+vectorA<VecX> FullSystem::getNullspaces(
+		vectorA<VecX> &nullspaces_pose,
+		vectorA<VecX> &nullspaces_scale,
+		vectorA<VecX> &nullspaces_affA,
+		vectorA<VecX> &nullspaces_affB)
 {
 	nullspaces_pose.clear();
 	nullspaces_scale.clear();
@@ -668,7 +668,7 @@ std::vector<VecX> FullSystem::getNullspaces(
 
 
 	int n=CPARS+frameHessians.size()*8;
-	std::vector<VecX> nullspaces_x0_pre;
+	vectorA<VecX> nullspaces_x0_pre;
 	for(int i=0;i<6;i++)
 	{
 		VecX nullspace_x0(n);

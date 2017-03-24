@@ -208,7 +208,7 @@ FullSystem::~FullSystem()
 	delete ef;
 }
 
-void FullSystem::setOriginalCalib(VecXf originalCalib, int originalW, int originalH)
+void FullSystem::setOriginalCalib(const VecXf &originalCalib, int originalW, int originalH)
 {
 
 }
@@ -1446,7 +1446,7 @@ void FullSystem::printEigenValLine()
 		variancesLog->flush();
 	}
 
-	std::vector<VecX> &nsp = ef->lastNullspaces_forLogging;
+	vectorA<VecX> &nsp = ef->lastNullspaces_forLogging;
 	(*nullspacesLog) << allKeyFramesHistory.back()->id << " ";
 	for(unsigned int i=0;i<nsp.size();i++)
 		(*nullspacesLog) << nsp[i].dot(ef->lastHS * nsp[i]) << " " << nsp[i].dot(ef->lastbS) << " " ;

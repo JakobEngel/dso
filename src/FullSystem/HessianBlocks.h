@@ -40,7 +40,7 @@ namespace dso
 {
 
 
-inline Vec2 affFromTo(Vec2 from, Vec2 to)	// contains affine parameters as XtoWorld.
+inline Vec2 affFromTo(const Vec2 &from, const Vec2 &to)	// contains affine parameters as XtoWorld.
 {
 	return Vec2(from[0] / to[0], (from[1] - to[1]) / to[0]);
 }
@@ -175,8 +175,8 @@ struct FrameHessian
 
 
 
-	void setStateZero(Vec10 state_zero);
-	inline void setState(Vec10 state)
+	void setStateZero(const Vec10 &state_zero);
+	inline void setState(const Vec10 &state)
 	{
 
 		this->state = state;
@@ -191,7 +191,7 @@ struct FrameHessian
 		PRE_camToWorld = PRE_worldToCam.inverse();
 		//setCurrentNullspace();
 	};
-	inline void setStateScaled(Vec10 state_scaled)
+	inline void setStateScaled(const Vec10 &state_scaled)
 	{
 
 		this->state_scaled = state_scaled;
@@ -206,7 +206,7 @@ struct FrameHessian
 		PRE_camToWorld = PRE_worldToCam.inverse();
 		//setCurrentNullspace();
 	};
-	inline void setEvalPT(SE3 worldToCam_evalPT, Vec10 state)
+	inline void setEvalPT(const SE3 &worldToCam_evalPT, const Vec10 &state)
 	{
 
 		this->worldToCam_evalPT = worldToCam_evalPT;
@@ -216,7 +216,7 @@ struct FrameHessian
 
 
 
-	inline void setEvalPT_scaled(SE3 worldToCam_evalPT, AffLight aff_g2l)
+	inline void setEvalPT_scaled(const SE3 &worldToCam_evalPT, const AffLight &aff_g2l)
 	{
 		Vec10 initial_state = Vec10::Zero();
 		initial_state[6] = aff_g2l.a;
@@ -343,7 +343,7 @@ struct CalibHessian
 
 
 
-	inline void setValue(VecC value)
+	inline void setValue(const VecC &value)
 	{
 		// [0-3: Kl, 4-7: Kr, 8-12: l2r]
 		this->value = value;
@@ -360,7 +360,7 @@ struct CalibHessian
 		this->value_minus_value_zero = this->value - this->value_zero;
 	};
 
-	inline void setValueScaled(VecC value_scaled)
+	inline void setValueScaled(const VecC &value_scaled)
 	{
 		this->value_scaled = value_scaled;
 		this->value_scaledf = this->value_scaled.cast<float>();
