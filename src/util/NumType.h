@@ -27,10 +27,12 @@
 #include "Eigen/Core"
 #include "sophus/sim3.hpp"
 #include "sophus/se3.hpp"
-
+#include <vector>
 
 namespace dso
 {
+template <class T, class Allocator =  Eigen::aligned_allocator<std::pair<const int,T>>   >
+using vectorA = std::vector< T, Allocator > ;
 
 // CAMERA MODEL TO USE
 

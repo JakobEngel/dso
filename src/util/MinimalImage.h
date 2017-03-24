@@ -34,6 +34,7 @@ template<typename T>
 class MinimalImage
 {
 public:
+	EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 	int w;
 	int h;
 	T* data;
