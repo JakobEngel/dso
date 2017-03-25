@@ -655,11 +655,11 @@ void FullSystem::removeOutliers()
 
 
 
-vectorA<VecX> FullSystem::getNullspaces(
-		vectorA<VecX> &nullspaces_pose,
-		vectorA<VecX> &nullspaces_scale,
-		vectorA<VecX> &nullspaces_affA,
-		vectorA<VecX> &nullspaces_affB)
+std::vector<VecX> FullSystem::getNullspaces(
+		std::vector<VecX> &nullspaces_pose,
+		std::vector<VecX> &nullspaces_scale,
+		std::vector<VecX> &nullspaces_affA,
+		std::vector<VecX> &nullspaces_affB)
 {
 	nullspaces_pose.clear();
 	nullspaces_scale.clear();
@@ -668,7 +668,7 @@ vectorA<VecX> FullSystem::getNullspaces(
 
 
 	int n=CPARS+frameHessians.size()*8;
-	vectorA<VecX> nullspaces_x0_pre;
+	std::vector<VecX> nullspaces_x0_pre;
 	for(int i=0;i<6;i++)
 	{
 		VecX nullspace_x0(n);

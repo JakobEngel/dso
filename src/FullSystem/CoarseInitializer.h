@@ -78,7 +78,7 @@ public:
 
 class CoarseInitializer {
 public:
-	EIGEN_MAKE_ALIGNED_OPERATOR_NEW
+	EIGEN_MAKE_ALIGNED_OPERATOR_NEW;
 	CoarseInitializer(int w, int h);
 	~CoarseInitializer();
 
