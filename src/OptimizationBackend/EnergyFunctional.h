@@ -105,11 +105,11 @@ public:
 	MatXX lastHS;
 	VecX lastbS;
 	VecX lastX;
-	vectorA<VecX> lastNullspaces_forLogging;
-	vectorA<VecX> lastNullspaces_pose;
-	vectorA<VecX> lastNullspaces_scale;
-	vectorA<VecX> lastNullspaces_affA;
-	vectorA<VecX> lastNullspaces_affB;
+	std::vector<VecX> lastNullspaces_forLogging;
+	std::vector<VecX> lastNullspaces_pose;
+	std::vector<VecX> lastNullspaces_scale;
+	std::vector<VecX> lastNullspaces_affA;
+	std::vector<VecX> lastNullspaces_affB;
 
 	IndexThreadReduce<Vec10>* red;
 

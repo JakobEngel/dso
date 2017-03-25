@@ -1446,7 +1446,7 @@ void FullSystem::printEigenValLine()
 		variancesLog->flush();
 	}
 
-	vectorA<VecX> &nsp = ef->lastNullspaces_forLogging;
+	std::vector<VecX> &nsp = ef->lastNullspaces_forLogging;
 	(*nullspacesLog) << allKeyFramesHistory.back()->id << " ";
 	for(unsigned int i=0;i<nsp.size();i++)
 		(*nullspacesLog) << nsp[i].dot(ef->lastHS * nsp[i]) << " " << nsp[i].dot(ef->lastbS) << " " ;

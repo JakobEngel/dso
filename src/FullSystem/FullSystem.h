@@ -209,11 +209,11 @@ private:
 
 	void debugPlotTracking();
 
-	vectorA<VecX> getNullspaces(
-			vectorA<VecX> &nullspaces_pose,
-			vectorA<VecX> &nullspaces_scale,
-			vectorA<VecX> &nullspaces_affA,
-			vectorA<VecX> &nullspaces_affB);
+	std::vector<VecX> getNullspaces(
+			std::vector<VecX> &nullspaces_pose,
+			std::vector<VecX> &nullspaces_scale,
+			std::vector<VecX> &nullspaces_affA,
+			std::vector<VecX> &nullspaces_affB);
 
 	void setNewFrameEnergyTH();
 
