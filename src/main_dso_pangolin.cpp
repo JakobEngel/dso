@@ -354,8 +354,6 @@ void parseArgument(char* arg)
 int main( int argc, char** argv )
 {
 	//setlocale(LC_ALL, "");
-	printf( "EIGEN_IDEAL_MAX_ALIGN_BYTES,EIGEN_MAX_STATIC_ALIGN_BYTES,EIGEN_MAX_ALIGN_BYTES=%d,%d,%d\n",EIGEN_IDEAL_MAX_ALIGN_BYTES,EIGEN_MAX_STATIC_ALIGN_BYTES,EIGEN_MAX_ALIGN_BYTES
-		);
 	for(int i=1; i<argc;i++)
 		parseArgument(argv[i]);
 
