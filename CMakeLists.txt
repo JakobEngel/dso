@@ -31,6 +31,10 @@ set(CMAKE_CXX_FLAGS
 #   "${SSE_FLAGS} -O3 -g -std=c++0x -fno-omit-frame-pointer"
 )
 
+if (MSVC)
+     set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /EHsc")
+endif (MSVC)
+
 # Sources files
 set(dso_SOURCE_FILES
   ${PROJECT_SOURCE_DIR}/src/FullSystem/FullSystem.cpp

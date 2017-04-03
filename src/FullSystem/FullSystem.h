@@ -25,6 +25,7 @@
 #pragma once
 #define MAX_ACTIVE_FRAMES 100
 
+#include <deque>
 #include "util/NumType.h"
 #include "util/globalCalib.h"
 #include "vector"
