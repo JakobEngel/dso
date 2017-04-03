@@ -391,7 +391,7 @@ double FullSystem::calcMEnergy()
 }
 
 
-void FullSystem::printOptRes(Vec3 res, double resL, double resM, double resPrior, double LExact, float a, float b)
+void FullSystem::printOptRes(const Vec3 &res, double resL, double resM, double resPrior, double LExact, float a, float b)
 {
 	printf("A(%f)=(AV %.3f). Num: A(%'d) + M(%'d); ab %f %f!\n",
 			res[0],

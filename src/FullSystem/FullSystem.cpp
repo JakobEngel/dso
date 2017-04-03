@@ -208,7 +208,7 @@ FullSystem::~FullSystem()
 	delete ef;
 }
 
-void FullSystem::setOriginalCalib(VecXf originalCalib, int originalW, int originalH)
+void FullSystem::setOriginalCalib(const VecXf &originalCalib, int originalW, int originalH)
 {
 
 }
