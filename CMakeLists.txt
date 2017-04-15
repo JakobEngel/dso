@@ -22,6 +22,8 @@ find_package(LibZip QUIET)
 find_package(Pangolin 0.2 QUIET)
 find_package(OpenCV QUIET)
 
+#checking for ROS
+find_package(roscpp QUIET)
 
 
 # flags
@@ -65,6 +67,16 @@ include_directories(
   ${EIGEN3_INCLUDE_DIR}
 ) 
 
+# decide if we have ROS
+if(NOT roscpp_FOUND)
+  set(roscpp_LIBRARIES "")
+  message(STATUS "Couldn't find roscpp.")
+else()
+  message(STATUS "Found roscpp installed at ${roscpp_DIR}.")
+  include_directories(${roscpp_INCLUDE_DIRS})
+  add_definitions(-DHAS_ROS=1)
+  
+endif()
 
 # decide if we have pangolin
 if (Pangolin_FOUND)
@@ -120,7 +132,7 @@ add_library(dso ${dso_SOURCE_FILES} ${dso_opencv_SOURCE_FILES} ${dso_pangolin_SO
 if (OpenCV_FOUND AND Pangolin_FOUND)
 	message("--- compiling dso_dataset.")
 	add_executable(dso_dataset ${PROJECT_SOURCE_DIR}/src/main_dso_pangolin.cpp )
-    target_link_libraries(dso_dataset dso boost_system boost_thread cxsparse ${LIBZIP_LIBRARY} ${Pangolin_LIBRARIES} ${OpenCV_LIBS})
+    target_link_libraries(dso_dataset dso boost_system boost_thread cxsparse ${LIBZIP_LIBRARY} ${Pangolin_LIBRARIES} ${OpenCV_LIBS} ${roscpp_LIBRARIES})
 else()
 	message("--- not building dso_dataset, since either don't have openCV or Pangolin.")
 endif()
