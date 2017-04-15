@@ -21,7 +21,7 @@
 * along with DSO. If not, see <http://www.gnu.org/licenses/>.
 */
 
-
+#define EIGEN_ALIGN32 EIGEN_ALIGN_TO_BOUNDARY(32)
 #pragma once
 
 #include "util/NumType.h"
@@ -142,7 +142,7 @@ private:
 			int lvl,
 			Mat88f &H_out, Vec8f &b_out,
 			Mat88f &H_out_sc, Vec8f &b_out_sc,
-			const SE3 &refToNew, AffLight refToNew_aff,
+			SE3 refToNew, AffLight refToNew_aff,
 			bool plot);
 	Vec3f calcEC(int lvl); // returns OLD NERGY, NEW ENERGY, NUM TERMS.
 	void optReg(int lvl);
