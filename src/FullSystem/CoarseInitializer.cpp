@@ -325,7 +325,7 @@ void CoarseInitializer::debugPlot(int lvl, std::vector<IOWrap::Output3DWrapper*>
 Vec3f CoarseInitializer::calcResAndGS(
 		int lvl, Mat88f &H_out, Vec8f &b_out,
 		Mat88f &H_out_sc, Vec8f &b_out_sc,
-		const SE3 &refToNew, AffLight refToNew_aff,
+		SE3 refToNew, AffLight refToNew_aff,
 		bool plot)
 {
 	int wl = w[lvl], hl = h[lvl];
@@ -363,16 +363,16 @@ Vec3f CoarseInitializer::calcResAndGS(
 			continue;
 		}
 
-        VecNRf dp0;
-        VecNRf dp1;
-        VecNRf dp2;
-        VecNRf dp3;
-        VecNRf dp4;
-        VecNRf dp5;
-        VecNRf dp6;
-        VecNRf dp7;
-        VecNRf dd;
-        VecNRf r;
+        EIGEN_ALIGN32 VecNRf dp0;
+        EIGEN_ALIGN32 VecNRf dp1;
+        EIGEN_ALIGN32 VecNRf dp2;
+        EIGEN_ALIGN32 VecNRf dp3;
+        EIGEN_ALIGN32 VecNRf dp4;
+        EIGEN_ALIGN32 VecNRf dp5;
+        EIGEN_ALIGN32 VecNRf dp6;
+        EIGEN_ALIGN32 VecNRf dp7;
+        EIGEN_ALIGN32 VecNRf dd;
+        EIGEN_ALIGN32 VecNRf r;
 		JbBuffer_new[i].setZero();
 
 		// sum over all residuals.
