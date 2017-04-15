@@ -25,7 +25,6 @@
 #pragma once
 #define MAX_ACTIVE_FRAMES 100
 
-#include <deque>
 #include "util/NumType.h"
 #include "util/globalCalib.h"
 #include "vector"
@@ -106,7 +105,7 @@ template<typename T> inline void deleteOutOrder(std::vector<T*> &v, const T* ele
 }
 
 
-inline bool eigenTestNan(const MatXX &m, std::string msg)
+inline bool eigenTestNan(MatXX m, std::string msg)
 {
 	bool foundNan = false;
 	for(int y=0;y<m.rows();y++)
@@ -131,7 +130,7 @@ inline bool eigenTestNan(const MatXX &m, std::string msg)
 
 class FullSystem {
 public:
-	EIGEN_MAKE_ALIGNED_OPERATOR_NEW
+	EIGEN_MAKE_ALIGNED_OPERATOR_NEW;
 	FullSystem();
 	virtual ~FullSystem();
 
@@ -160,7 +159,7 @@ public:
 
 
 	void setGammaFunction(float* BInv);
-	void setOriginalCalib(const VecXf &originalCalib, int originalW, int originalH);
+	void setOriginalCalib(VecXf originalCalib, int originalW, int originalH);
 
 private:
 
@@ -206,7 +205,7 @@ private:
 	void activatePointsMT_Reductor(std::vector<PointHessian*>* optimized,std::vector<ImmaturePoint*>* toOptimize,int min, int max, Vec10* stats, int tid);
 	void applyRes_Reductor(bool copyJacobians, int min, int max, Vec10* stats, int tid);
 
-	void printOptRes(const Vec3 &res, double resL, double resM, double resPrior, double LExact, float a, float b);
+	void printOptRes(Vec3 res, double resL, double resM, double resPrior, double LExact, float a, float b);
 
 	void debugPlotTracking();
 
