@@ -32,6 +32,12 @@
 #include "FullSystem/FullSystem.h"
 #include "FullSystem/ImmaturePoint.h"
 
+#include <opencv2/highgui/highgui.hpp>
+
+
+#ifdef HAS_ROS
+	#include <ros/ros.h>
+#endif
 namespace dso
 {
 namespace IOWrap
@@ -291,8 +297,12 @@ void PangolinDSOViewer::run()
 
 	printf("QUIT Pangolin thread!\n");
 	printf("I'll just kill the whole process.\nSo Long, and Thanks for All the Fish!\n");
-
-	exit(1);
+		
+	#ifdef HAS_ROS
+		ros::shutdown();
+	#else
+		exit(1);
+	#endif
 }
 
 
