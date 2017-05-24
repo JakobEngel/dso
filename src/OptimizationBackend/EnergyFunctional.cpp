@@ -30,7 +30,9 @@
 #include "OptimizationBackend/AccumulatedSCHessian.h"
 #include "OptimizationBackend/AccumulatedTopHessian.h"
 
-
+#ifndef __SSE3__
+#include "SSE2NEON.h"
+#endif
 
 namespace dso
 {

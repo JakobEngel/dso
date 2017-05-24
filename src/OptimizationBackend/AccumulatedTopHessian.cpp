@@ -27,6 +27,10 @@
 #include "OptimizationBackend/EnergyFunctionalStructs.h"
 #include <iostream>
 
+#ifndef __SSE3__
+#include "SSE2NEON.h"
+#endif
+
 namespace dso
 {
 

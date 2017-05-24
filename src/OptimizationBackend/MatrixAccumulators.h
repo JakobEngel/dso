@@ -25,6 +25,9 @@
 #pragma once
 #include "util/NumType.h"
 
+#ifndef __SSE3__
+#include "SSE2NEON.h"
+#endif
 
 namespace dso
 {

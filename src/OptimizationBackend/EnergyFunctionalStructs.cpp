@@ -28,7 +28,9 @@
 #include "FullSystem/HessianBlocks.h"
 #include "FullSystem/Residuals.h"
 
-
+#ifndef __SSE3__
+#include "SSE2NEON.h"
+#endif
 
 namespace dso
 {

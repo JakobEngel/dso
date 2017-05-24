@@ -22,8 +22,6 @@ find_package(LibZip QUIET)
 find_package(Pangolin 0.2 QUIET)
 find_package(OpenCV QUIET)
 
-
-
 # flags
 add_definitions("-DENABLE_SSE")
 set(CMAKE_CXX_FLAGS
@@ -62,6 +60,7 @@ set(dso_SOURCE_FILES
 include_directories(
   ${PROJECT_SOURCE_DIR}/src
   ${PROJECT_SOURCE_DIR}/thirdparty/Sophus
+  ${PROJECT_SOURCE_DIR}/thirdparty/sse2neon
   ${EIGEN3_INCLUDE_DIR}
 ) 
 

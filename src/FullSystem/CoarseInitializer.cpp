@@ -37,6 +37,9 @@
 #include "FullSystem/PixelSelector2.h"
 #include "util/nanoflann.h"
 
+#ifndef __SSE3__
+#include "SSE2NEON.h"
+#endif
 
 namespace dso
 {
