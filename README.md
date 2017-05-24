@@ -61,6 +61,9 @@ to unzip the dataset image archives before loading them).
 	sudo make install
 	sudo cp lib/zipconf.h /usr/local/include/zipconf.h   # (no idea why that is needed).
 
+##### sse2neon (required for ARM builds).
+After cloning, just run `git submodule update --init` to include this.  It translates Intel-native SSE functions to ARM-native NEON functions during the compilation process.
+
 #### 2.3 Build
 
 		cd dso
