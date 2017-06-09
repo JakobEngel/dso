@@ -1076,7 +1076,7 @@ UndistortEquidistant::UndistortEquidistant(const char* configFileName, bool nopr
     if(noprefix)
         readFromFile(configFileName, 8);
     else
-        readFromFile(configFileName, 8,"Equidistant ");
+        readFromFile(configFileName, 8,"EquiDistant ");
 }
 UndistortEquidistant::~UndistortEquidistant()
 {

@@ -140,7 +140,7 @@ However, it should be easy to adapt it to your needs, if required. The binary is
 
 ###### Calibration File for Equidistant camera model
 
-    Equidistant fx fy cx cy k1 k2 r1 r2
+    EquiDistant fx fy cx cy k1 k2 r1 r2
     in_width in_height
     "crop" / "full" / "fx fy cx cy 0"
     out_width out_height
