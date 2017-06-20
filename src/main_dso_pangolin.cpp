@@ -70,6 +70,7 @@ int mode=0;
 
 bool firstRosSpin=false;
 
+
 using namespace dso;
 
 
@@ -342,6 +343,34 @@ void parseArgument(char* arg)
 			setting_affineOptModeA = -1; //-1: fix. >=0: optimize (with prior, if > 0).
 			setting_affineOptModeB = -1; //-1: fix. >=0: optimize (with prior, if > 0).
             setting_minGradHistAdd=3;
+		}
+		return;
+	}
+
+
+	if(1==sscanf(arg,"detectionType=%d",&option))
+	{
+
+		detectionType = option;
+		if(option==0)
+		{
+			printf("Original feature detection!\n");
+		}
+		if(option==1)
+		{
+			printf("Their FAST!\n");
+
+            if(1==sscanf(arg,"detectionTypeFastThreshold=%d",&option))
+            {
+                detectionTypeFastThreshold = option;
+            }
+            else
+                detectionTypeFastThreshold = 20;
+
+		}
+		if(option==2)
+		{
+			printf("Our method - TODO!\n");
 		}
 		return;
 	}

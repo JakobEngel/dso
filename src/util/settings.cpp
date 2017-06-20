@@ -192,9 +192,13 @@ bool disableAllDisplay = false;
 bool setting_onlyLogKFPoses = true;
 bool setting_logStuff = true;
 
+int detectionType = 0;
+int detectionTypeFastThreshold = 20;
 
 
-bool goStepByStep = false;
+
+
+	bool goStepByStep = false;
 
 
 bool setting_render_displayCoarseTrackingFull=false;
