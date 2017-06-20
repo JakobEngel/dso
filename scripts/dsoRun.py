@@ -82,7 +82,7 @@ for (det, detTh) in zip(detecitonTypes, detectionTypeFastThreshold):
 
 for seq in sequences:
 
-	for (det, detTh) in zip(detecitonTypes, detectionTypeFastThreshold):
+	for (det, detTh) in zip(detectionTypes, detectionTypeFastThreshold):
 		
 		for runId in range(0, runsPerSequence):
 			print("Current sequence: " + seq);
