@@ -73,6 +73,12 @@ mainDatasetPath = '/mnt/data/Datasets/dso';
 detectionTypes = [0, 1, 1, 1, 1];
 detectionTypeFastThreshold = [-1, 20, 15, 10, 5];
 
+# Clear the results directories
+for (det, detTh) in zip(detecitonTypes, detectionTypeFastThreshold):
+	if not os.path.exists("results/det_"+str(det)+"_"+str(detTh)):
+		os.makedirs("results/det_"+str(det)+"_"+str(detTh));	
+	else:
+		call('rm results/det_'+str(det)+'_'+str(detTh) +'/*', shell=True);
 
 for seq in sequences:
 
@@ -84,11 +90,6 @@ for seq in sequences:
 			# Copy to currently used settings
 			call('./dso_dataset files='+mainDatasetPath+'/sequence_'+ seq +'/images.zip calib='+mainDatasetPath+'/sequence_'+ seq +'/camera.txt gamma='+mainDatasetPath+'/sequence_'+ seq +'/pcalib.txt vignette='+mainDatasetPath+'/sequence_'+ seq +'/vignette.png preset=0 mode=0 nogui=1 reverse=0 quiet=1 detectionType=' + str(det) + ' detectionTypeFastThreshold=' + str(detTh), shell=True);	
 		
-			if not os.path.exists("results/det_"+str(det)+"_"+str(detTh)):
-				os.makedirs("results/det_"+str(det)+"_"+str(detTh));	
-			else:
-				call('rm results/det_'+str(det)+'_'+str(detTh) +'/*', shell=True);
-
 			# Run software
 			call('mv result.txt results/det_'+str(det)+'_'+str(detTh) +'/sequence_' + str(seq) + '_' + str(runId) + '.txt', shell=True);
 
