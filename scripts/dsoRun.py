@@ -15,28 +15,28 @@ else:
 
 
 sequences = [
-# '01', \
-# '02', \
-# '03', \
-# '04', \
-# '05', \
-# '06', \
-# '07', \
-# '08', \
-# '09', \
-# '10', \
-# '11', \
-# '12', \
-# '13', \
-# '14', \
-# '15', \
-# '16', \
-# '17', \
-# '18', \
-# '19', \
-# '20', \
-# '21', \
-# '22', \
+'01', \
+'02', \
+'03', \
+'04', \
+'05', \
+'06', \
+'07', \
+'08', \
+'09', \
+'10', \
+'11', \
+'12', \
+'13', \
+'14', \
+'15', \
+'16', \
+'17', \
+'18', \
+'19', \
+'20', \
+'21', \
+'22', \
 '23', \
 '24', \
 '25', \
@@ -71,8 +71,8 @@ runsPerSequence = 1;
 
 mainDatasetPath = '/mnt/data/Datasets/dso';
 
-detectionTypes = [2, 1, 1, 1];
-detectionTypeFastThreshold = [0, 15, 10, 5];
+detectionTypes = [2];#, 1, 1, 1];
+detectionTypeFastThreshold = [0];#[0, 15, 10, 5];
 
 # Clear the results directories
 for (det, detTh) in zip(detectionTypes, detectionTypeFastThreshold):
