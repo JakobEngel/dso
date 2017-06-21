@@ -58,22 +58,10 @@ PixelSelector::PixelSelector(int w, int h)
 	allowFast=true;
 	gradHistFrame=0;
 
-
-    // TODO: We can test the influence of those settings on final result
-    static const int nFeatures = 2000;//fSettings["ORBextractor.nFeatures"];
-    static const float fScaleFactor = 1.2;//fSettings["ORBextractor.scaleFactor"];
-    static const int nLevels = 8;//fSettings["ORBextractor.nLevels"];
-    static const int fIniThFAST = 20;//fSettings["ORBextractor.iniThFAST"];
-    static const int fMinThFAST = 7;//fSettings["ORBextractor.minThFAST"];
-
-    if(detectionType == 2)
-        oRBextractor = new ORB_SLAM2::ORBextractor(nFeatures,fScaleFactor,nLevels,fIniThFAST,fMinThFAST);
 }
 
 PixelSelector::~PixelSelector()
 {
-	if(detectionType == 2)
-    	delete oRBextractor;
 	delete[] randomPattern;
 	delete[] gradHist;
 	delete[] ths;
@@ -246,6 +234,15 @@ int PixelSelector::makeMaps(
 	}
     else if (detectionType == 2){
 
+        // TODO: We can test the influence of those settings on final result
+        //static const int nFeatures = 2000;//fSettings["ORBextractor.nFeatures"];
+        static const float fScaleFactor = 1.2;//fSettings["ORBextractor.scaleFactor"];
+        static const int nLevels = 8;//fSettings["ORBextractor.nLevels"];
+        static const int fIniThFAST = 20;//fSettings["ORBextractor.iniThFAST"];
+        static const int fMinThFAST = 7;//fSettings["ORBextractor.minThFAST"];
+
+        oRBextractor = new ORB_SLAM2::ORBextractor(numWant,fScaleFactor,nLevels,fIniThFAST,fMinThFAST);
+
         memset(map_out, 0, sizeof(float)*wG[0]*hG[0]);
         cv::Mat img8u(hG[0],wG[0],CV_8U);
         for(int i=0;i<wG[0]*hG[0];i++)
@@ -273,6 +270,7 @@ int PixelSelector::makeMaps(
         printf("ORBSLAM selection: got %f / %f!\n", numHave, numWant);
         quotia = numWant / numHave;
 
+        delete oRBextractor;
     }
 
 	int numHaveSub = numHave;
