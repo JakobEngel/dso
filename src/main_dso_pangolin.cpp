@@ -371,11 +371,13 @@ void parseArgument(char* arg)
     {
 		detectionTypeFastThreshold = option;
         printf("Setting detectonTypeFastThreshold=%d!\n", detectionTypeFastThreshold);
+		return;
 
     }
     else {
         printf("DetectonTypeFastThreshold=20 -> not provided in params!\n");
         detectionTypeFastThreshold = 20;
+		return;
     }
 
 
