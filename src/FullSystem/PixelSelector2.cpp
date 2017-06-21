@@ -57,10 +57,22 @@ PixelSelector::PixelSelector(int w, int h)
 
 	allowFast=true;
 	gradHistFrame=0;
+
+
+    // TODO: We can test the influence of those settings on final result
+    static const int nFeatures = 1000;//fSettings["ORBextractor.nFeatures"];
+    static const float fScaleFactor = 1.2;//fSettings["ORBextractor.scaleFactor"];
+    static const int nLevels = 8;//fSettings["ORBextractor.nLevels"];
+    static const int fIniThFAST = 20;//fSettings["ORBextractor.iniThFAST"];
+    static const int fMinThFAST = 7;//fSettings["ORBextractor.minThFAST"];
+
+    if(detectionType == 2)
+        oRBextractor = new ORB_SLAM2::ORBextractor(nFeatures,fScaleFactor,nLevels,fIniThFAST,fMinThFAST);
 }
 
 PixelSelector::~PixelSelector()
 {
+    delete oRBextractor;
 	delete[] randomPattern;
 	delete[] gradHist;
 	delete[] ths;
@@ -232,8 +244,32 @@ int PixelSelector::makeMaps(
 		}
 	}
     else {
-        // TODO
-        printf("Not yet implemented");
+
+        memset(map_out, 0, sizeof(float)*wG[0]*hG[0]);
+        cv::Mat img8u(hG[0],wG[0],CV_8U);
+        for(int i=0;i<wG[0]*hG[0];i++)
+        {
+            // TODO: Why image intensity * 0,8? Maybe it should be scaled to take all possible values of char?
+            float v = fh->dI[i][0]*0.8;
+            img8u.at<uchar>(i) = (!std::isfinite(v) || v>255) ? 255 : v;
+        }
+
+        double min, max;
+        cv::minMaxLoc(img8u, &min, &max);
+        printf("MIN/MAX values of the image - min: %f, max: %f", min, max);
+
+        std::vector<cv::KeyPoint> pts;
+        oRBextractor->extractOnlyKeypoints(img8u,cv::Mat(),pts);
+
+        for(unsigned int i=0;i<pts.size();i++)
+        {
+            int x = pts[i].pt.x+0.5;
+            int y = pts[i].pt.y+0.5;
+            map_out[x+y*wG[0]]=1;
+            numHave++;
+        }
+
+
     }
 
 	int numHaveSub = numHave;

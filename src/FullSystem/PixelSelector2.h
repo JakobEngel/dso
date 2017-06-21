@@ -26,6 +26,8 @@
  
 #include "util/NumType.h"
 
+#include "Modifications/ORBextractor.h"
+
 namespace dso
 {
 
@@ -63,6 +65,9 @@ private:
 	float* thsSmoothed;
 	int thsStep;
 	const FrameHessian* gradHistFrame;
+
+    // ORBExractor from ORBSLAM2
+    ORB_SLAM2::ORBextractor* oRBextractor;
 };
 
 
