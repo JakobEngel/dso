@@ -356,24 +356,27 @@ void parseArgument(char* arg)
 		{
 			printf("Original feature detection!\n");
 		}
-		if(option==1)
+		else if(option==1)
 		{
 			printf("Their FAST!\n");
-
-            if(1==sscanf(arg,"detectionTypeFastThreshold=%d",&option))
-            {
-                detectionTypeFastThreshold = option;
-            }
-            else
-                detectionTypeFastThreshold = 20;
-
 		}
-		if(option==2)
+		else if(option==2)
 		{
 			printf("Our method - TODO!\n");
 		}
 		return;
 	}
+
+    if(1==sscanf(arg,"detectionTypeFastThreshold=%d",&option))
+    {
+        printf("Setting detectonTypeFastThreshold=%d!\n", &option);
+        detectionTypeFastThreshold = option;
+    }
+    else {
+        printf("DetectonTypeFastThreshold=20 -> not provided in params!\n");
+        detectionTypeFastThreshold = 20;
+    }
+
 
 	printf("could not parse argument \"%s\"!!!!\n", arg);
 }
