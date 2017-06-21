@@ -70,8 +70,8 @@ runsPerSequence = 1;
 
 mainDatasetPath = '/mnt/data/Datasets/dso';
 
-detectionTypes = [0, 1, 1, 1, 1];
-detectionTypeFastThreshold = [-1, 20, 15, 10, 5];
+detectionTypes = [1, 1, 1];
+detectionTypeFastThreshold = [15, 10, 5];
 
 # Clear the results directories
 for (det, detTh) in zip(detectionTypes, detectionTypeFastThreshold):
