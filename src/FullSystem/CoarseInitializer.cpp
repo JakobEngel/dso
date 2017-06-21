@@ -1006,6 +1006,8 @@ void CoarseInitializer::makeNN()
 				float df = expf(-ret_dist[k]*NNDistFactor);
 				sumDF += df;
 				pts[i].neighboursDist[myidx]=df;
+
+                printf ("Values: %d vs %d\n", ret_index[k], npts);
 				assert(ret_index[k]>=0 && ret_index[k] < npts);
 				myidx++;
 			}

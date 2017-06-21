@@ -60,7 +60,7 @@ PixelSelector::PixelSelector(int w, int h)
 
 
     // TODO: We can test the influence of those settings on final result
-    static const int nFeatures = 1000;//fSettings["ORBextractor.nFeatures"];
+    static const int nFeatures = 2000;//fSettings["ORBextractor.nFeatures"];
     static const float fScaleFactor = 1.2;//fSettings["ORBextractor.scaleFactor"];
     static const int nLevels = 8;//fSettings["ORBextractor.nLevels"];
     static const int fIniThFAST = 20;//fSettings["ORBextractor.iniThFAST"];
@@ -72,7 +72,8 @@ PixelSelector::PixelSelector(int w, int h)
 
 PixelSelector::~PixelSelector()
 {
-    delete oRBextractor;
+	if(detectionType == 2)
+    	delete oRBextractor;
 	delete[] randomPattern;
 	delete[] gradHist;
 	delete[] ths;
@@ -243,7 +244,7 @@ int PixelSelector::makeMaps(
 
 		}
 	}
-    else {
+    else if (detectionType == 2){
 
         memset(map_out, 0, sizeof(float)*wG[0]*hG[0]);
         cv::Mat img8u(hG[0],wG[0],CV_8U);
@@ -254,9 +255,9 @@ int PixelSelector::makeMaps(
             img8u.at<uchar>(i) = (!std::isfinite(v) || v>255) ? 255 : v;
         }
 
-        double min, max;
-        cv::minMaxLoc(img8u, &min, &max);
-        printf("MIN/MAX values of the image - min: %f, max: %f", min, max);
+//        double min, max;
+//        cv::minMaxLoc(img8u, &min, &max);
+//        printf("MIN/MAX values of the image - min: %f, max: %f\n", min, max);
 
         std::vector<cv::KeyPoint> pts;
         oRBextractor->extractOnlyKeypoints(img8u,cv::Mat(),pts);
@@ -269,6 +270,8 @@ int PixelSelector::makeMaps(
             numHave++;
         }
 
+        printf("ORBSLAM selection: got %f / %f!\n", numHave, numWant);
+        quotia = numWant / numHave;
 
     }
 
