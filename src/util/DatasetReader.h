@@ -304,6 +304,8 @@ private:
             x.at<uchar>(i) = (!std::isfinite(v) || v>255) ? 255 : v;
         }
 
+        delete noPhotoUndistort;
+
 
 		delete minimg;
 		return ret2;
