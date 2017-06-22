@@ -239,18 +239,36 @@ int PixelSelector::makeMaps(
         static const float fScaleFactor = 1.2;//fSettings["ORBextractor.scaleFactor"];
         static const int nLevels = 8;//fSettings["ORBextractor.nLevels"];
         static const int fIniThFAST = 20;//fSettings["ORBextractor.iniThFAST"];
-        static const int fMinThFAST = 7;//fSettings["ORBextractor.minThFAST"];
+
+        // TODO: THIS WAS 7 in the original implementation
+        static const int fMinThFAST = 2;//fSettings["ORBextractor.minThFAST"];
 
         oRBextractor = new ORB_SLAM2::ORBextractor(numWant,fScaleFactor,nLevels,fIniThFAST,fMinThFAST);
 
         memset(map_out, 0, sizeof(float)*wG[0]*hG[0]);
         cv::Mat img8u(hG[0],wG[0],CV_8U);
+
+
+//        float minVal = fh->dI[0][0], maxVal = fh->dI[0][0];
+//        for(int i=0;i<wG[0]*hG[0];i++) {
+//            if (fh->dI[i][0] > maxVal)
+//                maxVal = fh->dI[i][0];
+//            if (fh->dI[i][0] < minVal)
+//                minVal = fh->dI[i][0];
+//        }
+
         for(int i=0;i<wG[0]*hG[0];i++)
         {
             // TODO: Why image intensity * 0,8? Maybe it should be scaled to take all possible values of char?
             float v = fh->dI[i][0]*0.8;
             img8u.at<uchar>(i) = (!std::isfinite(v) || v>255) ? 255 : v;
+//            float v = fh->dI[i][0];
+//            v = (v - minVal) / (maxVal - minVal) * 255;
+            img8u.at<uchar>(i) = (uchar) v;
+
         }
+
+//        printf("MIN/MAX values of the original image - min: %f, max: %f\n", minVal, maxVal);
 
 //        double min, max;
 //        cv::minMaxLoc(img8u, &min, &max);
