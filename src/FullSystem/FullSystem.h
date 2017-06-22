@@ -41,6 +41,7 @@
 #include "FullSystem/PixelSelector2.h"
 
 #include <math.h>
+#include <opencv2/highgui/highgui.hpp>
 
 namespace dso
 {
@@ -136,7 +137,7 @@ public:
 	virtual ~FullSystem();
 
 	// adds a new frame, and creates point & residual structs.
-	void addActiveFrame(ImageAndExposure* image, int id);
+	void addActiveFrame(ImageAndExposure* image, int id, cv::Mat imgOpenCV);
 
 	// marginalizes a frame. drops / marginalizes points & residuals.
 	void marginalizeFrame(FrameHessian* frame);

@@ -799,7 +799,7 @@ void FullSystem::flagPointsForRemoval()
 }
 
 
-void FullSystem::addActiveFrame( ImageAndExposure* image, int id )
+void FullSystem::addActiveFrame( ImageAndExposure* image, int id, cv::Mat imgOpenCV)
 {
 
     if(isLost) return;
@@ -821,7 +821,7 @@ void FullSystem::addActiveFrame( ImageAndExposure* image, int id )
 	// =========================== make Images / derivatives etc. =========================
 	fh->ab_exposure = image->exposure_time;
     fh->makeImages(image->image, &Hcalib);
-
+	fh->imgOpenCV = imgOpenCV;
 
 
 

@@ -99,7 +99,8 @@ MinimalImageB* readStreamBW_8U(char* data, int numBytes)
 		printf("cv::imdecode did something strange! this may segfault. \n");
 		return 0;
 	}
-	MinimalImageB* img = new MinimalImageB(m.cols, m.rows);
+
+    MinimalImageB* img = new MinimalImageB(m.cols, m.rows);
 	memcpy(img->data, m.data, m.rows*m.cols);
 	return img;
 }

@@ -275,9 +275,9 @@ int PixelSelector::makeMaps(
             imgForDetection = img8u;
         else if (detectionType == 3)
             cv::equalizeHist( img8u, imgForDetection );
-//        else if (detectionType == 4)
-//            imgForDetection = originalImage;
-
+        else if (detectionType == 4) {
+             imgForDetection = fh->imgOpenCV;
+        }
 
 //        printf("MIN/MAX values of the original image - min: %f, max: %f\n", minVal, maxVal);
 

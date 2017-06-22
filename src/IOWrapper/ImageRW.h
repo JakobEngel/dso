@@ -26,6 +26,7 @@
 #pragma once
 #include "util/NumType.h"
 #include "util/MinimalImage.h"
+#include <opencv2/highgui/highgui.hpp>
 
 namespace dso
 {

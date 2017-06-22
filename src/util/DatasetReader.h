@@ -40,6 +40,7 @@
 #endif
 
 #include <boost/thread.hpp>
+#include <opencv2/highgui/highgui.hpp>
 
 using namespace dso;
 
@@ -221,12 +222,12 @@ public:
 
 	MinimalImageB* getImageRaw(int id)
 	{
-			return getImageRaw_internal(id,0);
+		return getImageRaw_internal(id,0);
 	}
 
-	ImageAndExposure* getImage(int id, bool forceLoadDirectly=false)
+	ImageAndExposure* getImage(int id, cv::Mat &image, bool forceLoadDirectly=false)
 	{
-		return getImage_internal(id, 0);
+		return getImage_internal(id, image, 0);
 	}
 
 
@@ -280,13 +281,30 @@ private:
 	}
 
 
-	ImageAndExposure* getImage_internal(int id, int unused)
+	ImageAndExposure* getImage_internal(int id, cv::Mat &x, int unused)
 	{
-		MinimalImageB* minimg = getImageRaw_internal(id, 0);
-		ImageAndExposure* ret2 = undistort->undistort<unsigned char>(
+
+		MinimalImageB* minimg = getImageRaw_internal(id,0);
+
+	    ImageAndExposure* ret2 = undistort->undistort<unsigned char>(
 				minimg,
 				(exposures.size() == 0 ? 1.0f : exposures[id]),
 				(timestamps.size() == 0 ? 0.0 : timestamps[id]));
+
+
+        ImageAndExposure* noPhotoUndistort = undistort->undistort<unsigned char>(
+                minimg,
+                (exposures.size() == 0 ? 1.0f : exposures[id]),
+                (timestamps.size() == 0 ? 0.0 : timestamps[id]), 0);
+
+        x = cv::Mat(hG[0],wG[0],CV_8U);
+        for(int i=0;i<wG[0]*hG[0];i++)
+        {
+            float v = noPhotoUndistort->image[i];
+            x.at<uchar>(i) = (!std::isfinite(v) || v>255) ? 255 : v;
+        }
+
+
 		delete minimg;
 		return ret2;
 	}

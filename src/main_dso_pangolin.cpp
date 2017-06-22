@@ -50,6 +50,7 @@
 #include "IOWrapper/Pangolin/PangolinDSOViewer.h"
 #include "IOWrapper/OutputWrapper/SampleOutputWrapper.h"
 
+#include <opencv2/highgui/highgui.hpp>
 
 std::string vignette = "";
 std::string gammaCalib = "";
@@ -477,7 +478,8 @@ int main( int argc, char** argv )
             for(int ii=0;ii<(int)idsToPlay.size(); ii++)
             {
                 int i = idsToPlay[ii];
-                preloadedImages.push_back(reader->getImage(i));
+                cv::Mat image;
+                preloadedImages.push_back(reader->getImage(i, image));
             }
         }
 
@@ -500,11 +502,13 @@ int main( int argc, char** argv )
 
 
             ImageAndExposure* img;
+            cv::Mat imgOpenCV;
             if(preload)
                 img = preloadedImages[ii];
-            else
-                img = reader->getImage(i);
+            else {
 
+                img = reader->getImage(i, imgOpenCV);
+            }
 
 
             bool skipFrame=false;
@@ -524,7 +528,7 @@ int main( int argc, char** argv )
 
 
 
-            if(!skipFrame) fullSystem->addActiveFrame(img, i);
+            if(!skipFrame) fullSystem->addActiveFrame(img, i, imgOpenCV);
 
 
 
