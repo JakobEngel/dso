@@ -234,7 +234,7 @@ int PixelSelector::makeMaps(
 
 		}
 	}
-    else if (detectionType >= 2 || detectionType  <= 4){
+    else if (detectionType >= 2){
 
         // TODO: We can test the influence of those settings on final result
         //static const int nFeatures = 2000;//fSettings["ORBextractor.nFeatures"];
@@ -245,7 +245,18 @@ int PixelSelector::makeMaps(
         // TODO: THIS WAS 7 in the original implementation
         static const int fMinThFAST = detectionTypeFastThreshold;//fSettings["ORBextractor.minThFAST"];
 
-        oRBextractor = new ORB_SLAM2::ORBextractor(numWant,fScaleFactor,nLevels,fIniThFAST,fMinThFAST);
+        static double qualityLevel = 0.0001;
+        static double minDistanceOfFeatures = 0;
+        static double harrisK = 0.04;
+
+        ORB_SLAM2::ORBextractor::DetectorType detectorType = ORB_SLAM2::ORBextractor::DetectorType::FAST; // FAST
+        if (detectionType == 5 )
+            detectorType = ORB_SLAM2::ORBextractor::DetectorType::SHITOMASI;
+        else if (detectionType == 6)
+            detectorType = ORB_SLAM2::ORBextractor::DetectorType::HARRIS;
+
+
+        oRBextractor = new ORB_SLAM2::ORBextractor(numWant,fScaleFactor,nLevels, detectorType,fIniThFAST,fMinThFAST, qualityLevel, minDistanceOfFeatures, harrisK);
 
         memset(map_out, 0, sizeof(float)*wG[0]*hG[0]);
         cv::Mat img8u(hG[0],wG[0],CV_8U);
@@ -275,7 +286,7 @@ int PixelSelector::makeMaps(
             imgForDetection = img8u;
         else if (detectionType == 3)
             cv::equalizeHist( img8u, imgForDetection );
-        else if (detectionType == 4) {
+        else if (detectionType > 3) {
              imgForDetection = fh->imgOpenCV;
         }
 
