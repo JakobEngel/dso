@@ -808,7 +808,7 @@ void ORBextractor::ComputeKeyPointsOctTree(vector<vector<KeyPoint> >& allKeypoin
 
                 vector<cv::KeyPoint> vKeysCell;
 
-                int wantedNo = mnFeaturesPerLevel[level] / nRows / nCols * 1.5;
+                int wantedNo = mnFeaturesPerLevel[level] * 1.5 / (nRows * nCols) ;
                 if (detectorType == DetectorType::FAST) {
                     cv::FAST(mvImagePyramid[level].rowRange(iniY,maxY).colRange(iniX,maxX), vKeysCell,iniThFAST,true);
                     if(vKeysCell.empty())
