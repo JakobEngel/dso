@@ -245,7 +245,7 @@ int PixelSelector::makeMaps(
         // TODO: THIS WAS 7 in the original implementation
         static const int fMinThFAST = detectionTypeFastThreshold;//fSettings["ORBextractor.minThFAST"];
 
-        static double qualityLevel = 0.0001;
+        static double qualityLevel = 0.01;
         static double minDistanceOfFeatures = 0;
         static double harrisK = 0.04;
 

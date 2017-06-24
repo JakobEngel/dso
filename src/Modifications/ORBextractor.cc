@@ -808,7 +808,7 @@ void ORBextractor::ComputeKeyPointsOctTree(vector<vector<KeyPoint> >& allKeypoin
 
                 vector<cv::KeyPoint> vKeysCell;
 
-
+                int wantedNo = mnFeaturesPerLevel[level] / nRows / nCols * 1.5;
                 if (detectorType == DetectorType::FAST) {
                     cv::FAST(mvImagePyramid[level].rowRange(iniY,maxY).colRange(iniX,maxX), vKeysCell,iniThFAST,true);
                     if(vKeysCell.empty())
@@ -819,26 +819,26 @@ void ORBextractor::ComputeKeyPointsOctTree(vector<vector<KeyPoint> >& allKeypoin
                 }
                 else if (detectorType == DetectorType::SHITOMASI) {
                     vector<Point2f> corners;
-                    cv::goodFeaturesToTrack(mvImagePyramid[level].rowRange(iniY,maxY).colRange(iniX,maxX), corners,1500, qualityLevel, minDistanceOfFeatures, noArray(), 3, false);
+                    cv::goodFeaturesToTrack(mvImagePyramid[level].rowRange(iniY,maxY).colRange(iniX,maxX), corners, wantedNo, qualityLevel, minDistanceOfFeatures, noArray(), 3, false);
 
 //                    printf("Corners shi-tomasi: %d vs %d\n", 1500, corners.size());
                     if(corners.empty()) {
                         cv::goodFeaturesToTrack(mvImagePyramid[level].rowRange(iniY, maxY).colRange(iniX, maxX),
-                                                corners, 1500, qualityLevel / 1000.0, minDistanceOfFeatures,
+                                                corners, wantedNo, qualityLevel / 1000.0, minDistanceOfFeatures,
                                                 noArray(), 3, false);
                     }
                     cv::KeyPoint::convert(corners, vKeysCell);
                 }
                 else if (detectorType == DetectorType::HARRIS) {
                     vector<Point2f> corners;
-                    cv::goodFeaturesToTrack(mvImagePyramid[level].rowRange(iniY,maxY).colRange(iniX,maxX), corners, 1500, qualityLevel*0.000001, minDistanceOfFeatures, noArray(), 3, true, harrisK);
+                    cv::goodFeaturesToTrack(mvImagePyramid[level].rowRange(iniY,maxY).colRange(iniX,maxX), corners, wantedNo, qualityLevel*0.000001, minDistanceOfFeatures, noArray(), 3, true, harrisK);
 
 
 //                    printf("Corners harris: %d", corners.size());
 
                     if(corners.empty()) {
                         cv::goodFeaturesToTrack(mvImagePyramid[level].rowRange(iniY, maxY).colRange(iniX, maxX),
-                                                corners, 1500, qualityLevel / 1000.0, minDistanceOfFeatures,
+                                                corners, wantedNo, qualityLevel / 1000.0, minDistanceOfFeatures,
                                                 noArray(), 3, true, harrisK);
                     }
                     cv::KeyPoint::convert(corners, vKeysCell);
