@@ -68,31 +68,33 @@ sequences = [
 
 runsPerSequence = 1;
 
+#mainDatasetPath = '/mnt/data/Datasets/dso';
+mainDatasetPath = '/media/michalnowicki/MNowicki-Private/DSO/sequences'
 
-mainDatasetPath = '/mnt/data/Datasets/dso';
 
 detectionTypes = [6] #[4, 4]#[] 1, 1, 1];
 detectionTypeFastThreshold = [0] #[7, 2];#[0, 15, 10, 5];
+harrisK = [0.002, 0.005, 0.01, 0.02, 0.04, 0.08];
 
 # Clear the results directories
-for (det, detTh) in zip(detectionTypes, detectionTypeFastThreshold):
-	if not os.path.exists("results/det_"+str(det)+"_"+str(detTh)):
-		os.makedirs("results/det_"+str(det)+"_"+str(detTh));	
+for (det, hark) in zip(detectionTypes, harrisK):
+	if not os.path.exists("results/det_"+str(det)+"_"+str(hark)):
+		os.makedirs("results/det_"+str(det)+"_"+str(hark));
 	else:
-		call('rm results/det_'+str(det)+'_'+str(detTh) +'/*', shell=True);
+		call('rm results/det_'+str(det)+'_'+str(hark) +'/*', shell=True);
 
 for seq in sequences:
 
-	for (det, detTh) in zip(detectionTypes, detectionTypeFastThreshold):
+	for (det, hark) in zip(detectionTypes, harrisK):
 		
 		for runId in range(0, runsPerSequence):
 			print("Current sequence: " + seq);
 
-			print('./dso_dataset files='+mainDatasetPath+'/sequence_'+ seq +'/images.zip calib='+mainDatasetPath+'/sequence_'+ seq +'/camera.txt gamma='+mainDatasetPath+'/sequence_'+ seq +'/pcalib.txt vignette='+mainDatasetPath+'/sequence_'+ seq +'/vignette.png preset=0 mode=0 nogui=1 reverse=0 quiet=1 detectionType=' + str(det) + ' detectionTypeFastThreshold=' + str(detTh));
+			print('./dso_dataset files='+mainDatasetPath+'/sequence_'+ seq +'/images.zip calib='+mainDatasetPath+'/sequence_'+ seq +'/camera.txt gamma='+mainDatasetPath+'/sequence_'+ seq +'/pcalib.txt vignette='+mainDatasetPath+'/sequence_'+ seq +'/vignette.png preset=0 mode=0 nogui=1 reverse=0 quiet=1 detectionType=' + str(det) + ' harrisK=' + str(hark));
 
 			# Copy to currently used settings
-			call('./dso_dataset files='+mainDatasetPath+'/sequence_'+ seq +'/images.zip calib='+mainDatasetPath+'/sequence_'+ seq +'/camera.txt gamma='+mainDatasetPath+'/sequence_'+ seq +'/pcalib.txt vignette='+mainDatasetPath+'/sequence_'+ seq +'/vignette.png preset=0 mode=0 nogui=1 reverse=0 quiet=1 detectionType=' + str(det) + ' detectionTypeFastThreshold=' + str(detTh), shell=True);	
+			call('./dso_dataset files='+mainDatasetPath+'/sequence_'+ seq +'/images.zip calib='+mainDatasetPath+'/sequence_'+ seq +'/camera.txt gamma='+mainDatasetPath+'/sequence_'+ seq +'/pcalib.txt vignette='+mainDatasetPath+'/sequence_'+ seq +'/vignette.png preset=0 mode=0 nogui=1 reverse=0 quiet=1 detectionType=' + str(det) + ' harrisK=' + str(hark), shell=True);
 		
 			# Run software
-			call('mv result.txt results/det_'+str(det)+'_'+str(detTh) +'/sequence_' + str(seq) + '_' + str(runId) + '.txt', shell=True);
+			call('mv result.txt results/det_'+str(det)+'_'+str(hark) +'/sequence_' + str(seq) + '_' + str(runId) + '.txt', shell=True);
 

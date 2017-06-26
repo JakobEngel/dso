@@ -189,6 +189,7 @@ extern bool plotStereoImages;
 extern bool multiThreading;
 extern int detectionType;
 extern int detectionTypeFastThreshold;
+extern float harrisK;
 
 
 extern float freeDebugParam1;
