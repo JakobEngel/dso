@@ -73,7 +73,7 @@ runsPerSequence = 1;
 mainDatasetPath='/home/michal/dsoDataset'
 
 
-detectionTypes = [6] #[4, 4]#[] 1, 1, 1];
+detectionTypes = [6, 6, 6, 6, 6, 6] #[4, 4]#[] 1, 1, 1];
 detectionTypeFastThreshold = [0] #[7, 2];#[0, 15, 10, 5];
 harrisK = [0.002, 0.005, 0.01, 0.02, 0.04, 0.08];
 
@@ -95,7 +95,7 @@ for seq in sequences:
 
 			# Copy to currently used settings
 			call('./dso_dataset files='+mainDatasetPath+'/sequence_'+ seq +'/images.zip calib='+mainDatasetPath+'/sequence_'+ seq +'/camera.txt gamma='+mainDatasetPath+'/sequence_'+ seq +'/pcalib.txt vignette='+mainDatasetPath+'/sequence_'+ seq +'/vignette.png preset=0 mode=0 nogui=1 reverse=0 quiet=1 detectionType=' + str(det) + ' harrisK=' + str(hark), shell=True);
-		
+
 			# Run software
 			call('mv result.txt results/det_'+str(det)+'_'+str(hark) +'/sequence_' + str(seq) + '_' + str(runId) + '.txt', shell=True);
 
