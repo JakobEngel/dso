@@ -69,7 +69,8 @@ sequences = [
 runsPerSequence = 1;
 
 #mainDatasetPath = '/mnt/data/Datasets/dso';
-mainDatasetPath = '/media/michalnowicki/MNowicki-Private/DSO/sequences'
+#mainDatasetPath = '/media/michalnowicki/MNowicki-Private/DSO/sequences'
+mainDatasetPath='/home/michal/dsoDataset'
 
 
 detectionTypes = [6] #[4, 4]#[] 1, 1, 1];
