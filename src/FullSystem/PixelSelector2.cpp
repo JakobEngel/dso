@@ -247,7 +247,6 @@ int PixelSelector::makeMaps(
 
         static double qualityLevel = 0.01;
         static double minDistanceOfFeatures = 0;
-        static double harrisK = 0.04;
 
         ORB_SLAM2::ORBextractor::DetectorType detectorType = ORB_SLAM2::ORBextractor::DetectorType::FAST; // FAST
         if (detectionType == 5 )
