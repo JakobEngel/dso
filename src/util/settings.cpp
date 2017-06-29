@@ -301,18 +301,18 @@ int staticPatternNum[10] = {
 		25
 };
 
-int staticPatternPadding[10] = {
-		1,
-		1,
-		1,
-		1,
-		2,
-		2,
-		2,
-		3,
-		2,
-		4
-};
+//int staticPatternPadding[10] = {
+//		1,
+//		1,
+//		1,
+//		1,
+//		2,
+//		2,
+//		2,
+//		3,
+//		2,
+//		4
+//};
 
 
 }

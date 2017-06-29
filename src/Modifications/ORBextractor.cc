@@ -831,7 +831,8 @@ void ORBextractor::ComputeKeyPointsOctTree(vector<vector<KeyPoint> >& allKeypoin
                 }
                 else if (detectorType == DetectorType::HARRIS) {
                     vector<Point2f> corners;
-                    cv::goodFeaturesToTrack(mvImagePyramid[level].rowRange(iniY,maxY).colRange(iniX,maxX), corners, wantedNo, qualityLevel*0.000001, minDistanceOfFeatures, noArray(), 3, true, harrisK);
+                    // TODO: Changed the size of the neighbourhood!
+                    cv::goodFeaturesToTrack(mvImagePyramid[level].rowRange(iniY,maxY).colRange(iniX,maxX), corners, wantedNo, qualityLevel*0.000001, minDistanceOfFeatures, noArray(), 5, true, harrisK);
 
 
 //                    printf("Corners harris: %d", corners.size());
@@ -839,7 +840,7 @@ void ORBextractor::ComputeKeyPointsOctTree(vector<vector<KeyPoint> >& allKeypoin
                     if(corners.empty()) {
                         cv::goodFeaturesToTrack(mvImagePyramid[level].rowRange(iniY, maxY).colRange(iniX, maxX),
                                                 corners, wantedNo, qualityLevel / 1000.0, minDistanceOfFeatures,
-                                                noArray(), 3, true, harrisK);
+                                                noArray(), 5, true, harrisK);
                     }
                     cv::KeyPoint::convert(corners, vKeysCell);
                 }

@@ -332,14 +332,19 @@ Vec3f CoarseInitializer::calcResAndGS(
 		const SE3 &refToNew, AffLight refToNew_aff,
 		bool plot)
 {
-	int wl = w[lvl], hl = h[lvl];
+    // Get the width/height of the image at the chosen pyramid lvl
+	int imgWidthAtLvl = w[lvl], imgHeightAtLvl = h[lvl];
+
+    // Images colors (They probably tried on color images and it failed thus 3f)
 	Eigen::Vector3f* colorRef = firstFrame->dIp[lvl];
 	Eigen::Vector3f* colorNew = newFrame->dIp[lvl];
 
+    // Compute current transformation
 	Mat33f RKi = (refToNew.rotationMatrix() * Ki[lvl]).cast<float>();
 	Vec3f t = refToNew.translation().cast<float>();
 	Eigen::Vector2f r2new_aff = Eigen::Vector2f(exp(refToNew_aff.a), refToNew_aff.b);
 
+    // Getting the camera parameters at that lvl
 	float fxl = fx[lvl];
 	float fyl = fy[lvl];
 	float cxl = cx[lvl];
@@ -351,13 +356,15 @@ Vec3f CoarseInitializer::calcResAndGS(
 	E.initialize();
 
 
+    // For each points at that lvl
 	int npts = numPoints[lvl];
 	Pnt* ptsl = points[lvl];
 	for(int i=0;i<npts;i++)
 	{
-
+        // Get the current point
 		Pnt* point = ptsl+i;
 
+        // We update the position of the point?
 		point->maxstep = 1e10;
 		if(!point->isGood)
 		{
@@ -382,12 +389,17 @@ Vec3f CoarseInitializer::calcResAndGS(
 		// sum over all residuals.
 		bool isGood = true;
 		float energy=0;
+
+		// The neighbouring pattern used to define
 		for(int idx=0;idx<patternNum;idx++)
 		{
+
+            // The value to add to image position to achieve the neighbour
 			int dx = patternP[idx][0];
 			int dy = patternP[idx][1];
 
-
+            // We take the point of the pattern, transform it with (R,t), and then project
+            // Also computes the invDepth of the center point
 			Vec3f pt = RKi * Vec3f(point->u+dx, point->v+dy, 1) + t*point->idepth_new;
 			float u = pt[0] / pt[2];
 			float v = pt[1] / pt[2];
@@ -395,32 +407,36 @@ Vec3f CoarseInitializer::calcResAndGS(
 			float Kv = fyl * v + cyl;
 			float new_idepth = point->idepth_new/pt[2];
 
-			if(!(Ku > 1 && Kv > 1 && Ku < wl-2 && Kv < hl-2 && new_idepth > 0))
+            // We reject point if its projection is outside of the image border
+			if(!(Ku > 1 && Kv > 1 && Ku < imgWidthAtLvl-2 && Kv < imgHeightAtLvl-2 && new_idepth > 0))
 			{
 				isGood = false;
 				break;
 			}
 
-			Vec3f hitColor = getInterpolatedElement33(colorNew, Ku, Kv, wl);
-			//Vec3f hitColor = getInterpolatedElement33BiCub(colorNew, Ku, Kv, wl);
+            // We get the bilinear interpolation of the color in that place
+			Vec3f hitColor = getInterpolatedElement33(colorNew, Ku, Kv, imgWidthAtLvl);
+			//Vec3f hitColor = getInterpolatedElement33BiCub(colorNew, Ku, Kv, widthAtChosenLvl);
 
-			//float rlR = colorRef[point->u+dx + (point->v+dy) * wl][0];
-			float rlR = getInterpolatedElement31(colorRef, point->u+dx, point->v+dy, wl);
+            // We get the biliniar interpolation of the color in the original image
+			float originalColor = getInterpolatedElement31(colorRef, point->u+dx, point->v+dy, imgWidthAtLvl);
+            //float originalColor = colorRef[point->u+dx + (point->v+dy) * widthAtChosenLvl][0];
 
-			if(!std::isfinite(rlR) || !std::isfinite((float)hitColor[0]))
+            // check if both colors are sensible. We reject the point otherwise
+            if(!std::isfinite(originalColor) || !std::isfinite((float)hitColor[0]))
 			{
 				isGood = false;
 				break;
 			}
 
+            // The difference in intensity between what we expected and what we got (residual) with additional exposure correction
+			float residual = hitColor[0] - r2new_aff[0] * originalColor - r2new_aff[1];
 
-			float residual = hitColor[0] - r2new_aff[0] * rlR - r2new_aff[1];
+            // Huber norm of the residual
 			float hw = fabs(residual) < setting_huberTH ? 1 : setting_huberTH / fabs(residual);
 			energy += hw *residual*residual*(2-hw);
 
-
-
-
+            // Jacobians with respect to exposure time?
 			float dxdd = (t[0]-t[2]*u)/pt[2];
 			float dydd = (t[1]-t[2]*v)/pt[2];
 
@@ -433,7 +449,7 @@ Vec3f CoarseInitializer::calcResAndGS(
 			dp3[idx] = -u*v*dxInterp - (1+v*v)*dyInterp;
 			dp4[idx] = (1+u*u)*dxInterp + u*v*dyInterp;
 			dp5[idx] = -v*dxInterp + u*dyInterp;
-			dp6[idx] = - hw*r2new_aff[0] * rlR;
+			dp6[idx] = - hw*r2new_aff[0] * originalColor;
 			dp7[idx] = - hw*1;
 			dd[idx] = dxInterp * dxdd  + dyInterp * dydd;
 			r[idx] = hw*residual;
@@ -454,6 +470,7 @@ Vec3f CoarseInitializer::calcResAndGS(
 			JbBuffer_new[i][9] += dd[idx]*dd[idx];
 		}
 
+        // If it was projected outside of the image or energy of the point exceeds the threshold
 		if(!isGood || energy > point->outlierTH*20)
 		{
 			E.updateSingle((float)(point->energy[0]));
@@ -461,7 +478,6 @@ Vec3f CoarseInitializer::calcResAndGS(
 			point->energy_new = point->energy;
 			continue;
 		}
-
 
 		// add into energy.
 		E.updateSingle(energy);
@@ -610,6 +626,9 @@ float CoarseInitializer::rescale()
 
 Vec3f CoarseInitializer::calcEC(int lvl)
 {
+
+    // Computes the weights for optimization as defined in eq. 7
+    // TODO: I'm not sure if it is the correct guess
 	if(!snapped) return Vec3f(0,0,numPoints[lvl]);
 	AccumulatorX<2> E;
 	E.initialize();
@@ -641,6 +660,8 @@ void CoarseInitializer::optReg(int lvl)
 	}
 
 
+    // For each point it finds the inverse depth of its neighbours and then updates the point's inverse depth
+    // TODO: Check it
 	for(int i=0;i<npts;i++)
 	{
 		Pnt* point = ptsl+i;
@@ -659,6 +680,7 @@ void CoarseInitializer::optReg(int lvl)
 
 		if(nnn > 2)
 		{
+            // It finds the median element?
 			std::nth_element(idnn,idnn+nnn/2,idnn+nnn);
 			point->iR = (1-regWeight)*point->idepth + regWeight*idnn[nnn/2];
 		}

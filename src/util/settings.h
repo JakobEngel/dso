@@ -215,7 +215,8 @@ extern int staticPatternPadding[10];
 //#define patternP staticPattern[setting_pattern]
 //#define patternPadding staticPatternPadding[setting_pattern]
 
-//
+// TODO: Original
+//#define patternNum 8
 #define patternNum 8
 #define patternP staticPattern[8]
 #define patternPadding 2
