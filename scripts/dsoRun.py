@@ -95,11 +95,11 @@ else:
 	lambdaThreshold = [0.001, 0.0001, 0.00001, 0.000001];
 
 	# Clear the results directories
-	for (det, hark) in zip(detectionTypes, harrisK):
-		if not os.path.exists("results/det_"+str(det)+"_"+str(hark)):
-			os.makedirs("results/det_"+str(det)+"_"+str(hark));
+	for (det, lamb) in zip(detectionTypes, lambdaThreshold):
+		if not os.path.exists("results/det_"+str(det)+"_"+str(lamb)):
+			os.makedirs("results/det_"+str(det)+"_"+str(lamb));
 		else:
-			call('rm results/det_'+str(det)+'_'+str(hark) +'/*', shell=True);
+			call('rm results/det_'+str(det)+'_'+str(lamb) +'/*', shell=True);
 
 	for seq in sequences:
 
@@ -114,5 +114,5 @@ else:
 				call('./dso_dataset files='+mainDatasetPath+'/sequence_'+ seq +'/images.zip calib='+mainDatasetPath+'/sequence_'+ seq +'/camera.txt gamma='+mainDatasetPath+'/sequence_'+ seq +'/pcalib.txt vignette='+mainDatasetPath+'/sequence_'+ seq +'/vignette.png preset=0 mode=0 nogui=1 reverse=0 quiet=1 detectionType=' + str(det) + ' harrisK=' + str(hark) +' lambdaThreshold=' + str(lamb), shell=True);
 
 				# Run software
-				call('mv result.txt results/det_'+str(det)+'_'+str(hark) +'/sequence_' + str(seq) + '_' + str(runId) + '.txt', shell=True);
+				call('mv result.txt results/det_'+str(det)+'_'+str(lamb) +'/sequence_' + str(seq) + '_' + str(runId) + '.txt', shell=True);
 
