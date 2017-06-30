@@ -25,7 +25,7 @@ find_package(OpenCV QUIET)
 # flags
 add_definitions("-DENABLE_SSE")
 set(CMAKE_CXX_FLAGS
-   "${SSE_FLAGS} -O3 -g -std=c++0x -march=native"
+   "${SSE_FLAGS} -O3 -g -std=c++11 -march=native"
 #   "${SSE_FLAGS} -O3 -g -std=c++0x -fno-omit-frame-pointer"
 )
 
@@ -54,7 +54,7 @@ set(dso_SOURCE_FILES
   ${PROJECT_SOURCE_DIR}/src/util/Undistort.cpp
   ${PROJECT_SOURCE_DIR}/src/util/globalCalib.cpp
   ${PROJECT_SOURCE_DIR}/src/Modifications/ORBextractor.cc
-)
+        src/Modifications/cornerEdgeHarris.cpp)
 
 
 

@@ -253,9 +253,11 @@ int PixelSelector::makeMaps(
             detectorType = ORB_SLAM2::ORBextractor::DetectorType::SHITOMASI;
         else if (detectionType == 6)
             detectorType = ORB_SLAM2::ORBextractor::DetectorType::HARRIS;
+        else if (detectionType == 7)
+            detectorType = ORB_SLAM2::ORBextractor::DetectorType::HARRIS_CE;
 
 
-        oRBextractor = new ORB_SLAM2::ORBextractor(numWant,fScaleFactor,nLevels, detectorType,fIniThFAST,fMinThFAST, qualityLevel, minDistanceOfFeatures, harrisK);
+        oRBextractor = new ORB_SLAM2::ORBextractor(numWant,fScaleFactor,nLevels, detectorType,fIniThFAST,fMinThFAST, qualityLevel, minDistanceOfFeatures, harrisK, lambdaThreshold);
 
         memset(map_out, 0, sizeof(float)*wG[0]*hG[0]);
         cv::Mat img8u(hG[0],wG[0],CV_8U);

@@ -190,6 +190,7 @@ extern bool multiThreading;
 extern int detectionType;
 extern int detectionTypeFastThreshold;
 extern float harrisK;
+extern float lambdaThreshold;
 
 
 extern float freeDebugParam1;

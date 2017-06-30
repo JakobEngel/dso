@@ -195,7 +195,7 @@ bool setting_logStuff = true;
 int detectionType = 0;
 int detectionTypeFastThreshold = 20;
 float harrisK = 0.05;
-
+float lambdaThreshold = 10e-6;
 
 
 	bool goStepByStep = false;

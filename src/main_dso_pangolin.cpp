@@ -390,6 +390,18 @@ void parseArgument(char* arg)
     else {
         printf("harrisK=0.04 -> not provided in params!\n");
         harrisK=0.04;
+    }
+
+    if(1==sscanf(arg,"lambdaThreshold=%f",&foption))
+    {
+        lambdaThreshold = foption;
+        printf("Setting lambdaThreshold=%f!\n", lambdaThreshold);
+        return;
+
+    }
+    else {
+        printf("lambdaThreshold=10e-6 -> not provided in params!\n");
+        lambdaThreshold=10e-6;
 
     }
 
