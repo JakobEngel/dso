@@ -156,9 +156,9 @@ Furthermore, it should be straight-forward to implement other camera models.
 i.e., DSO computes the camera matrix `K` as
 
 		K(0,0) = width * fx
-		K(1,1) = width * fy
+		K(1,1) = height * fy
 		K(0,2) = width * cx - 0.5
-		K(1,2) = width * cy - 0.5
+		K(1,2) = height * cy - 0.5
 For backwards-compatibility, if the given `cx` and `cy` are larger than 1, DSO assumes all four parameters to directly be the entries of K, 
 and ommits the above computation. 
 
