@@ -100,7 +100,10 @@ namespace ORB_SLAM2
                     // We will sort by lambdas and we want edges to be sorted according to the difference in lambdas
                     // We also want to prefer corners so edge priority will be
                     // (maxLambda - minLambda)
-                    eig.at<float>(j,i) = (maxLambda - minLambda); /// qualityThreshold;
+//                    eig.at<float>(j,i) = (maxLambda - minLambda); /// qualityThreshold;
+
+                    // TODO: Idea to verify that strong edge is as good as strong corner
+                    eig.at<float>(j,i) = maxLambda;
                     countEdge++;
                 }
 
