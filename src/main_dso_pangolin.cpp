@@ -375,10 +375,6 @@ void parseArgument(char* arg)
 		return;
 
     }
-    else {
-        printf("DetectonTypeFastThreshold=20 -> not provided in params!\n");
-        detectionTypeFastThreshold = 20;
-    }
 
     if(1==sscanf(arg,"harrisK=%f",&foption))
     {
@@ -386,10 +382,6 @@ void parseArgument(char* arg)
         printf("Setting harrisK=%f!\n", harrisK);
         return;
 
-    }
-    else {
-        printf("harrisK=0.04 -> not provided in params!\n");
-        harrisK=0.04;
     }
 
     if(1==sscanf(arg,"lambdaThreshold=%f",&foption))
@@ -399,11 +391,7 @@ void parseArgument(char* arg)
         return;
 
     }
-    else {
-        printf("lambdaThreshold=10e-6 -> not provided in params!\n");
-        lambdaThreshold=10e-6;
 
-    }
 
 
 	printf("could not parse argument \"%s\"!!!!\n", arg);
@@ -413,6 +401,11 @@ void parseArgument(char* arg)
 
 int main( int argc, char** argv )
 {
+	lambdaThreshold=10e-6;
+	harrisK=0.04;
+	detectionTypeFastThreshold = 20;
+
+
 	//setlocale(LC_ALL, "");
 	for(int i=1; i<argc;i++)
 		parseArgument(argv[i]);
