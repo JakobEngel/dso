@@ -50,9 +50,10 @@ ImmaturePoint::ImmaturePoint(int u_, int v_, FrameHessian* host_, float type, Ca
 
 		gradH += ptc.tail<2>()  * ptc.tail<2>().transpose();
 
-//		weights[idx] = sqrtf(setting_outlierTHSumComponent / (setting_outlierTHSumComponent + ptc.tail<2>().squaredNorm()));
+		weights[idx] = sqrtf(setting_outlierTHSumComponent / (setting_outlierTHSumComponent + ptc.tail<2>().squaredNorm()));
+//        std::cout << "W: " << weights[idx] << std::endl;
 		// TODO: TURNED OFF WEIGHTS
-		weights[idx] = 1.0f;
+//		weights[idx] = 1.0f;
 	}
 
 	energyTH = patternNum*setting_outlierTH;

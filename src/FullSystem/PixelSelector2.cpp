@@ -239,7 +239,7 @@ int PixelSelector::makeMaps(
         // TODO: We can test the influence of those settings on final result
         //static const int nFeatures = 2000;//fSettings["ORBextractor.nFeatures"];
         static const float fScaleFactor = 1.2;//fSettings["ORBextractor.scaleFactor"];
-        static const int nLevels = 8;//fSettings["ORBextractor.nLevels"];
+        static const int nLevels = 1;//fSettings["ORBextractor.nLevels"];
         static const int fIniThFAST = 20;//fSettings["ORBextractor.iniThFAST"];
 
         // TODO: THIS WAS 7 in the original implementation
