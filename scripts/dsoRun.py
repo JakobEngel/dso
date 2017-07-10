@@ -103,15 +103,15 @@ else:
 
 	for seq in sequences:
 
-		for (det, hark, lamb) in zip(detectionTypes, harrisK, lambdaThreshold):
+		for (det, fastThr, hark, lamb) in zip(detectionTypes, detectionTypeFastThreshold, harrisK, lambdaThreshold):
 
 			for runId in range(0, runsPerSequence):
 				print("Current sequence: " + seq);
 
-				print('./dso_dataset files='+mainDatasetPath+'/sequence_'+ seq +'/images.zip calib='+mainDatasetPath+'/sequence_'+ seq +'/camera.txt gamma='+mainDatasetPath+'/sequence_'+ seq +'/pcalib.txt vignette='+mainDatasetPath+'/sequence_'+ seq +'/vignette.png preset=0 mode=0 nogui=1 reverse=0 quiet=1 detectionType=' + str(det) + ' detectionTypeFastThreshold=' +str(detectionTypeFastThreshold) +' harrisK=' + str(hark) +' lambdaThreshold=' + str(lamb));
+				print('./dso_dataset files='+mainDatasetPath+'/sequence_'+ seq +'/images.zip calib='+mainDatasetPath+'/sequence_'+ seq +'/camera.txt gamma='+mainDatasetPath+'/sequence_'+ seq +'/pcalib.txt vignette='+mainDatasetPath+'/sequence_'+ seq +'/vignette.png preset=0 mode=0 nogui=1 reverse=0 quiet=1 detectionType=' + str(det) + ' detectionTypeFastThreshold=' +str(fastThr) +' harrisK=' + str(hark) +' lambdaThreshold=' + str(lamb));
 
 				# Copy to currently used settings
-				call('./dso_dataset files='+mainDatasetPath+'/sequence_'+ seq +'/images.zip calib='+mainDatasetPath+'/sequence_'+ seq +'/camera.txt gamma='+mainDatasetPath+'/sequence_'+ seq +'/pcalib.txt vignette='+mainDatasetPath+'/sequence_'+ seq +'/vignette.png preset=0 mode=0 nogui=1 reverse=0 quiet=1 detectionType=' + str(det) + ' detectionTypeFastThreshold=' +str(detectionTypeFastThreshold) +' harrisK=' + str(hark) +' lambdaThreshold=' + str(lamb), shell=True);
+				call('./dso_dataset files='+mainDatasetPath+'/sequence_'+ seq +'/images.zip calib='+mainDatasetPath+'/sequence_'+ seq +'/camera.txt gamma='+mainDatasetPath+'/sequence_'+ seq +'/pcalib.txt vignette='+mainDatasetPath+'/sequence_'+ seq +'/vignette.png preset=0 mode=0 nogui=1 reverse=0 quiet=1 detectionType=' + str(det) + ' detectionTypeFastThreshold=' +str(fastThr) +' harrisK=' + str(hark) +' lambdaThreshold=' + str(lamb), shell=True);
 
 				# Run software
 				call('mv result.txt results/det_'+str(det)+'_'+str(lamb) +'/sequence_' + str(seq) + '_' + str(runId) + '.txt', shell=True);
