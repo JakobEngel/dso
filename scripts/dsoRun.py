@@ -89,10 +89,10 @@ else:
 	print 'mainDatasetPath: ' + mainDatasetPath
 
 
-	detectionTypes = [2, 5, 7]#[7, 7, 7, 7]; #[6, 6, 6, 6, 6, 6] #[4, 4]#[] 1, 1, 1];
-	detectionTypeFastThreshold = [2, 0, 0]#[0, 0, 0, 0, 0]; #[7, 2];#[0, 15, 10, 5];
-	harrisK = [0, 0.005, 0,005]#[0.01, 0.01, 0.01, 0.01];#[0.002, 0.005, 0.01, 0.02, 0.04, 0.08];
-	lambdaThreshold = [0, 0, 0.0000001]#[0.001, 0.0001, 0.00001, 0.000001];
+	detectionTypes = [6, 6, 6, 6, 7, 7, 7, 7]#[7, 7, 7, 7]; #[6, 6, 6, 6, 6, 6] #[4, 4]#[] 1, 1, 1];
+	detectionTypeFastThreshold = [0, 0, 0, 0, 0, 0, 0, 0]#[0, 0, 0, 0, 0]; #[7, 2];#[0, 15, 10, 5];
+	harrisK = [0,005, 0.01, 0.02, 0.04, 0, 0, 0, 0]#[0.01, 0.01, 0.01, 0.01];#[0.002, 0.005, 0.01, 0.02, 0.04, 0.08];
+	lambdaThreshold = [0,0,0,0, 0.000001, 0.00001, 0.0001, 0.001]#[0.001, 0.0001, 0.00001, 0.000001];
 
 	# Clear the results directories
 	for (det, lamb) in zip(detectionTypes, lambdaThreshold):
