@@ -25,7 +25,7 @@ find_package(OpenCV QUIET)
 # flags
 add_definitions("-DENABLE_SSE")
 set(CMAKE_CXX_FLAGS
-   "${SSE_FLAGS} -O3 -g -std=c++0x -march=native"
+   "${SSE_FLAGS} -O3 -g -std=c++11 -march=native"
 #   "${SSE_FLAGS} -O3 -g -std=c++0x -fno-omit-frame-pointer"
 )
 
@@ -53,7 +53,8 @@ set(dso_SOURCE_FILES
   ${PROJECT_SOURCE_DIR}/src/util/settings.cpp
   ${PROJECT_SOURCE_DIR}/src/util/Undistort.cpp
   ${PROJECT_SOURCE_DIR}/src/util/globalCalib.cpp
-)
+  ${PROJECT_SOURCE_DIR}/src/Modifications/ORBextractor.cc
+        src/Modifications/cornerEdgeHarris.cpp)
 
 
 
@@ -119,7 +120,7 @@ add_library(dso ${dso_SOURCE_FILES} ${dso_opencv_SOURCE_FILES} ${dso_pangolin_SO
 if (OpenCV_FOUND AND Pangolin_FOUND)
 	message("--- compiling dso_dataset.")
 	add_executable(dso_dataset ${PROJECT_SOURCE_DIR}/src/main_dso_pangolin.cpp )
-    target_link_libraries(dso_dataset dso boost_system boost_thread cxsparse ${LIBZIP_LIBRARY} ${Pangolin_LIBRARIES} ${OpenCV_LIBS})
+    target_link_libraries(dso_dataset dso boost_system boost_thread cxsparse ${LIBZIP_LIBRARY} ${Pangolin_LIBRARIES} ${OpenCV_LIBS} pthread)
 else()
 	message("--- not building dso_dataset, since either don't have openCV or Pangolin.")
 endif()

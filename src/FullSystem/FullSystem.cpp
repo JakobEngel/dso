@@ -799,7 +799,7 @@ void FullSystem::flagPointsForRemoval()
 }
 
 
-void FullSystem::addActiveFrame( ImageAndExposure* image, int id )
+void FullSystem::addActiveFrame( ImageAndExposure* image, int id, cv::Mat imgOpenCV)
 {
 
     if(isLost) return;
@@ -821,7 +821,7 @@ void FullSystem::addActiveFrame( ImageAndExposure* image, int id )
 	// =========================== make Images / derivatives etc. =========================
 	fh->ab_exposure = image->exposure_time;
     fh->makeImages(image->image, &Hcalib);
-
+	fh->imgOpenCV = imgOpenCV;
 
 
 
@@ -1135,7 +1135,6 @@ void FullSystem::makeKeyFrame( FrameHessian* fh)
 
 
 
-
 	{
 		boost::unique_lock<boost::mutex> crlock(coarseTrackerSwapMutex);
 		coarseTracker_forNewKF->makeK(&Hcalib);
@@ -1147,8 +1146,25 @@ void FullSystem::makeKeyFrame( FrameHessian* fh)
         coarseTracker_forNewKF->debugPlotIDepthMapFloat(outputWrapper);
 	}
 
-
 	debugPlot("post Optimize");
+
+	std::cout << "=======\n\tOptimized calibration matrix: " << Hcalib.fxl() <<" " <<  Hcalib.fyl() << " " << Hcalib.cxl() << " " << Hcalib.cyl() << "\n=======\n";
+
+	// TODO: Let's check reproj error
+//	for(FrameHessian* fh : frameHessians)
+//	{
+//		for(unsigned int i=0;i<fh->pointHessians.size();i++)
+//		{
+//			PointHessian* ph = fh->pointHessians[i];
+//			if(ph==0) continue;
+//
+//			if ( ph->efPoint->stateFlag = EFPointStatus::PS_GOOD) {
+////			ph->
+//				double u = ph->u, v = ph->v;
+//				double id = ph->idepth_scaled;
+//			}
+//		}
+//	}
 
 
 

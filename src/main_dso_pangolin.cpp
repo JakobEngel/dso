@@ -50,6 +50,7 @@
 #include "IOWrapper/Pangolin/PangolinDSOViewer.h"
 #include "IOWrapper/OutputWrapper/SampleOutputWrapper.h"
 
+#include <opencv2/highgui/highgui.hpp>
 
 std::string vignette = "";
 std::string gammaCalib = "";
@@ -69,6 +70,7 @@ bool useSampleOutput=false;
 int mode=0;
 
 bool firstRosSpin=false;
+
 
 using namespace dso;
 
@@ -346,6 +348,52 @@ void parseArgument(char* arg)
 		return;
 	}
 
+
+	if(1==sscanf(arg,"detectionType=%d",&option))
+	{
+
+		detectionType = option;
+		if(option==0)
+		{
+			printf("Original feature detection!\n");
+		}
+		else if(option==1)
+		{
+			printf("Their FAST!\n");
+		}
+		else if(option==2)
+		{
+			printf("Our method - TODO!\n");
+		}
+		return;
+	}
+
+    if(1==sscanf(arg,"detectionTypeFastThreshold=%d",&option))
+    {
+		detectionTypeFastThreshold = option;
+        printf("Setting detectonTypeFastThreshold=%d!\n", detectionTypeFastThreshold);
+		return;
+
+    }
+
+    if(1==sscanf(arg,"harrisK=%f",&foption))
+    {
+        harrisK = foption;
+        printf("Setting harrisK=%f!\n", harrisK);
+        return;
+
+    }
+
+    if(1==sscanf(arg,"lambdaThreshold=%f",&foption))
+    {
+        lambdaThreshold = foption;
+        printf("Setting lambdaThreshold=%f!\n", lambdaThreshold);
+        return;
+
+    }
+
+
+
 	printf("could not parse argument \"%s\"!!!!\n", arg);
 }
 
@@ -353,6 +401,11 @@ void parseArgument(char* arg)
 
 int main( int argc, char** argv )
 {
+	lambdaThreshold=10e-6;
+	harrisK=0.04;
+	detectionTypeFastThreshold = 20;
+
+
 	//setlocale(LC_ALL, "");
 	for(int i=1; i<argc;i++)
 		parseArgument(argv[i]);
@@ -442,7 +495,8 @@ int main( int argc, char** argv )
             for(int ii=0;ii<(int)idsToPlay.size(); ii++)
             {
                 int i = idsToPlay[ii];
-                preloadedImages.push_back(reader->getImage(i));
+                cv::Mat image;
+                preloadedImages.push_back(reader->getImage(i, image));
             }
         }
 
@@ -465,11 +519,13 @@ int main( int argc, char** argv )
 
 
             ImageAndExposure* img;
+            cv::Mat imgOpenCV;
             if(preload)
                 img = preloadedImages[ii];
-            else
-                img = reader->getImage(i);
+            else {
 
+                img = reader->getImage(i, imgOpenCV);
+            }
 
 
             bool skipFrame=false;
@@ -489,7 +545,7 @@ int main( int argc, char** argv )
 
 
 
-            if(!skipFrame) fullSystem->addActiveFrame(img, i);
+            if(!skipFrame) fullSystem->addActiveFrame(img, i, imgOpenCV);
 
 
 

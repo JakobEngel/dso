@@ -35,6 +35,8 @@
 #include "FullSystem/Residuals.h"
 #include "util/ImageAndExposure.h"
 
+#include <opencv2/highgui/highgui.hpp>
+
 
 namespace dso
 {
@@ -121,7 +123,8 @@ struct FrameHessian
 	float* absSquaredGrad[PYR_LEVELS];  // only used for pixel select (histograms etc.). no NAN.
 
 
-
+	// Original OpenCV img
+	cv::Mat imgOpenCV;
 
 
 

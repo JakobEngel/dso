@@ -23,10 +23,16 @@
 
 
 #include "FullSystem/PixelSelector2.h"
- 
+
+#include "opencv2/core.hpp"
+#include "opencv2/features2d.hpp"
+#include "opencv2/xfeatures2d.hpp"
+#include "opencv2/highgui.hpp"
 // 
 
-
+#include "opencv2/imgcodecs.hpp"
+#include "opencv2/highgui.hpp"
+#include "opencv2/imgproc.hpp"
 
 #include "util/NumType.h"
 #include "IOWrapper/ImageDisplay.h"
@@ -51,8 +57,9 @@ PixelSelector::PixelSelector(int w, int h)
 	ths = new float[(w/32)*(h/32)+100];
 	thsSmoothed = new float[(w/32)*(h/32)+100];
 
-	allowFast=false;
+	allowFast=true;
 	gradHistFrame=0;
+
 }
 
 PixelSelector::~PixelSelector()
@@ -149,29 +156,29 @@ int PixelSelector::makeMaps(
 	int idealPotential = currentPotential;
 
 
-//	if(setting_pixelSelectionUseFast>0 && allowFast)
-//	{
-//		memset(map_out, 0, sizeof(float)*wG[0]*hG[0]);
-//		std::vector<cv::KeyPoint> pts;
-//		cv::Mat img8u(hG[0],wG[0],CV_8U);
-//		for(int i=0;i<wG[0]*hG[0];i++)
-//		{
-//			float v = fh->dI[i][0]*0.8;
-//			img8u.at<uchar>(i) = (!std::isfinite(v) || v>255) ? 255 : v;
-//		}
-//		cv::FAST(img8u, pts, setting_pixelSelectionUseFast, true);
-//		for(unsigned int i=0;i<pts.size();i++)
-//		{
-//			int x = pts[i].pt.x+0.5;
-//			int y = pts[i].pt.y+0.5;
-//			map_out[x+y*wG[0]]=1;
-//			numHave++;
-//		}
-//
-//		printf("FAST selection: got %f / %f!\n", numHave, numWant);
-//		quotia = numWant / numHave;
-//	}
-//	else
+	if(detectionType == 1)
+	{
+		memset(map_out, 0, sizeof(float)*wG[0]*hG[0]);
+		std::vector<cv::KeyPoint> pts;
+		cv::Mat img8u(hG[0],wG[0],CV_8U);
+		for(int i=0;i<wG[0]*hG[0];i++)
+		{
+			float v = fh->dI[i][0]*0.8;
+			img8u.at<uchar>(i) = (!std::isfinite(v) || v>255) ? 255 : v;
+		}
+		cv::FAST(img8u, pts, detectionTypeFastThreshold, true);
+		for(unsigned int i=0;i<pts.size();i++)
+		{
+			int x = pts[i].pt.x+0.5;
+			int y = pts[i].pt.y+0.5;
+			map_out[x+y*wG[0]]=1;
+			numHave++;
+		}
+
+		printf("FAST selection: got %f / %f!\n", numHave, numWant);
+		quotia = numWant / numHave;
+	}
+	else if (detectionType == 0)
 	{
 
 
@@ -227,6 +234,85 @@ int PixelSelector::makeMaps(
 
 		}
 	}
+    else if (detectionType >= 2){
+
+        // TODO: We can test the influence of those settings on final result
+        //static const int nFeatures = 2000;//fSettings["ORBextractor.nFeatures"];
+        static const float fScaleFactor = 1.2;//fSettings["ORBextractor.scaleFactor"];
+        static const int nLevels = 1;//fSettings["ORBextractor.nLevels"];
+        static const int fIniThFAST = 20;//fSettings["ORBextractor.iniThFAST"];
+
+        // TODO: THIS WAS 7 in the original implementation
+        static const int fMinThFAST = detectionTypeFastThreshold;//fSettings["ORBextractor.minThFAST"];
+
+        static double qualityLevel = 0.01;
+        static double minDistanceOfFeatures = 0;
+
+        ORB_SLAM2::ORBextractor::DetectorType detectorType = ORB_SLAM2::ORBextractor::DetectorType::FAST; // FAST
+        if (detectionType == 5 )
+            detectorType = ORB_SLAM2::ORBextractor::DetectorType::SHITOMASI;
+        else if (detectionType == 6)
+            detectorType = ORB_SLAM2::ORBextractor::DetectorType::HARRIS;
+        else if (detectionType == 7)
+            detectorType = ORB_SLAM2::ORBextractor::DetectorType::HARRIS_CE;
+
+
+        oRBextractor = new ORB_SLAM2::ORBextractor(numWant,fScaleFactor,nLevels, detectorType,fIniThFAST,fMinThFAST, qualityLevel, minDistanceOfFeatures, harrisK, lambdaThreshold);
+
+        memset(map_out, 0, sizeof(float)*wG[0]*hG[0]);
+        cv::Mat img8u(hG[0],wG[0],CV_8U);
+
+
+        float minVal = fh->dI[0][0], maxVal = fh->dI[0][0];
+        for(int i=0;i<wG[0]*hG[0];i++) {
+            if (fh->dI[i][0] > maxVal)
+                maxVal = fh->dI[i][0];
+            if (fh->dI[i][0] < minVal)
+                minVal = fh->dI[i][0];
+        }
+
+        for(int i=0;i<wG[0]*hG[0];i++)
+        {
+            // TODO: Why image intensity * 0,8? Maybe it should be scaled to take all possible values of char?
+//            float v = fh->dI[i][0]*0.8;
+//            img8u.at<uchar>(i) = (!std::isfinite(v) || v>255) ? 255 : v;
+            float v = fh->dI[i][0];
+            v = (v - minVal) / (maxVal - minVal) * 255;
+            img8u.at<uchar>(i) = (uchar) v;
+
+        }
+
+        cv::Mat imgForDetection;
+        if (detectionType == 2)
+            imgForDetection = img8u;
+        else if (detectionType == 3)
+            cv::equalizeHist( img8u, imgForDetection );
+        else if (detectionType > 3) {
+             imgForDetection = fh->imgOpenCV;
+        }
+
+//        printf("MIN/MAX values of the original image - min: %f, max: %f\n", minVal, maxVal);
+
+//        double min, max;
+//        cv::minMaxLoc(img8u, &min, &max);
+//        printf("MIN/MAX values of the image - min: %f, max: %f\n", min, max);
+
+        std::vector<cv::KeyPoint> pts;
+        oRBextractor->extractOnlyKeypoints(imgForDetection,cv::Mat(),pts);
+
+        for(unsigned int i=0;i<pts.size();i++)
+        {
+            int x = pts[i].pt.x+0.5;
+            int y = pts[i].pt.y+0.5;
+            map_out[x+y*wG[0]]=1;
+            numHave++;
+        }
+
+        printf("ORBSLAM selection: got %f / %f!\n", numHave, numWant);
+        quotia = numWant / numHave;
+
+        delete oRBextractor;
+    }
 
 	int numHaveSub = numHave;
 	if(quotia < 0.95)

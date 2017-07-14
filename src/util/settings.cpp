@@ -192,9 +192,13 @@ bool disableAllDisplay = false;
 bool setting_onlyLogKFPoses = true;
 bool setting_logStuff = true;
 
+int detectionType = 0;
+int detectionTypeFastThreshold = 20;
+float harrisK = 0.05;
+float lambdaThreshold = 10e-6;
 
 
-bool goStepByStep = false;
+	bool goStepByStep = false;
 
 
 bool setting_render_displayCoarseTrackingFull=false;
@@ -297,18 +301,18 @@ int staticPatternNum[10] = {
 		25
 };
 
-int staticPatternPadding[10] = {
-		1,
-		1,
-		1,
-		1,
-		2,
-		2,
-		2,
-		3,
-		2,
-		4
-};
+//int staticPatternPadding[10] = {
+//		1,
+//		1,
+//		1,
+//		1,
+//		2,
+//		2,
+//		2,
+//		3,
+//		2,
+//		4
+//};
 
 
 }

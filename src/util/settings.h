@@ -187,6 +187,11 @@ extern int sparsityFactor;
 extern bool goStepByStep;
 extern bool plotStereoImages;
 extern bool multiThreading;
+extern int detectionType;
+extern int detectionTypeFastThreshold;
+extern float harrisK;
+extern float lambdaThreshold;
+
 
 extern float freeDebugParam1;
 extern float freeDebugParam2;
@@ -211,7 +216,8 @@ extern int staticPatternPadding[10];
 //#define patternP staticPattern[setting_pattern]
 //#define patternPadding staticPatternPadding[setting_pattern]
 
-//
+// TODO: Original
+//#define patternNum 8
 #define patternNum 8
 #define patternP staticPattern[8]
 #define patternPadding 2
