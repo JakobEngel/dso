@@ -23,14 +23,15 @@ find_package(LibZip QUIET)
 find_package(Pangolin 0.2 QUIET)
 find_package(OpenCV QUIET)
 
+
 # flags
 set(CMAKE_CXX_FLAGS
    "-O3 -std=c++0x"
 )
 
-# ARM compilation with neon (for Raspberry Pi 3)
-if(${CMAKE_SYSTEM_PROCESSOR} MATCHES ".*arm.*")
-	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -mfloat-abi=hard -mfpu=neon-fp-armv8")
+# ARM compilation with neon (for Raspberry Pi 3 only)
+if(${CMAKE_LIBRARY_ARCHITECTURE} MATCHES "arm-linux-gnueabihf" AND ${CMAKE_SYSTEM_PROCESSOR} MATCHES "armv7l")
+	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -mtune=cortex-a53 -mfloat-abi=hard -mfpu=neon-fp-armv8")
 	# -march=native induces errors on Raspberry Pi 3
 else()
 	add_definitions("-DENABLE_SSE")
