@@ -164,11 +164,11 @@ and ommits the above computation.
 
 
 **That strange "0.5" offset:**
- Internally, DSO uses the convention that the pixel at integer position (1,1) in the image 
+ Internally, DSO uses the convention that the pixel at integer position (1,1) in the image, i.e. the pixel in the second row and second column,
 contains the integral over the continuous image function from (0.5,0.5) to (1.5,1.5), i.e., approximates a "point-sample" of the 
 continuous image functions at (1.0, 1.0).
 In turn, there seems to be no unifying convention across calibration toolboxes whether the pixel at integer position (1,1)
-contains the integral over (0.5,0.5) to (1.5,1.5), or the integral over (1,1) to (0,0). The above conversion assumes that 
+contains the integral over (0.5,0.5) to (1.5,1.5), or the integral over (1,1) to (2,2). The above conversion assumes that 
 the given calibration in the calibration file uses the latter convention, and thus applies the -0.5 correction.
 Note that this also is taken into account when creating the scale-pyramid (see `globalCalib.cpp`).
 
