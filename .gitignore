@@ -7,3 +7,4 @@ build-*
 *.so
 *.a
 *.so.*
+thirdparty/libzip-1.1.1
