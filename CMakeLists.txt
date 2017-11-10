@@ -4,9 +4,15 @@ PROJECT(${PROJECT_NAME})
 CMAKE_MINIMUM_REQUIRED(VERSION 2.6)
 #set(CMAKE_VERBOSE_MAKEFILE ON)
 
-
-set(BUILD_TYPE Release)
-#set(BUILD_TYPE RelWithDebInfo)
+# Set default build type if not specified otherwise.
+# See https://cmake.org/pipermail/cmake/2012-May/050243.html
+if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
+  set(CMAKE_BUILD_TYPE Release CACHE STRING "Choose the type of build." FORC)
+  message(STATUS "Setting build type to '${CMAKE_BUILD_TYPE}' as none was specified.")
+  # Set the possible values of build type for cmake-gui
+  set_property(CACHE CMAKE_BUILD_TYPE PROPERTY STRINGS "Debug" "Release"
+    "MinSizeRel" "RelWithDebInfo")
+endif()
 
 set(EXECUTABLE_OUTPUT_PATH bin)
 set(LIBRARY_OUTPUT_PATH lib)
