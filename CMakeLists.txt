@@ -4,6 +4,10 @@ PROJECT(${PROJECT_NAME})
 CMAKE_MINIMUM_REQUIRED(VERSION 2.6)
 #set(CMAKE_VERBOSE_MAKEFILE ON)
 
+# TODO: make this work like a catkin package if it is built with
+# catkin, otherwise plain cmake; change package.xml to catkin; check
+# realsense_camera or librealsense for an example
+
 # Set default build type if not specified otherwise.
 # See https://cmake.org/pipermail/cmake/2012-May/050243.html
 if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
@@ -28,6 +32,8 @@ find_package(Boost COMPONENTS system thread)
 
 # optional libraries
 find_package(LibZip QUIET)
+
+# TODO: make sure this works in general with catkin_tools, not just because of cmake package caching (~/.cmake/packages/Pangolin)
 find_package(Pangolin 0.2 QUIET)
 find_package(OpenCV QUIET)
 
@@ -36,7 +42,10 @@ set(CMAKE_CXX_FLAGS
    "-std=c++14 -march=native"
 #   "-O3 -g -std=c++14 -fno-omit-frame-pointer"
 )
-option(DSO_BUILD_STATIC_LIBRARY        "Build a static dso library, instead of shared" ON)
+
+#message("   CMAKE_CXX_FLAGS: ${CMAKE_CXX_FLAGS}")
+
+option(DSO_BUILD_STATIC_LIBRARY        "Build a static dso library, instead of shared" OFF)
 
 if (MSVC)
      set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /EHsc")
@@ -157,6 +166,7 @@ if (OpenCV_FOUND AND Pangolin_FOUND)
 	message("--- compiling dso_dataset.")
 	add_executable(dso_dataset ${PROJECT_SOURCE_DIR}/src/main_dso_pangolin.cpp )
     target_link_libraries(dso_dataset dso boost_system cxsparse ${BOOST_THREAD_LIBRARY} ${LIBZIP_LIBRARY} ${Pangolin_LIBRARIES} ${OpenCV_LIBS})
+	install (TARGETS dso_dataset RUNTIME DESTINATION ${EXECUTABLE_OUTPUT_PATH})
 else()
 	message("--- not building dso_dataset, since either don't have openCV or Pangolin.")
 endif()

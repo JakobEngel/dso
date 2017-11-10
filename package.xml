@@ -1,0 +1,24 @@
+<?xml version="1.0"?>
+<package format="2">
+  <name>dso</name>
+  <version>1.0.0</version>
+  <description>Direct Sparse Visual Odometry</description>
+  <maintainer email="demmeln@in.tum.de">Nikolaus Demmel</maintainer>
+  <maintainer email="engelj-@in-dot-tum-dot.de">Jakob Engel</maintainer>
+  <author email="engelj-@in-dot-tum-dot.de">Jakob Engel</author>
+  <license>GPLv3</license>
+  <url>http://vision.in.tum.de/dso</url>
+  <buildtool_depend>cmake</buildtool_depend>
+  <depend>eigen</depend>
+  <depend>pangolin</depend>
+  <depend>suitesparse</depend>
+  <depend>boost</depend>
+  <depend>libopencv-dev</depend>
+  <depend>zlib</depend>
+  <export>
+    <build_type>cmake</build_type>
+  </export>
+  <!-- todo: define rosdep keys for libzip -->
+</package>
+
+
