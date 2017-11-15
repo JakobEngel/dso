@@ -20,12 +20,12 @@ matrix:
   - compiler: gcc
     os: linux
     env: BUILD_TYPE=Release
-#  - compiler: clang
-#    os: linux
-#    env: BUILD_TYPE=Debug
-#  - compiler: clang
-#    os: linux
-#    env: BUILD_TYPE=Release
+  - compiler: clang
+    os: linux
+    env: BUILD_TYPE=Debug
+  - compiler: clang
+    os: linux
+    env: BUILD_TYPE=Release
   - compiler: clang
     os: osx
     env: BUILD_TYPE=Release
