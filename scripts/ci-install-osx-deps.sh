@@ -5,7 +5,7 @@
 set -x # echo on
 set -e # exit on error
 
-# Travis suggests to not call brew update
+brew update
 brew install boost eigen glew opencv libzip cmake pkgconfig
 
 brew install ccache
