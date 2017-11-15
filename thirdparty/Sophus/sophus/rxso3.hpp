@@ -21,7 +21,7 @@
 // IN THE SOFTWARE.
 
 #ifndef SOPHUS_RXSO3_HPP
-#define RXSO3_HPP
+#define SOPHUS_RXSO3_HPP
 
 #include "sophus.hpp"
 #include "so3.hpp"
@@ -377,7 +377,7 @@ public:
   const Adjoint d_lieBracketab_by_d_a(const Tangent & b) {
     Adjoint res;
     res.setZero();
-    res.template topLeftCorner<3,3>() = -SO3::hat(b.template head<3>());
+    res.template topLeftCorner<3,3>() = -SO3d::hat(b.template head<3>());
     return res;
   }
 
