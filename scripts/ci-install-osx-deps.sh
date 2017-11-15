@@ -6,7 +6,8 @@ set -x # echo on
 set -e # exit on error
 
 brew update
-brew install boost eigen glew opencv libzip cmake pkgconfig
+brew upgrad cmake pkgconfig # already present in the travis image
+brew install boost eigen glew opencv libzip 
 
 brew install ccache
 export PATH="/usr/local/opt/ccache/libexec:$PATH"
