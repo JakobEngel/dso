@@ -26,9 +26,9 @@ matrix:
 #  - compiler: clang
 #    os: linux
 #    env: BUILD_TYPE=Release
-#  - compiler: clang
-#    os: osx
-#    env: BUILD_TYPE=Release
+  - compiler: clang
+    os: osx
+    env: BUILD_TYPE=Release
 
 env:
   global:
@@ -36,7 +36,7 @@ env:
 
 before_install:
   - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then scripts/ci-install-linux-deps.sh ; fi
-#  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then scripts/ci-install-osx-deps.sh ; fi
+  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then scripts/ci-install-osx-deps.sh ; fi
 
 script:
   - mkdir build
