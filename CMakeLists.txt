@@ -162,25 +162,14 @@ else()
 	message("--- not building dso_dataset, since either don't have openCV or Pangolin.")
 endif()
 
-file(GLOB dso_HEADER_FILES "${PROJECT_SOURCE_DIR}/src/FullSystem/*.h")
-
-install (FILES ${dso_HEADER_FILES} DESTINATION ${INCLUDE_OUTPUT_PATH}/FullSystem)
-
-file(GLOB dso_HEADER_FILES "${PROJECT_SOURCE_DIR}/src/OptimizationBackend/*.h")
-
-install (FILES ${dso_HEADER_FILES} DESTINATION ${INCLUDE_OUTPUT_PATH}/OptimizationBackend)
-
-file(GLOB dso_HEADER_FILES "${PROJECT_SOURCE_DIR}/src/IOWrapper/*.h")
-
-install (FILES ${dso_HEADER_FILES} DESTINATION ${INCLUDE_OUTPUT_PATH}/IOWrapper)
-
-file(GLOB dso_HEADER_FILES "${PROJECT_SOURCE_DIR}/src/util/*.h")
-
-install (FILES ${dso_HEADER_FILES} DESTINATION ${INCLUDE_OUTPUT_PATH}/util)
+# install all header files
+install(DIRECTORY src/ DESTINATION ${INCLUDE_OUTPUT_PATH}
+        FILES_MATCHING PATTERN "*.h")
 
 #DSO comes with its own version of Sophus (TODO try to get the library from https://github.com/strasdat/Sophus)
-file(GLOB SOPHUS_HEADER_FILES "${PROJECT_SOURCE_DIR}/thirdparty/Sophus/sophus/*.hpp")
-install (FILES ${SOPHUS_HEADER_FILES} DESTINATION ${INCLUDE_OUTPUT_PATH}/sophus)
+install(DIRECTORY thirdparty/Sophus/sophus DESTINATION ${INCLUDE_OUTPUT_PATH}
+        FILES_MATCHING PATTERN "*.hpp")
+
 
 macro(libraries_for_pkgconfig VARNAME)
     foreach(__lib ${ARGN})
