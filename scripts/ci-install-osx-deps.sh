@@ -6,8 +6,17 @@ set -x # echo on
 set -e # exit on error
 
 brew update
-brew upgrade cmake pkgconfig # already present in the travis image
-brew install boost eigen glew opencv libzip 
+
+# The following are already present in the travis image.
+# We can probably live with slightly outdated formulas, so skip the upgrade
+# which takes very long (in particular boost).
+#brew upgrade cmake pkgconfig boost
+
+# remove numpy, which is present in the travis image.
+# It will be installed from brew as opencv dependency, which fails if already present.
+/usr/bin/yes | pip uninstall numpy > /dev/null 2>&1
+
+brew install eigen glew opencv libzip
 
 brew install ccache
 export PATH="/usr/local/opt/ccache/libexec:$PATH"

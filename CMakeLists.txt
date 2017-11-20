@@ -38,8 +38,8 @@ find_package(OpenCV QUIET)
 
 # flags
 set(CMAKE_CXX_FLAGS
-   "-std=c++14 -march=native"
-#   "-O3 -g -std=c++14 -fno-omit-frame-pointer"
+   "-std=c++14 -march=native ${CMAKE_CXX_FLAGS}"
+#   "-O3 -g -fno-omit-frame-pointer"
 )
 
 #message("   CMAKE_CXX_FLAGS: ${CMAKE_CXX_FLAGS}")

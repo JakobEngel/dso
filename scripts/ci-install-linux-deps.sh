@@ -10,12 +10,7 @@ ROOT_DIR="$PWD"
 sudo apt-get update -qq
 
 # basic dependencies (needed in minimalistic docker containers, but not travis)
-#sudo apt-get install -qq build-essential git cmake
-
-# make recent gcc default (installed by travis "addon")
-sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-5 60 --slave /usr/bin/g++ g++ /usr/bin/g++-5
-gcc --version
-g++ --version
+#sudo apt-get install -qq build-essential git cmake wget pkg-config
 
 # get more recent cmake for e.g. CMAKE_CXX_COMPILER_LAUNCHER
 cd "$ROOT_DIR"
@@ -42,12 +37,10 @@ cd "$ROOT_DIR"
 # skip libeigen3-dev, since we installed manually above
 sudo apt-get install -qq libglew-dev libc++-dev
 git clone https://github.com/stevenlovegrove/Pangolin.git
-cd Pangolin
-mkdir build
-cd build
+mkdir Pangolin/build
+cd Pangolin/build
 cmake -DCMAKE_CXX_COMPILER_LAUNCHER=ccache -DCMAKE_BUILD_TYPE=$BUILD_TYPE ..
 make
-
 
 # deps for DSO
 # skip libeigen3-dev, since we installed manually above

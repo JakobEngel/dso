@@ -1,31 +1,34 @@
 # no xenial support from travis yet...
 dist: trusty
 sudo: enabled
+language: cpp
+cache: ccache
 
 # get c++14 compatible gcc version
 addons:
   apt:
     sources:
-      - sourceline: 'ppa:ubuntu-toolchain-r/test'
+      - ubuntu-toolchain-r-test
     packages:
       - gcc-5
       - g++-5
 
-language: cpp
-
-cache: ccache
-
+# See: https://docs.travis-ci.com/user/languages/c/
+# We don't include clang builds, since there are issues
+# with C++11/14 and libc++ on Trusty, e.g. when including
+# OpenCV headers.
 matrix:
   include:
   - compiler: gcc
     os: linux
-    env: BUILD_TYPE=Release
-  - compiler: clang
+    env:
+      - BUILD_TYPE=Release
+      - MATRIX_EVAL="CC=gcc-5 && CXX=g++-5"
+  - compiler: gcc
     os: linux
-    env: BUILD_TYPE=Debug
-  - compiler: clang
-    os: linux
-    env: BUILD_TYPE=Release
+    env:
+      - BUILD_TYPE=Debug
+      - MATRIX_EVAL="CC=gcc-5 && CXX=g++-5"
   - compiler: clang
     os: osx
     env: BUILD_TYPE=Release
@@ -35,6 +38,7 @@ env:
     - MAKEFLAGS="-j 2"
 
 before_install:
+  - eval "${MATRIX_EVAL}"
   - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then scripts/ci-install-linux-deps.sh ; fi
   - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then scripts/ci-install-osx-deps.sh ; fi
 
