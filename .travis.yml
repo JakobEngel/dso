@@ -47,4 +47,5 @@ script:
   - cd build
   - cmake -DCMAKE_CXX_COMPILER_LAUNCHER=ccache -DCMAKE_BUILD_TYPE=$BUILD_TYPE ..
   - make
+  - sudo make install
 #  - make test
