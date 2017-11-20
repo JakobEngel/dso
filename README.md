@@ -15,12 +15,14 @@ Get some datasets from [https://vision.in.tum.de/mono-dataset](https://vision.in
 
 #### 2.1 Required Dependencies
 
+The following instructions are tested on Ubuntu 16.04. Ubuntu 14.04
+should also work. Other platforms might work with minor adjustments.
+For Mac OS X, see below.
+
 ##### eigen3 and boost (required).
 Required. Install with
 
-		sudo apt-get install libeigen3-dev libboost-all-dev
-
-
+    sudo apt-get install libeigen3-dev libboost-all-dev
 
 #### 2.2 Optional Dependencies
 
@@ -56,7 +58,7 @@ On Ubuntu 16.04 and up, the version from apt should suffice:
 
     sudo apt-get install libzip-dev
 
-On Ubuntu 14.04:
+On Ubuntu 14.04, you need to compile it manually:
 
 	sudo apt-get install zlib1g-dev
 	cd dso/thirdparty
@@ -70,6 +72,16 @@ On Ubuntu 14.04:
 ##### sse2neon (required for ARM builds).
 After cloning, just run `git submodule update --init` to include this.  It translates Intel-native SSE functions to ARM-native NEON functions during the compilation process.
 
+##### Mac OS X
+
+You can install the dependencies with Homebrew.
+
+    brew install cmake pkgconfig boost eigen glew opencv libzip
+
+The install and build
+[Pangolin](https://github.com/stevenlovegrove/Pangolin.git) as above,
+and proceed below.
+
 #### 2.3 Build
 
 		cd dso
@@ -80,7 +92,7 @@ After cloning, just run `git submodule update --init` to include this.  It trans
 	
 this will by default compile a dynamic library `libdso.so`, which can be linked from external projects.
 It will also build a binary `dso_dataset`, to run DSO on datasets. However, for this
-OpenCV and Pangolin need to be installed. You can switch to building a static library with the `cmake -DDSO_BUILD_STATIC_LIBRARY=ON`.
+OpenCV and Pangolin need to be installed. You can switch to building a static library with `cmake -DDSO_BUILD_STATIC_LIBRARY=ON`.
 
 
 
