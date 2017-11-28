@@ -8,3 +8,10 @@ build-*
 *.a
 *.so.*
 thirdparty/libzip-1.1.1
+.idea
+data
+build
+Build
+*.*~
+cmake-build-debug
+.DS_Store
