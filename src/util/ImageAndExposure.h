@@ -31,6 +31,17 @@ namespace dso
 {
 
 
+/**
+* This class is used to transport the image data, exposure time, w, h, and timestamp throughout the
+* system. TODO it may me useful to give this class the stereo pair instead of just the mono image 
+* already here. 
+*
+* See https://docs.opencv.org/3.1.0/d3/d63/classcv_1_1Mat.html -- cv::Mat(int rows, int cols, int type, void *data, size_t step=AUTO_STEP). 
+* This is a constructor for a cv::Mat that can be used with a float* so we can use opencv's depth map functions
+*
+* - Nate
+*/
+
 class ImageAndExposure
 {
 public:
@@ -54,11 +65,13 @@ public:
 		delete[] imageR;
 	}
 
+	// Simply copies this.exposure_time to other.exposure_time
 	inline void copyMetaTo(ImageAndExposure &other)
 	{
 		other.exposure_time = exposure_time;
 	}
 
+	// Get a copy of the object that points to a separate place in memory.
 	inline ImageAndExposure* getDeepCopy()
 	{
 		ImageAndExposure* img = new ImageAndExposure(w,h,timestamp);

@@ -213,6 +213,13 @@ void FullSystem::setOriginalCalib(const VecXf &originalCalib, int originalW, int
 
 }
 
+
+/**
+* This function seems to estimate the irradiance to pixel intensity mapping function,
+* G : R -> ([0,255] intersect Z), given the inverse of B, the irradiance as explained in the paper.
+* I may be wrong
+*
+*/
 void FullSystem::setGammaFunction(float* BInv)
 {
 	if(BInv==0) return;
@@ -274,8 +281,8 @@ Vec4 FullSystem::trackNewCoarse(FrameHessian* fh)
 	assert(allFrameHistory.size() > 0);
 	// set pose initialization.
 
-    for(IOWrap::Output3DWrapper* ow : outputWrapper)
-        ow->pushLiveFrame(fh);
+    	for(IOWrap::Output3DWrapper* ow : outputWrapper)
+        	ow->pushLiveFrame(fh);
 
 
 
@@ -1200,6 +1207,7 @@ void FullSystem::makeKeyFrame( FrameHessian* fh)
 
 void FullSystem::initializeFromInitializer(FrameHessian* newFrame)
 {
+	// Where we initialize with 10 images
 	boost::unique_lock<boost::mutex> lock(mapMutex);
 
 	// add firstframe.
