@@ -70,7 +70,7 @@ namespace IOWrap
  *      ->id = ID of that frame, starting with 0 for the very first frame.
  *
  *      ->incoming_id = ID passed into [addActiveFrame( ImageAndExposure* image, int id )].
- *	->timestamp = timestamp passed into [addActiveFrame( ImageAndExposure* image, int id )] as image.timestamp.
+ *  ->timestamp = timestamp passed into [addActiveFrame( ImageAndExposure* image, int id )] as image.timestamp.
  *
  * [FrameHessian]
  *      ->immaturePoints: contains points that have not been "activated" (they do however have a depth initialization).
@@ -87,7 +87,7 @@ namespace IOWrap
  *
  *
  * [PointHessian]
- * 	->u,v: pixel-coordinates of point.
+ *  ->u,v: pixel-coordinates of point.
  *      ->idepth_scaled: inverse depth of point.
  *                       DO NOT USE [idepth], since it may be scaled with [SCALE_IDEPTH] ... however that is currently set to 1 so never mind.
  *      ->host: pointer to host-frame of point.
@@ -98,7 +98,7 @@ namespace IOWrap
  *      ->idepth_hessian: hessian value (inverse variance) of inverse depth.
  *
  * [ImmaturePoint]
- * 	->u,v: pixel-coordinates of point.
+ *  ->u,v: pixel-coordinates of point.
  *      ->idepth_min, idepth_max: the initialization sais that the inverse depth of this point is very likely
  *        between these two thresholds (their mean being the best guess)
  *      ->host: pointer to host-frame of point.

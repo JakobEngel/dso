@@ -42,55 +42,55 @@ class ImageAndExposure
 {
 public:
 
-	EIGEN_MAKE_ALIGNED_OPERATOR_NEW;
-	float* imageL;			// irradiance. between 0 and 256 (stereo rectified)
-	float* imageR;			// irradiance. between 0 and 256 (stereo rectified)
-	int w,h;				// width and height;
-	double timestamp;       // timestamp of this image if we have it
-	float exposure_time;	// exposure time in ms.
-	Vec3 p_2in1;			// second camera seen from the first
-    Mat33 R_1to2;			// rotation from first to second camera
+    EIGEN_MAKE_ALIGNED_OPERATOR_NEW;
+    float* imageL;          // irradiance. between 0 and 256 (stereo rectified)
+    float* imageR;          // irradiance. between 0 and 256 (stereo rectified)
+    int w,h;                // width and height;
+    double timestamp;       // timestamp of this image if we have it
+    float exposure_time;    // exposure time in ms.
+    Vec3 p_2in1;            // second camera seen from the first
+    Mat33 R_1to2;           // rotation from first to second camera
 
     /**
      * Default constructor
      * Will make a set of empty images to size
      */
     inline ImageAndExposure(int w_, int h_, double timestamp_=0) : w(w_), h(h_), timestamp(timestamp_)
-	{
-		imageL = new float[w*h];
-		imageR = new float[w*h];
-		exposure_time=1;
-	}
+    {
+        imageL = new float[w*h];
+        imageR = new float[w*h];
+        exposure_time=1;
+    }
 
     /**
      * Deconstructor
      * deletes our allocated image arrays
      */
-	inline ~ImageAndExposure()
-	{
-		delete[] imageL;
-		delete[] imageR;
-	}
+    inline ~ImageAndExposure()
+    {
+        delete[] imageL;
+        delete[] imageR;
+    }
 
-	/**
-	 * Simply copies this.exposure_time to other.exposure_time
-	 */
-	inline void copyMetaTo(ImageAndExposure &other)
-	{
-		other.exposure_time = exposure_time;
-	}
+    /**
+     * Simply copies this.exposure_time to other.exposure_time
+     */
+    inline void copyMetaTo(ImageAndExposure &other)
+    {
+        other.exposure_time = exposure_time;
+    }
 
-	/**
-	 * Get a copy of the object that points to a separate place in memory.
-	 */
-	inline ImageAndExposure* getDeepCopy()
-	{
-		ImageAndExposure* img = new ImageAndExposure(w,h,timestamp);
-		img->exposure_time = exposure_time;
-		memcpy(img->imageL, imageL, w*h*sizeof(float));
-		memcpy(img->imageR, imageR, w*h*sizeof(float));
-		return img;
-	}
+    /**
+     * Get a copy of the object that points to a separate place in memory.
+     */
+    inline ImageAndExposure* getDeepCopy()
+    {
+        ImageAndExposure* img = new ImageAndExposure(w,h,timestamp);
+        img->exposure_time = exposure_time;
+        memcpy(img->imageL, imageL, w*h*sizeof(float));
+        memcpy(img->imageR, imageR, w*h*sizeof(float));
+        return img;
+    }
 };
 
 

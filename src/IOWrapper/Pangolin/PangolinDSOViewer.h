@@ -46,92 +46,92 @@ class KeyFrameDisplay;
 
 struct GraphConnection
 {
-	KeyFrameDisplay* from;
-	KeyFrameDisplay* to;
-	int fwdMarg, bwdMarg, fwdAct, bwdAct;
+    KeyFrameDisplay* from;
+    KeyFrameDisplay* to;
+    int fwdMarg, bwdMarg, fwdAct, bwdAct;
 };
 
 
 class PangolinDSOViewer : public Output3DWrapper
 {
 public:
-	EIGEN_MAKE_ALIGNED_OPERATOR_NEW;
+    EIGEN_MAKE_ALIGNED_OPERATOR_NEW;
     PangolinDSOViewer(int w, int h, bool startRunThread=true);
-	virtual ~PangolinDSOViewer();
+    virtual ~PangolinDSOViewer();
 
-	void run();
-	void close();
+    void run();
+    void close();
 
-	void addImageToDisplay(std::string name, MinimalImageB3* image);
-	void clearAllImagesToDisplay();
+    void addImageToDisplay(std::string name, MinimalImageB3* image);
+    void clearAllImagesToDisplay();
 
 
-	// ==================== Output3DWrapper Functionality ======================
+    // ==================== Output3DWrapper Functionality ======================
     virtual void publishGraph(const std::map<uint64_t,Eigen::Vector2i> &connectivity);
     virtual void publishKeyframes( std::vector<FrameHessian*> &frames, bool final, CalibHessian* HCalib);
     virtual void publishCamPose(FrameShell* frame, CalibHessian* HCalib);
 
 
-	virtual void pushLiveFrame(FrameHessian* image);
-	virtual void pushDepthImage(MinimalImageB3* image);
+    virtual void pushLiveFrame(FrameHessian* image);
+    virtual void pushDepthImage(MinimalImageB3* image);
     virtual bool needPushDepthImage();
 
-	virtual void join();
+    virtual void join();
 
-	virtual void reset();
+    virtual void reset();
 private:
 
-	bool needReset;
-	void reset_internal();
-	void drawConstraints();
+    bool needReset;
+    void reset_internal();
+    void drawConstraints();
 
-	boost::thread runThread;
-	bool running;
-	int w,h;
-
-
-
-	// images rendering
-	boost::mutex openImagesMutex;
-	MinimalImageB3* internalVideoImg;
-	MinimalImageB3* internalKFImg;
-	MinimalImageB3* internalResImg;
-	bool videoImgChanged, kfImgChanged, resImgChanged;
+    boost::thread runThread;
+    bool running;
+    int w,h;
 
 
 
-	// 3D model rendering
-	boost::mutex model3DMutex;
-	KeyFrameDisplay* currentCam;
-	std::vector<KeyFrameDisplay*> keyframes;
-	std::vector<Vec3f,Eigen::aligned_allocator<Vec3f>> allFramePoses;
-	std::map<int, KeyFrameDisplay*> keyframesByKFID;
-	std::vector<GraphConnection,Eigen::aligned_allocator<GraphConnection>> connections;
+    // images rendering
+    boost::mutex openImagesMutex;
+    MinimalImageB3* internalVideoImg;
+    MinimalImageB3* internalKFImg;
+    MinimalImageB3* internalResImg;
+    bool videoImgChanged, kfImgChanged, resImgChanged;
 
 
 
-	// render settings
-	bool settings_showKFCameras;
-	bool settings_showCurrentCamera;
-	bool settings_showTrajectory;
-	bool settings_showFullTrajectory;
-	bool settings_showActiveConstraints;
-	bool settings_showAllConstraints;
-
-	float settings_scaledVarTH;
-	float settings_absVarTH;
-	int settings_pointCloudMode;
-	float settings_minRelBS;
-	int settings_sparsity;
+    // 3D model rendering
+    boost::mutex model3DMutex;
+    KeyFrameDisplay* currentCam;
+    std::vector<KeyFrameDisplay*> keyframes;
+    std::vector<Vec3f,Eigen::aligned_allocator<Vec3f>> allFramePoses;
+    std::map<int, KeyFrameDisplay*> keyframesByKFID;
+    std::vector<GraphConnection,Eigen::aligned_allocator<GraphConnection>> connections;
 
 
-	// timings
-	struct timeval last_track;
-	struct timeval last_map;
+
+    // render settings
+    bool settings_showKFCameras;
+    bool settings_showCurrentCamera;
+    bool settings_showTrajectory;
+    bool settings_showFullTrajectory;
+    bool settings_showActiveConstraints;
+    bool settings_showAllConstraints;
+
+    float settings_scaledVarTH;
+    float settings_absVarTH;
+    int settings_pointCloudMode;
+    float settings_minRelBS;
+    int settings_sparsity;
 
 
-	std::deque<float> lastNTrackingMs;
-	std::deque<float> lastNMappingMs;
+    // timings
+    struct timeval last_track;
+    struct timeval last_map;
+
+
+    std::deque<float> lastNTrackingMs;
+    std::deque<float> lastNMappingMs;
 };
 
 

@@ -51,49 +51,49 @@ class EnergyFunctional;
 class EFResidual
 {
 public:
-	EIGEN_MAKE_ALIGNED_OPERATOR_NEW;
+    EIGEN_MAKE_ALIGNED_OPERATOR_NEW;
 
-	inline EFResidual(PointFrameResidual* org, EFPoint* point_, EFFrame* host_, EFFrame* target_) :
-		data(org), point(point_), host(host_), target(target_)
-	{
-		isLinearized=false;
-		isActiveAndIsGoodNEW=false;
-		J = new RawResidualJacobian();
-		assert(((long)this)%16==0);
-		assert(((long)J)%16==0);
-	}
-	inline ~EFResidual()
-	{
-		delete J;
-	}
-
-
-	void takeDataF();
+    inline EFResidual(PointFrameResidual* org, EFPoint* point_, EFFrame* host_, EFFrame* target_) :
+        data(org), point(point_), host(host_), target(target_)
+    {
+        isLinearized=false;
+        isActiveAndIsGoodNEW=false;
+        J = new RawResidualJacobian();
+        assert(((long)this)%16==0);
+        assert(((long)J)%16==0);
+    }
+    inline ~EFResidual()
+    {
+        delete J;
+    }
 
 
-	void fixLinearizationF(EnergyFunctional* ef);
+    void takeDataF();
 
 
-	// structural pointers
-	PointFrameResidual* data;
-	int hostIDX, targetIDX;
-	EFPoint* point;
-	EFFrame* host;
-	EFFrame* target;
-	int idxInAll;
-
-	RawResidualJacobian* J;
-
-	VecNRf res_toZeroF;
-	Vec8f JpJdF;
+    void fixLinearizationF(EnergyFunctional* ef);
 
 
-	// status.
-	bool isLinearized;
+    // structural pointers
+    PointFrameResidual* data;
+    int hostIDX, targetIDX;
+    EFPoint* point;
+    EFFrame* host;
+    EFFrame* target;
+    int idxInAll;
 
-	// if residual is not OOB & not OUTLIER & should be used during accumulations
-	bool isActiveAndIsGoodNEW;
-	inline const bool &isActive() const {return isActiveAndIsGoodNEW;}
+    RawResidualJacobian* J;
+
+    VecNRf res_toZeroF;
+    Vec8f JpJdF;
+
+
+    // status.
+    bool isLinearized;
+
+    // if residual is not OOB & not OUTLIER & should be used during accumulations
+    bool isActiveAndIsGoodNEW;
+    inline const bool &isActive() const {return isActiveAndIsGoodNEW;}
 };
 
 
@@ -103,39 +103,39 @@ class EFPoint
 {
 public:
     EIGEN_MAKE_ALIGNED_OPERATOR_NEW;
-	EFPoint(PointHessian* d, EFFrame* host_) : data(d),host(host_)
-	{
-		takeData();
-		stateFlag=EFPointStatus::PS_GOOD;
-	}
-	void takeData();
+    EFPoint(PointHessian* d, EFFrame* host_) : data(d),host(host_)
+    {
+        takeData();
+        stateFlag=EFPointStatus::PS_GOOD;
+    }
+    void takeData();
 
-	PointHessian* data;
-
-
-
-	float priorF;
-	float deltaF;
+    PointHessian* data;
 
 
-	// constant info (never changes in-between).
-	int idxInPoints;
-	EFFrame* host;
 
-	// contains all residuals.
-	std::vector<EFResidual*> residualsAll;
-
-	float bdSumF;
-	float HdiF;
-	float Hdd_accLF;
-	VecCf Hcd_accLF;
-	float bd_accLF;
-	float Hdd_accAF;
-	VecCf Hcd_accAF;
-	float bd_accAF;
+    float priorF;
+    float deltaF;
 
 
-	EFPointStatus stateFlag;
+    // constant info (never changes in-between).
+    int idxInPoints;
+    EFFrame* host;
+
+    // contains all residuals.
+    std::vector<EFResidual*> residualsAll;
+
+    float bdSumF;
+    float HdiF;
+    float Hdd_accLF;
+    VecCf Hcd_accLF;
+    float bd_accLF;
+    float Hdd_accAF;
+    VecCf Hcd_accAF;
+    float bd_accAF;
+
+
+    EFPointStatus stateFlag;
 };
 
 
@@ -144,24 +144,24 @@ class EFFrame
 {
 public:
     EIGEN_MAKE_ALIGNED_OPERATOR_NEW;
-	EFFrame(FrameHessian* d) : data(d)
-	{
-		takeData();
-	}
-	void takeData();
+    EFFrame(FrameHessian* d) : data(d)
+    {
+        takeData();
+    }
+    void takeData();
 
 
-	Vec8 prior;				// prior hessian (diagonal)
-	Vec8 delta_prior;		// = state-state_prior (E_prior = (delta_prior)' * diag(prior) * (delta_prior)
-	Vec8 delta;				// state - state_zero.
+    Vec8 prior;             // prior hessian (diagonal)
+    Vec8 delta_prior;       // = state-state_prior (E_prior = (delta_prior)' * diag(prior) * (delta_prior)
+    Vec8 delta;             // state - state_zero.
 
 
 
-	std::vector<EFPoint*> points;
-	FrameHessian* data;
-	int idx;	// idx in frames.
+    std::vector<EFPoint*> points;
+    FrameHessian* data;
+    int idx;    // idx in frames.
 
-	int frameID;
+    int frameID;
 };
 
 }

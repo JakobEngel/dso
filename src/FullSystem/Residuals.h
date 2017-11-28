@@ -48,7 +48,7 @@ enum ResState {IN=0, OOB, OUTLIER};
 
 struct FullJacRowT
 {
-	Eigen::Vector2f projectedTo[MAX_RES_PER_POINT];
+    Eigen::Vector2f projectedTo[MAX_RES_PER_POINT];
 };
 
 class PointFrameResidual
@@ -56,51 +56,51 @@ class PointFrameResidual
 public:
     EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
-	EFResidual* efResidual;
+    EFResidual* efResidual;
 
-	static int instanceCounter;
-
-
-	ResState state_state;
-	double state_energy;
-	ResState state_NewState;
-	double state_NewEnergy;
-	double state_NewEnergyWithOutlier;
+    static int instanceCounter;
 
 
-	void setState(ResState s) {state_state = s;}
+    ResState state_state;
+    double state_energy;
+    ResState state_NewState;
+    double state_NewEnergy;
+    double state_NewEnergyWithOutlier;
 
 
-	PointHessian* point;
-	FrameHessian* host;
-	FrameHessian* target;
-	RawResidualJacobian* J;
+    void setState(ResState s) {state_state = s;}
 
 
-	bool isNew;
+    PointHessian* point;
+    FrameHessian* host;
+    FrameHessian* target;
+    RawResidualJacobian* J;
 
 
-	Eigen::Vector2f projectedTo[MAX_RES_PER_POINT];
-	Vec3f centerProjectedTo;
-
-	~PointFrameResidual();
-	PointFrameResidual();
-	PointFrameResidual(PointHessian* point_, FrameHessian* host_, FrameHessian* target_);
-	double linearize(CalibHessian* HCalib);
+    bool isNew;
 
 
-	void resetOOB()
-	{
-		state_NewEnergy = state_energy = 0;
-		state_NewState = ResState::OUTLIER;
+    Eigen::Vector2f projectedTo[MAX_RES_PER_POINT];
+    Vec3f centerProjectedTo;
 
-		setState(ResState::IN);
-	};
-	void applyRes( bool copyJacobians);
+    ~PointFrameResidual();
+    PointFrameResidual();
+    PointFrameResidual(PointHessian* point_, FrameHessian* host_, FrameHessian* target_);
+    double linearize(CalibHessian* HCalib);
 
-	void debugPlot();
 
-	void printRows(std::vector<VecX> &v, VecX &r, int nFrames, int nPoints, int M, int res);
+    void resetOOB()
+    {
+        state_NewEnergy = state_energy = 0;
+        state_NewState = ResState::OUTLIER;
+
+        setState(ResState::IN);
+    };
+    void applyRes( bool copyJacobians);
+
+    void debugPlot();
+
+    void printRows(std::vector<VecX> &v, VecX &r, int nFrames, int nPoints, int M, int res);
 };
 }
 
