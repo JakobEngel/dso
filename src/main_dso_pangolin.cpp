@@ -53,7 +53,8 @@
 
 std::string vignette = "";
 std::string gammaCalib = "";
-std::string source = "";
+std::string sourceL = "";
+std::string sourceR = "";
 std::string calib = "";
 double rescale = 1;
 bool reverse = false;
@@ -264,13 +265,21 @@ void parseArgument(char* arg)
 		return;
 	}
 
-	if(1==sscanf(arg,"files=%s",buf))
+	if(1==sscanf(arg,"filesL=%s",buf))
 	{
-		source = buf;
-		printf("loading data from %s!\n", source.c_str());
+		sourceL = buf;
+		printf("loading data from %s!\n", sourceL.c_str());
 		return;
 	}
 
+    if(1==sscanf(arg,"filesR=%s",buf))
+    {
+        sourceR = buf;
+        printf("loading data from %s!\n", sourceR.c_str());
+        return;
+    }
+
+    // only have one calib file since we are using recified images
 	if(1==sscanf(arg,"calib=%s",buf))
 	{
 		calib = buf;
@@ -361,19 +370,17 @@ int main( int argc, char** argv )
 	boost::thread exThread = boost::thread(exitThread);
 
 
-	ImageFolderReader* reader = new ImageFolderReader(source,calib, gammaCalib, vignette);
+	ImageFolderReader* reader = new ImageFolderReader(sourceL,sourceR,calib, gammaCalib, vignette);
 	reader->setGlobalCalibration();
 
-
-
-	if(setting_photometricCalibration > 0 && reader->getPhotometricGamma() == 0)
-	{
-		printf("ERROR: dont't have photometric calibation. Need to use commandline options mode=1 or mode=2 ");
+    // Check to see if we need to use photometric calibration
+	if(setting_photometricCalibration > 0 && reader->getPhotometricGamma() == 0) {
+		printf("ERROR: Don't have photometric calibation. Need to use commandline options mode=1 or mode=2");
 		exit(1);
-	}
-
-
-
+	} else if(setting_photometricCalibration > 0) {
+        printf("ERROR: We don't support photometric calibration for stereo. Need to use commandline options mode=1 or mode=2");
+        exit(1);
+    }
 
 	int lstart=start;
 	int lend = end;

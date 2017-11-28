@@ -8,9 +8,12 @@
 * `sudo apt-get install libsuitesparse-dev libeigen3-dev libboost-all-dev`
 * Ensure [Pangolin](https://github.com/stevenlovegrove/Pangolin) is globally installed
 * Build the program using catkin
-* Grab a dataset from the TUM website [link](https://vision.in.tum.de/data/datasets/mono-dataset)
-* Extract the image.zip file if not building with ziplib
-* Run the program using: `rosrun dso dso_dataset files=XXXX/images/ calib=XXXX/camera.txt gamma=XXXX/pcalib.txt vignette=XXXX/vignette.png`
+* Grab a dataset from the KITTI website [link](http://www.cvlibs.net/datasets/kitti/eval_odometry.php)
+    * Will want grayscale images
+    * If you want to create your own config, download the config set
+    * Config file has an extra line of the external transform between stereo cameras
+* Please take a look at the provided launch files
+* Run the program using: `rosrun dso dso_dataset filesL=imagesLEFT/ filesR=imagesRIGHT/ calib=config/kitti_odom.txt mode=2 prefetch=0`
 
 
 ## License

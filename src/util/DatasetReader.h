@@ -40,6 +40,7 @@
 #endif
 
 #include <boost/thread.hpp>
+#include <boost/lexical_cast.hpp>
 
 using namespace dso;
 
@@ -102,75 +103,145 @@ struct PrepImageItem
 class ImageFolderReader
 {
 public:
-	ImageFolderReader(std::string path, std::string calibFile, std::string gammaFile, std::string vignetteFile)
+	ImageFolderReader(std::string pathL, std::string pathR, std::string calibFile, std::string gammaFile, std::string vignetteFile)
 	{
-		this->path = path;
+
+		this->pathL = pathL;
+		this->pathR = pathR;
 		this->calibfile = calibFile;
 
 #if HAS_ZIPLIB
-		ziparchive=0;
-		databuffer=0;
+		ziparchiveL=0;
+		ziparchiveR=0;
+		databufferL=0;
+		databufferR=0;
 #endif
 
-		isZipped = (path.length()>4 && path.substr(path.length()-4) == ".zip");
+        bool isZippedL = (pathL.length()>4 && pathL.substr(pathL.length()-4) == ".zip");
+        bool isZippedR = (pathR.length()>4 && pathR.substr(pathR.length()-4) == ".zip");
 
-
-
-
-
-		if(isZipped)
+        // LEFT IMAGE FOLDER
+		if(isZippedL)
 		{
 #if HAS_ZIPLIB
 			int ziperror=0;
-			ziparchive = zip_open(path.c_str(),  ZIP_RDONLY, &ziperror);
+			ziparchiveL = zip_open(path.c_str(),  ZIP_RDONLY, &ziperror);
 			if(ziperror!=0)
 			{
-				printf("ERROR %d reading archive %s!\n", ziperror, path.c_str());
+				printf("ERROR %d reading archive %s!\n", ziperror, pathL.c_str());
 				exit(1);
 			}
 
-			files.clear();
-			int numEntries = zip_get_num_entries(ziparchive, 0);
+			filesL.clear();
+			int numEntries = zip_get_num_entries(ziparchiveL, 0);
 			for(int k=0;k<numEntries;k++)
 			{
-				const char* name = zip_get_name(ziparchive, k,  ZIP_FL_ENC_STRICT);
+				const char* name = zip_get_name(ziparchiveL, k,  ZIP_FL_ENC_STRICT);
 				std::string nstr = std::string(name);
 				if(nstr == "." || nstr == "..") continue;
-				files.push_back(name);
+				filesL.push_back(name);
 			}
 
-			printf("got %d entries and %d files!\n", numEntries, (int)files.size());
-			std::sort(files.begin(), files.end());
+			printf("got %d entries and %d files!\n", numEntries, (int)filesR.size());
+			std::sort(filesL.begin(), filesL.end());
 #else
 			printf("ERROR: cannot read .zip archive, as compile without ziplib!\n");
 			exit(1);
 #endif
 		}
 		else
-			getdir (path, files);
+            getdir(pathL, filesL);
+
+        // RIGHT IMAGE FOLDER
+        if(isZippedR)
+        {
+#if HAS_ZIPLIB
+            int ziperror=0;
+			ziparchiveR = zip_open(path.c_str(),  ZIP_RDONLY, &ziperror);
+			if(ziperror!=0)
+			{
+				printf("ERROR %d reading archive %s!\n", ziperror, pathR.c_str());
+				exit(1);
+			}
+
+			filesR.clear();
+			int numEntries = zip_get_num_entries(ziparchiveR, 0);
+			for(int k=0;k<numEntries;k++)
+			{
+				const char* name = zip_get_name(ziparchiveR, k,  ZIP_FL_ENC_STRICT);
+				std::string nstr = std::string(name);
+				if(nstr == "." || nstr == "..") continue;
+				filesR.push_back(name);
+			}
+
+			printf("got %d entries and %d files!\n", numEntries, (int)filesR.size());
+			std::sort(filesR.begin(), filesR.end());
+#else
+            printf("ERROR: cannot read .zip archive, as compile without ziplib!\n");
+            exit(1);
+#endif
+        }
+        else
+            getdir(pathR, filesR);
+
+        // Make sure we have equal amount left and right
+        if(filesL.size() != filesR.size()) {
+            printf("ERROR: Left images do not match right images! Left %d and right %d\n",(int)filesL.size(),(int)filesR.size());
+            exit(1);
+        }
 
 
 		undistort = Undistort::getUndistorterForFile(calibFile, gammaFile, vignetteFile);
 
-
 		widthOrg = undistort->getOriginalSize()[0];
 		heightOrg = undistort->getOriginalSize()[1];
-		width=undistort->getSize()[0];
-		height=undistort->getSize()[1];
+		width = undistort->getSize()[0];
+		height = undistort->getSize()[1];
 
+        // Open our config file so we can get the transform matrix
+        printf("STEREO: Loading config transform information\n");
+        std::ifstream f(calibFile.c_str());
+        if (!f.good()) {
+            printf("ERROR: Cannot operate without calibration, shutting down.\n");
+            f.close();
+            exit(1);
+        }
 
-		// load timestamps if possible.
+        // Loop through and get the last line in the config
+        std::string l1;
+        while(f.good()) {
+            std::getline(f,l1);
+        }
+        f.close();
+
+        // Done, lets read in the matrix
+        float ic[12];
+        std::sscanf(l1.c_str(),"%f %f %f %f %f %f %f %f %f %f %f %f",&ic[0],&ic[1],&ic[2],&ic[3],&ic[4],&ic[5],&ic[6],&ic[7],&ic[8],&ic[9],&ic[10],&ic[11]);
+        R_1to2 << ic[0],ic[1],ic[2],ic[4],ic[5],ic[6],ic[8],ic[9],ic[10];
+        p_2in1 << ic[3],ic[7],ic[11];
+
+        // Nice printing for the user
+        printf("STEREO: Using following R_C1toC2:\n");
+        printf("%.4f %.4f %.4f\n", R_1to2(0,0), R_1to2(0,1), R_1to2(0,2));
+        printf("%.4f %.4f %.4f\n", R_1to2(1,0), R_1to2(1,1), R_1to2(1,2));
+        printf("%.4f %.4f %.4f\n", R_1to2(2,0), R_1to2(2,1), R_1to2(2,2));
+        printf("STEREO: Using following p_C2inC1:\n");
+        printf("%.4f %.4f %.4f\n", p_2in1(0), p_2in1(1), p_2in1(2));
+
+		// Load timestamps if possible.
 		loadTimestamps();
-		printf("ImageFolderReader: got %d files in %s!\n", (int)files.size(), path.c_str());
+		printf("ImageFolderReader: LEFT got %d files in %s!\n", (int)filesL.size(), pathL.c_str());
+		printf("ImageFolderReader: RIGHT got %d files in %s!\n", (int)filesR.size(), pathR.c_str());
 
 	}
 	~ImageFolderReader()
 	{
 #if HAS_ZIPLIB
-		if(ziparchive!=0) zip_close(ziparchive);
-		if(databuffer!=0) delete databuffer;
+		if(ziparchiveL!=0) zip_close(ziparchiveL);
+		if(ziparchiveR!=0) zip_close(ziparchiveR);
+		if(databufferL!=0) delete databufferL;
+		if(databufferR!=0) delete databufferR;
 #endif
-
 
 		delete undistort;
 	};
@@ -201,7 +272,7 @@ public:
 
 	int getNumImages()
 	{
-		return files.size();
+		return filesL.size();
 	}
 
 	double getTimestamp(int id)
@@ -218,11 +289,15 @@ public:
 
 	}
 
-
-	MinimalImageB* getImageRaw(int id)
+	MinimalImageB* getImageRawL(int id)
 	{
-			return getImageRaw_internal(id,0);
+			return getImageRaw_internalLEFT(id,0);
 	}
+
+    MinimalImageB* getImageRawR(int id)
+    {
+        return getImageRaw_internalRIGHT(id,0);
+    }
 
 	ImageAndExposure* getImage(int id, bool forceLoadDirectly=false)
 	{
@@ -238,31 +313,54 @@ public:
 
 
 	// undistorter. [0] always exists, [1-2] only when MT is enabled.
+    // note we only need one since our stereo images are rectified
 	Undistort* undistort;
 private:
 
+    /**
+     * Epoch time conversion
+     * http://www.epochconverter.com/programming/functions-c.php
+     */
+    double parseTime(std::string timestamp)
+    {
+        // example: 2011-09-26 13:21:35.134391552
+        //          01234567891111111111222222222
+        //                    0123456789012345678
+        struct tm t = {0};  // Initalize to all 0's
+		std::cout << timestamp << std::endl;
+        t.tm_year = boost::lexical_cast<int>(timestamp.substr(0, 4)) - 1900;
+        t.tm_mon  = boost::lexical_cast<int>(timestamp.substr(5, 2)) - 1;
+        t.tm_mday = boost::lexical_cast<int>(timestamp.substr(8, 2));
+        t.tm_hour = boost::lexical_cast<int>(timestamp.substr(11, 2));
+        t.tm_min  = boost::lexical_cast<int>(timestamp.substr(14, 2));
+        t.tm_sec  = boost::lexical_cast<int>(timestamp.substr(17, 2));
+        t.tm_isdst = -1;
+        time_t timeSinceEpoch = mktime(&t);
+        return timeSinceEpoch;
+    }
 
-	MinimalImageB* getImageRaw_internal(int id, int unused)
+
+	MinimalImageB* getImageRaw_internalLEFT(int id, int unused)
 	{
-		if(!isZipped)
+		if(!isZippedL)
 		{
 			// CHANGE FOR ZIP FILE
-			return IOWrap::readImageBW_8U(files[id]);
+			return IOWrap::readImageBW_8U(filesL[id]);
 		}
 		else
 		{
 #if HAS_ZIPLIB
-			if(databuffer==0) databuffer = new char[widthOrg*heightOrg*6+10000];
-			zip_file_t* fle = zip_fopen(ziparchive, files[id].c_str(), 0);
-			long readbytes = zip_fread(fle, databuffer, (long)widthOrg*heightOrg*6+10000);
+			if(databufferL==0) databuffer = new char[widthOrg*heightOrg*6+10000];
+			zip_file_t* fle = zip_fopen(ziparchiveL, filesL[id].c_str(), 0);
+			long readbytes = zip_fread(fle, databufferL, (long)widthOrg*heightOrg*6+10000);
 
 			if(readbytes > (long)widthOrg*heightOrg*6)
 			{
-				printf("read %ld/%ld bytes for file %s. increase buffer!!\n", readbytes,(long)widthOrg*heightOrg*6+10000, files[id].c_str());
-				delete[] databuffer;
-				databuffer = new char[(long)widthOrg*heightOrg*30];
-				fle = zip_fopen(ziparchive, files[id].c_str(), 0);
-				readbytes = zip_fread(fle, databuffer, (long)widthOrg*heightOrg*30+10000);
+				printf("read %ld/%ld bytes for file %s. increase buffer!!\n", readbytes,(long)widthOrg*heightOrg*6+10000, filesL[id].c_str());
+				delete[] databufferL;
+				databufferL = new char[(long)widthOrg*heightOrg*30];
+				fle = zip_fopen(ziparchiveL, filesL[id].c_str(), 0);
+				readbytes = zip_fread(fle, databufferL, (long)widthOrg*heightOrg*30+10000);
 
 				if(readbytes > (long)widthOrg*heightOrg*30)
 				{
@@ -271,7 +369,7 @@ private:
 				}
 			}
 
-			return IOWrap::readStreamBW_8U(databuffer, readbytes);
+			return IOWrap::readStreamBW_8U(databufferL, readbytes);
 #else
 			printf("ERROR: cannot read .zip archive, as compile without ziplib!\n");
 			exit(1);
@@ -279,101 +377,128 @@ private:
 		}
 	}
 
+    MinimalImageB* getImageRaw_internalRIGHT(int id, int unused)
+    {
+        if(!isZippedL)
+        {
+            // CHANGE FOR ZIP FILE
+            return IOWrap::readImageBW_8U(filesR[id]);
+        }
+        else
+        {
+#if HAS_ZIPLIB
+            if(databufferR==0) databuffer = new char[widthOrg*heightOrg*6+10000];
+			zip_file_t* fle = zip_fopen(ziparchiveR, filesR[id].c_str(), 0);
+			long readbytes = zip_fread(fle, databufferR, (long)widthOrg*heightOrg*6+10000);
+
+			if(readbytes > (long)widthOrg*heightOrg*6)
+			{
+				printf("read %ld/%ld bytes for file %s. increase buffer!!\n", readbytes,(long)widthOrg*heightOrg*6+10000, filesR[id].c_str());
+				delete[] databufferR;
+				databufferR = new char[(long)widthOrg*heightOrg*30];
+				fle = zip_fopen(ziparchiveR, filesR[id].c_str(), 0);
+				readbytes = zip_fread(fle, databufferR, (long)widthOrg*heightOrg*30+10000);
+
+				if(readbytes > (long)widthOrg*heightOrg*30)
+				{
+					printf("buffer still to small (read %ld/%ld). abort.\n", readbytes,(long)widthOrg*heightOrg*30+10000);
+					exit(1);
+				}
+			}
+
+			return IOWrap::readStreamBW_8U(databufferR, readbytes);
+#else
+            printf("ERROR: cannot read .zip archive, as compile without ziplib!\n");
+            exit(1);
+#endif
+        }
+    }
+
 
 	ImageAndExposure* getImage_internal(int id, int unused)
 	{
-		MinimalImageB* minimg = getImageRaw_internal(id, 0);
+		MinimalImageB* minimgL = getImageRaw_internalLEFT(id, 0);
+		MinimalImageB* minimgR = getImageRaw_internalRIGHT(id, 0);
 		ImageAndExposure* ret2 = undistort->undistort<unsigned char>(
-				minimg,
+				minimgL,
+                minimgR,
 				(exposures.size() == 0 ? 1.0f : exposures[id]),
 				(timestamps.size() == 0 ? 0.0 : timestamps[id]));
-		delete minimg;
+		// Delete our incoming buffers
+		delete minimgL;
+		delete minimgR;
+		// Set the stereo configuration values here
+        ret2->R_1to2 = R_1to2;
+        ret2->p_2in1 = p_2in1;
 		return ret2;
 	}
 
 	inline void loadTimestamps()
 	{
 		std::ifstream tr;
-		std::string timesFile = path.substr(0,path.find_last_of('/')) + "/times.txt";
+		std::string timesFile = pathL.substr(0,pathL.find_last_of('/')) + "/../times.txt";
 		tr.open(timesFile.c_str());
-		while(!tr.eof() && tr.good())
-		{
+		while(!tr.eof() && tr.good()) {
+            // Read in line from file
 			std::string line;
-			char buf[1000];
-			tr.getline(buf, 1000);
-
-			int id;
-			double stamp;
-			float exposure = 0;
-
-			if(3 == sscanf(buf, "%d %lf %f", &id, &stamp, &exposure))
-			{
-				timestamps.push_back(stamp);
-				exposures.push_back(exposure);
-			}
-
-			else if(2 == sscanf(buf, "%d %lf", &id, &stamp))
-			{
-				timestamps.push_back(stamp);
-				exposures.push_back(exposure);
-			}
+            std::getline(tr,line);
+			// Skip if empty
+			if(line == "" || line == "\n" || line == " \n")
+				continue;
+            // TODO: Look into finding a non-kitti dataset that has exposure times
+			// Convert data from RAW datasets
+			//double stamp = parseTime(line);
+			// Simple timestamp for ODOMETRY datasets
+			double stamp = std::stod(line);
+            timestamps.push_back(stamp);
+            //exposures.push_back(0);
 		}
 		tr.close();
 
-		// check if exposures are correct, (possibly skip)
-		bool exposuresGood = ((int)exposures.size()==(int)getNumImages()) ;
-		for(int i=0;i<(int)exposures.size();i++)
-		{
-			if(exposures[i] == 0)
-			{
-				// fix!
-				float sum=0,num=0;
-				if(i>0 && exposures[i-1] > 0) {sum += exposures[i-1]; num++;}
-				if(i+1<(int)exposures.size() && exposures[i+1] > 0) {sum += exposures[i+1]; num++;}
-
-				if(num>0)
-					exposures[i] = sum/num;
-			}
-
-			if(exposures[i] == 0) exposuresGood=false;
-		}
-
-
-		if((int)getNumImages() != (int)timestamps.size())
-		{
-			printf("set timestamps and exposures to zero!\n");
+        // Check to make sure our timestamps match our images
+		if((int)getNumImages() != (int)timestamps.size()) {
+			printf("DATASET: Set timestamps and exposures to zero! (numImages = %d numTimes = %d)\n",(int)getNumImages(),(int)timestamps.size());
 			exposures.clear();
 			timestamps.clear();
 		}
 
+        // TODO: Look into finding a non-kitti dataset that has exposure times
+        bool exposuresGood = false;
 		if((int)getNumImages() != (int)exposures.size() || !exposuresGood)
 		{
-			printf("set EXPOSURES to zero!\n");
+			printf("DATASET: Set EXPOSURES to zero! (numImages = %d numExpo = %d)\n",(int)getNumImages(),(int)exposures.size());
 			exposures.clear();
 		}
 
-		printf("got %d images and %d timestamps and %d exposures.!\n", (int)getNumImages(), (int)timestamps.size(), (int)exposures.size());
+		printf("DATASET: got %d images and %d timestamps and %d exposures.!\n", (int)getNumImages(), (int)timestamps.size(), (int)exposures.size());
 	}
 
-
-
-
 	std::vector<ImageAndExposure*> preloadedImages;
-	std::vector<std::string> files;
+	std::vector<std::string> filesL;
+	std::vector<std::string> filesR;
 	std::vector<double> timestamps;
 	std::vector<float> exposures;
 
+    // Image size information
 	int width, height;
 	int widthOrg, heightOrg;
 
-	std::string path;
+    // Stereo config information
+    Vec3 p_2in1;
+    Mat33 R_1to2;
+
+	std::string pathL;
+	std::string pathR;
 	std::string calibfile;
 
-	bool isZipped;
+	bool isZippedL;
+	bool isZippedR;
 
 #if HAS_ZIPLIB
-	zip_t* ziparchive;
-	char* databuffer;
+	zip_t* ziparchiveL;
+	zip_t* ziparchiveR;
+	char* databufferL;
+	char* databufferR;
 #endif
 };
 
