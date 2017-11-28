@@ -1205,6 +1205,7 @@ void FullSystem::makeKeyFrame( FrameHessian* fh)
 
 void FullSystem::initializeFromInitializer(FrameHessian* newFrame)
 {
+	// Where we initialize with 10 images
 	boost::unique_lock<boost::mutex> lock(mapMutex);
 
 	// add firstframe.
