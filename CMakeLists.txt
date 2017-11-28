@@ -1,4 +1,4 @@
-SET(PROJECT_NAME DSO)
+SET(PROJECT_NAME dso)
 
 PROJECT(${PROJECT_NAME})
 CMAKE_MINIMUM_REQUIRED(VERSION 2.6)
@@ -11,6 +11,11 @@ set(BUILD_TYPE Release)
 set(EXECUTABLE_OUTPUT_PATH bin)
 set(LIBRARY_OUTPUT_PATH lib)
 set(CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake)
+
+# ROS
+find_package(catkin REQUIRED)
+catkin_package(INCLUDE_DIRS src thirdparty/Sophus thirdparty/sse2neon
+               LIBRARIES dso)
 
 # required libraries
 find_package(SuiteParse REQUIRED)
@@ -54,8 +59,6 @@ set(dso_SOURCE_FILES
   ${PROJECT_SOURCE_DIR}/src/util/Undistort.cpp
   ${PROJECT_SOURCE_DIR}/src/util/globalCalib.cpp
 )
-
-
 
 include_directories(
   ${PROJECT_SOURCE_DIR}/src
@@ -109,10 +112,10 @@ endif()
 
 
 # compile main library.
-include_directories( ${CSPARSE_INCLUDE_DIR} ${CHOLMOD_INCLUDE_DIR}) 
+include_directories(${CSPARSE_INCLUDE_DIR} ${CHOLMOD_INCLUDE_DIR}) 
 add_library(dso ${dso_SOURCE_FILES} ${dso_opencv_SOURCE_FILES} ${dso_pangolin_SOURCE_FILES})
 
-#set_property( TARGET dso APPEND_STRING PROPERTY COMPILE_FLAGS -Wall )
+#set_property(TARGET dso APPEND_STRING PROPERTY COMPILE_FLAGS -Wall )
 
 
 if (${CMAKE_SYSTEM_NAME} MATCHES "Darwin") # OSX
@@ -129,4 +132,16 @@ if (OpenCV_FOUND AND Pangolin_FOUND)
 else()
 	message("--- not building dso_dataset, since either don't have openCV or Pangolin.")
 endif()
+
+
+# ROS install
+install(TARGETS dso
+        ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
+        LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
+        RUNTIME DESTINATION ${CATKIN_GLOBAL_BIN_DESTINATION})
+install(DIRECTORY include/${PROJECT_NAME}/
+        DESTINATION ${CATKIN_PACKAGE_INCLUDE_DESTINATION}
+        PATTERN ".git" EXCLUDE)
+
+
 
