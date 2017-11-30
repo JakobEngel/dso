@@ -31,7 +31,8 @@
 #include "vector"
 #include <math.h>
 
-
+// INclude opencv core for cv::Mat in FrameHessian
+#include "opencv2/core.hpp"
 
 
 namespace dso
@@ -78,9 +79,29 @@ public:
 
 class CoarseInitializer {
 public:
+
+    /****************************
+    * Edits from Nate
+    ******************************/
+    cv::Mat firstFrameL; // frames for depth calculation
+    cv::Mat firstFrameR;    
+
+    /*******************************/
+
+
     EIGEN_MAKE_ALIGNED_OPERATOR_NEW;
     CoarseInitializer(int w, int h);
     ~CoarseInitializer();
+
+    /****************************
+    * Edits from Nate
+    ******************************/
+    
+    // Sets first frame RECTIFIED stereo pair for inital depth guess. Input is float*. They are converted to cv::Mat
+    void setFirstStereoPair(float* imL, float* imR, int w, int h);
+
+    /*******************************/
+
 
 
     void setFirst(  CalibHessian* HCalib, FrameHessian* newFrameHessian);
@@ -100,6 +121,7 @@ public:
     FrameHessian* firstFrame;
     FrameHessian* newFrame;
 private:
+    // Camera calibration info
     Mat33 K[PYR_LEVELS];
     Mat33 Ki[PYR_LEVELS];
     double fx[PYR_LEVELS];

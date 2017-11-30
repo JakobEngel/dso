@@ -839,8 +839,17 @@ void FullSystem::addActiveFrame( ImageAndExposure* image, int id )
         // use initializer!
         if(coarseInitializer->frameID<0)    // first frame set. fh is kept by coarseInitializer.
         {
+            /****************************
+            * Edits from Nate
+            ******************************/
+
+            // Hand off the rectified stereo pair of the first frame to the initializer
+	    coarseInitializer->setFirstStereoPair(image->imageL, image->imageR, image->w, image->h);
+        
+           /*******************************/
 
             coarseInitializer->setFirst(&Hcalib, fh);
+             
         }
         else if(coarseInitializer->trackFrame(fh, outputWrapper))   // if SNAPPED
         {
