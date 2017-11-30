@@ -43,7 +43,7 @@
 #endif
 
 #include "opencv2/calib3d.hpp"
-#include "opencv2/ximgproc/disparity_filter.hpp"
+#include "opencv2/ximgproc/disparity_filter.hpp" // NOTE that this is in opencv_contrib. Be sure to have opencv compiled with the contrib library
 
 namespace dso
 {
