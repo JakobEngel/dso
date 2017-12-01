@@ -56,7 +56,7 @@ public:
             printf("OUT: Destroyed SampleOutputWrapper\n");
         }
 
-        virtual void publishGraph(const std::map<uint64_t,Eigen::Vector2i> &connectivity)
+        virtual void publishGraph(const std::map<uint64_t, Eigen::Vector2i, std::less<uint64_t>, Eigen::aligned_allocator<std::pair<const uint64_t, Eigen::Vector2i>>> &connectivity) override
         {
             printf("OUT: got graph with %d edges\n", (int)connectivity.size());
 
@@ -74,7 +74,7 @@ public:
 
 
 
-        virtual void publishKeyframes( std::vector<FrameHessian*> &frames, bool final, CalibHessian* HCalib)
+        virtual void publishKeyframes( std::vector<FrameHessian*> &frames, bool final, CalibHessian* HCalib) override
         {
             for(FrameHessian* f : frames)
             {
@@ -98,7 +98,7 @@ public:
             }
         }
 
-        virtual void publishCamPose(FrameShell* frame, CalibHessian* HCalib)
+        virtual void publishCamPose(FrameShell* frame, CalibHessian* HCalib) override
         {
             printf("OUT: Current Frame %d (time %f, internal ID %d). CameraToWorld:\n",
                    frame->incoming_id,
@@ -108,21 +108,21 @@ public:
         }
 
 
-        virtual void pushLiveFrame(FrameHessian* image)
+        virtual void pushLiveFrame(FrameHessian* image) override
         {
             // can be used to get the raw image / intensity pyramid.
         }
 
-        virtual void pushDepthImage(MinimalImageB3* image)
+        virtual void pushDepthImage(MinimalImageB3* image) override
         {
             // can be used to get the raw image with depth overlay.
         }
-        virtual bool needPushDepthImage()
+        virtual bool needPushDepthImage() override
         {
             return false;
         }
 
-        virtual void pushDepthImageFloat(MinimalImageF* image, FrameHessian* KF )
+        virtual void pushDepthImageFloat(MinimalImageF* image, FrameHessian* KF ) override
         {
             printf("OUT: Predicted depth for KF %d (id %d, time %f, internal frame-ID %d). CameraToWorld:\n",
                    KF->frameID,

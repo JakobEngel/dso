@@ -419,7 +419,7 @@ void PangolinDSOViewer::drawConstraints()
 
 
 
-void PangolinDSOViewer::publishGraph(const std::map<uint64_t,Eigen::Vector2i> &connectivity)
+void PangolinDSOViewer::publishGraph(const std::map<uint64_t, Eigen::Vector2i, std::less<uint64_t>, Eigen::aligned_allocator<std::pair<const uint64_t, Eigen::Vector2i>>> &connectivity)
 {
     if(!setting_render_display3D) return;
     if(disableAllDisplay) return;
