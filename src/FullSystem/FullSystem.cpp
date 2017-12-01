@@ -281,8 +281,8 @@ Vec4 FullSystem::trackNewCoarse(FrameHessian* fh)
     assert(allFrameHistory.size() > 0);
     // set pose initialization.
 
-        for(IOWrap::Output3DWrapper* ow : outputWrapper)
-            ow->pushLiveFrame(fh);
+    for(IOWrap::Output3DWrapper* ow : outputWrapper)
+        ow->pushLiveFrame(fh);
 
 
 
@@ -839,12 +839,10 @@ void FullSystem::addActiveFrame( ImageAndExposure* image, int id )
         // use initializer!
         if(coarseInitializer->frameID<0)    // first frame set. fh is kept by coarseInitializer.
         {
-
             coarseInitializer->setFirst(&Hcalib, fh);
         }
         else if(coarseInitializer->trackFrame(fh, outputWrapper))   // if SNAPPED
         {
-
             initializeFromInitializer(fh);
             lock.unlock();
             deliverTrackedFrame(fh, true);
@@ -1117,17 +1115,17 @@ void FullSystem::makeKeyFrame( FrameHessian* fh)
     {
         if(allKeyFramesHistory.size()==2 && rmse > 20*benchmark_initializerSlackFactor)
         {
-            printf("I THINK INITIALIZATINO FAILED! Resetting.\n");
+            printf("I THINK INITIALIZATION FAILED! Resetting.\n");
             initFailed=true;
         }
         if(allKeyFramesHistory.size()==3 && rmse > 13*benchmark_initializerSlackFactor)
         {
-            printf("I THINK INITIALIZATINO FAILED! Resetting.\n");
+            printf("I THINK INITIALIZATION FAILED! Resetting.\n");
             initFailed=true;
         }
         if(allKeyFramesHistory.size()==4 && rmse > 9*benchmark_initializerSlackFactor)
         {
-            printf("I THINK INITIALIZATINO FAILED! Resetting.\n");
+            printf("I THINK INITIALIZATION FAILED! Resetting.\n");
             initFailed=true;
         }
     }
