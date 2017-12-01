@@ -48,8 +48,7 @@ public:
     int w,h;                // width and height;
     double timestamp;       // timestamp of this image if we have it
     float exposure_time;    // exposure time in ms.
-    Vec3 p_2in1;            // second camera seen from the first
-    Mat33 R_1to2;           // rotation from first to second camera
+    float baselinefx;       // baseline times focal length (top right of projection matrix)
 
     /**
      * Default constructor

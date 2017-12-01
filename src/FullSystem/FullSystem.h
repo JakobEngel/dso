@@ -166,9 +166,6 @@ private:
 
     CalibHessian Hcalib;
 
-
-
-
     // opt single point
     int optimizePoint(PointHessian* point, int minObs, bool flagOOB);
     PointHessian* optimizeImmaturePoint(ImmaturePoint* point, int minObs, ImmaturePointTemporaryResidual* residuals);
@@ -184,6 +181,7 @@ private:
     void flagPointsForRemoval();
     void makeNewTraces(FrameHessian* newFrame, float* gtDepth);
     void initializeFromInitializer(FrameHessian* newFrame);
+    void initializeFromStereo(ImageAndExposure* image, int id);
     void flagFramesForMarginalization(FrameHessian* newFH);
 
 

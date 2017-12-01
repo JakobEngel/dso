@@ -56,6 +56,13 @@
 
 #include <cmath>
 
+#include <opencv2/ximgproc/disparity_filter.hpp> // NOTE that this is in opencv_contrib. Be sure to have opencv compiled with the contrib library
+#include <opencv2/imgproc/imgproc.hpp> // add to use cvtColor to solve CV_8UC1 image type problem
+#include <opencv2/highgui/highgui.hpp> // for wait/imshow function
+#include <opencv2/core/utility.hpp>
+
+
+
 namespace dso
 {
 int FrameHessian::instanceCounter=0;
@@ -356,7 +363,9 @@ Vec4 FullSystem::trackNewCoarse(FrameHessian* fh)
         }
     }
 
-
+#include "opencv2/ximgproc/disparity_filter.hpp" // NOTE that this is in opencv_contrib. Be sure to have opencv compiled with the contrib library
+#include "opencv2/imgproc/imgproc.hpp" // add to use cvtColor to solve CV_8UC1 image type problem
+#include <opencv2/highgui/highgui.hpp> // for wait function
     Vec3 flowVecs = Vec3(100,100,100);
     SE3 lastF_2_fh = SE3();
     AffLight aff_g2l = AffLight(0,0);
@@ -814,52 +823,30 @@ void FullSystem::addActiveFrame( ImageAndExposure* image, int id )
 
 
     // =========================== add into allFrameHistory =========================
-    FrameHessian* fh = new FrameHessian();
-    FrameShell* shell = new FrameShell();
-    shell->camToWorld = SE3();      // no lock required, as fh is not used anywhere yet.
-    shell->aff_g2l = AffLight(0,0);
-    shell->marginalizedAt = shell->id = allFrameHistory.size();
-    shell->timestamp = image->timestamp;
-    shell->incoming_id = id;
-    fh->shell = shell;
-    allFrameHistory.push_back(shell);
+    FrameHessian* fhL = new FrameHessian();
+    FrameShell* shellL = new FrameShell();
+    shellL->camToWorld = SE3();      // no lock required, as fh is not used anywhere yet.
+    shellL->aff_g2l = AffLight(0,0);
+    shellL->marginalizedAt = shellL->id = allFrameHistory.size();
+    shellL->timestamp = image->timestamp;
+    shellL->incoming_id = id;
+    fhL->shell = shellL;
+    allFrameHistory.push_back(shellL);
 
 
     // =========================== make Images / derivatives etc. =========================
-    fh->ab_exposure = image->exposure_time;
+    fhL->ab_exposure = image->exposure_time;
 
     // TODO: right now we just pass the left image
     // TODO: ideally we would want to do the direct for both left & right
-    fh->makeImages(image->imageL, &Hcalib);
-
-
+    fhL->makeImages(image->imageL, &Hcalib);
 
 
     if(!initialized)
     {
-        // use initializer!
-        if(coarseInitializer->frameID<0)    // first frame set. fh is kept by coarseInitializer.
-        {
-
-            // Hand off the rectified stereo pair of the first frame to the initializer
-	        coarseInitializer->setFirstStereoPair(image->imageL, image->imageR, image->w, image->h);
-
-            // TODO: Do we need to remove this once the stereo version works?
-            coarseInitializer->setFirst(&Hcalib, fh);
-             
-        }
-        else if(coarseInitializer->trackFrame(fh, outputWrapper))   // if SNAPPED
-        {
-            initializeFromInitializer(fh);
-            lock.unlock();
-            deliverTrackedFrame(fh, true);
-        }
-        else
-        {
-            // if still initializing
-            fh->shell->poseValid = false;
-            delete fh;
-        }
+        // Call on our stereo initialization
+        initializeFromStereo(image, id);
+        // Return so we can start tracking on the next go if initialization was successfull
         return;
     }
     else    // do front-end operation.
@@ -872,7 +859,7 @@ void FullSystem::addActiveFrame( ImageAndExposure* image, int id )
         }
 
 
-        Vec4 tres = trackNewCoarse(fh);
+        Vec4 tres = trackNewCoarse(fhL);
         if(!std::isfinite((double)tres[0]) || !std::isfinite((double)tres[1]) || !std::isfinite((double)tres[2]) || !std::isfinite((double)tres[3]))
         {
             printf("Initial Tracking failed: LOST!\n");
@@ -884,12 +871,12 @@ void FullSystem::addActiveFrame( ImageAndExposure* image, int id )
         if(setting_keyframesPerSecond > 0)
         {
             needToMakeKF = allFrameHistory.size()== 1 ||
-                    (fh->shell->timestamp - allKeyFramesHistory.back()->timestamp) > 0.95f/setting_keyframesPerSecond;
+                    (fhL->shell->timestamp - allKeyFramesHistory.back()->timestamp) > 0.95f/setting_keyframesPerSecond;
         }
         else
         {
-            Vec2 refToFh=AffLight::fromToVecExposure(coarseTracker->lastRef->ab_exposure, fh->ab_exposure,
-                    coarseTracker->lastRef_aff_g2l, fh->shell->aff_g2l);
+            Vec2 refToFh=AffLight::fromToVecExposure(coarseTracker->lastRef->ab_exposure, fhL->ab_exposure,
+                    coarseTracker->lastRef_aff_g2l, fhL->shell->aff_g2l);
 
             // BRIGHTNESS CHECK
             needToMakeKF = allFrameHistory.size()== 1 ||
@@ -905,13 +892,13 @@ void FullSystem::addActiveFrame( ImageAndExposure* image, int id )
 
 
         for(IOWrap::Output3DWrapper* ow : outputWrapper)
-            ow->publishCamPose(fh->shell, &Hcalib);
+            ow->publishCamPose(fhL->shell, &Hcalib);
 
 
 
 
         lock.unlock();
-        deliverTrackedFrame(fh, needToMakeKF);
+        deliverTrackedFrame(fhL, needToMakeKF);
         return;
     }
 }
@@ -1296,6 +1283,83 @@ void FullSystem::initializeFromInitializer(FrameHessian* newFrame)
 
     initialized=true;
     printf("INITIALIZE FROM INITIALIZER (%d pts)!\n", (int)firstFrame->pointHessians.size());
+}
+
+void FullSystem::initializeFromStereo(ImageAndExposure* image, int id) {
+
+    //===========================================================================
+    // DISPARITY CALCULATION
+    //===========================================================================
+    // First lets convert to opencv objects
+    // https://stackoverflow.com/a/8377144/7718197
+    cv::Size sz(image->w, image->h);
+    cv::Mat cvImgL = cv::Mat(sz, CV_32FC1, (void*)image->imageL);
+    cv::Mat cvImgR = cv::Mat(sz, CV_32FC1, (void*)image->imageR);
+    cvImgL.convertTo(cvImgL, CV_8UC1);
+    cvImgR.convertTo(cvImgR, CV_8UC1);
+
+    // Next lets calculate the depth map
+    // TODO: move these into a launch file variable
+    int max_disp = 256;
+    int wsize = 15;
+    cv::Ptr<cv::StereoBM> left_matcher = cv::StereoBM::create(max_disp,wsize);
+    cv::Ptr<cv::ximgproc::DisparityWLSFilter> wls_filter = cv::ximgproc::createDisparityWLSFilter(left_matcher);
+    cv::Ptr<cv::StereoMatcher> right_matcher = cv::ximgproc::createRightMatcher(left_matcher);
+
+    // Compute disparities
+    cv::Mat dispL, dispR;
+    left_matcher->compute(cvImgL, cvImgR, dispL);
+    right_matcher->compute(cvImgR, cvImgL, dispR);
+
+    // Filter it
+    cv::Mat disp;
+    double lambda = 8000.0;
+    double sigma = 1.5;
+    wls_filter->setLambda(lambda);
+    wls_filter->setSigmaColor(sigma);
+    wls_filter->filter(dispL,cvImgL,disp,dispR,cv::Rect(0,0,cvImgL.cols,cvImgL.rows),cvImgR);
+
+    // Check the disparity map by displaying it
+    cv::Mat filtered_disp_vis;
+    cv::ximgproc::getDisparityVis(disp,filtered_disp_vis,2.0);
+    cv::imshow("disparity filtered", filtered_disp_vis);
+    cv::waitKey(10);
+
+    //===========================================================================
+    // DSO IMAGE GRADIENTS (todo: do in parallel)
+    //===========================================================================
+    // Make our hessian frame objects (LEFT)
+    FrameHessian* fhL = new FrameHessian();
+    FrameShell* shellL = new FrameShell();
+    shellL->camToWorld = SE3();      // no lock required, as fh is not used anywhere yet.
+    shellL->aff_g2l = AffLight(0,0);
+    shellL->marginalizedAt = shellL->id = allFrameHistory.size();
+    shellL->timestamp = image->timestamp;
+    shellL->incoming_id = id;
+    fhL->shell = shellL;
+    fhL->makeImages(image->imageL, &Hcalib);
+
+    // Make our hessian frame objects (RIGHT)
+    FrameHessian* fhR = new FrameHessian();
+    FrameShell* shellR = new FrameShell();
+    shellR->camToWorld = SE3();      // no lock required, as fh is not used anywhere yet.
+    shellR->aff_g2l = AffLight(0,0);
+    shellR->marginalizedAt = shellR->id = allFrameHistory.size();
+    shellR->timestamp = image->timestamp;
+    shellR->incoming_id = id;
+    fhR->shell = shellR;
+    fhR->makeImages(image->imageR, &Hcalib);
+
+
+    //===========================================================================
+    // DSO GOOD POINTS TO TRACK
+    //===========================================================================
+
+
+
+
+
+
 }
 
 void FullSystem::makeNewTraces(FrameHessian* newFrame, float* gtDepth)

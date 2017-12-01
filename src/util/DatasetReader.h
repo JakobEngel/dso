@@ -215,18 +215,15 @@ public:
         f.close();
 
         // Done, lets read in the matrix
-        float ic[12];
-        std::sscanf(l1.c_str(),"%f %f %f %f %f %f %f %f %f %f %f %f",&ic[0],&ic[1],&ic[2],&ic[3],&ic[4],&ic[5],&ic[6],&ic[7],&ic[8],&ic[9],&ic[10],&ic[11]);
-        R_1to2 << ic[0],ic[1],ic[2],ic[4],ic[5],ic[6],ic[8],ic[9],ic[10];
-        p_2in1 << ic[3],ic[7],ic[11];
+        float ic[1];
+        std::sscanf(l1.c_str(),"%f",&ic[0]);
+        baselinefx = ic[0];
 
         // Nice printing for the user
-        printf("STEREO: Using following R_C1toC2:\n");
-        printf("%.4f %.4f %.4f\n", R_1to2(0,0), R_1to2(0,1), R_1to2(0,2));
-        printf("%.4f %.4f %.4f\n", R_1to2(1,0), R_1to2(1,1), R_1to2(1,2));
-        printf("%.4f %.4f %.4f\n", R_1to2(2,0), R_1to2(2,1), R_1to2(2,2));
-        printf("STEREO: Using following p_C2inC1:\n");
-        printf("%.4f %.4f %.4f\n", p_2in1(0), p_2in1(1), p_2in1(2));
+        printf("STEREO: Using following baseline:\n");
+        printf("%.4f (baselinetimes fx)\n", baselinefx);
+        printf("%.4f (meters)\n", baselinefx/undistort->getK()(0,0));
+
 
         // Load timestamps if possible.
         loadTimestamps();
@@ -428,8 +425,7 @@ private:
         delete minimgL;
         delete minimgR;
         // Set the stereo configuration values here
-        ret2->R_1to2 = R_1to2;
-        ret2->p_2in1 = p_2in1;
+        ret2->baselinefx = baselinefx;
         return ret2;
     }
 
@@ -484,8 +480,7 @@ private:
     int widthOrg, heightOrg;
 
     // Stereo config information
-    Vec3 p_2in1;
-    Mat33 R_1to2;
+    float baselinefx;
 
     std::string pathL;
     std::string pathR;
