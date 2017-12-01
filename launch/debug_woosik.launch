@@ -9,13 +9,14 @@
     <arg name="prefetch"  default="0" />
     <!-- Kitti dataset location information (gray scale and calibration) -->
     <arg name="calib"   default="$(find dso)/config/kitti_odom.txt" />
-    <arg name="filesL"  default="/home/patrick/datasets/kitti/odometry/00/image_0/" />
-    <arg name="filesR"  default="/home/patrick/datasets/kitti/odometry/00/image_1/" />
+    <arg name="filesL"  default="/home/woosik/workspace/data_sets/Kitti/dataset/sequences/00/image_0/" />
+    <arg name="filesR"  default="/home/woosik/workspace/data_sets/Kitti/dataset/sequences/00/image_1/" />
 
 
     <!-- Launch the DSO node -->
     <node name="dso" pkg="dso" type="dso_dataset" output="screen"
-          args="filesL=$(arg filesL) filesR=$(arg filesR) calib=$(arg calib) preset=$(arg preset) mode=$(arg mode) prefetch=$(arg prefetch)">
+          args="filesL=$(arg filesL) filesR=$(arg filesR) calib=$(arg calib) preset=$(arg preset) mode=$(arg mode) prefetch=$(arg prefetch)"
+          launch-prefix="xterm -e gdb -ex run --args">
     </node>
 
 

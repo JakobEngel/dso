@@ -13,15 +13,15 @@ set(LIBRARY_OUTPUT_PATH lib)
 set(CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake)
 
 # ROS
-find_package(catkin REQUIRED)
-catkin_package(INCLUDE_DIRS src thirdparty/Sophus thirdparty/sse2neon
+find_package(catkin REQUIRED cv_bridge)
+catkin_package(CATKIN_DEPENDS cv_bridge INCLUDE_DIRS src thirdparty/Sophus thirdparty/sse2neon
                LIBRARIES dso)
 
 # required libraries
 find_package(SuiteParse REQUIRED)
 find_package(Eigen3 REQUIRED)
 find_package(Boost COMPONENTS system thread) 
-find_package(OpenCV REQUIRED) # We need OpenCV for the depth map calculation so may as well fail the build if its not installed
+find_package(OpenCV 3 REQUIRED) # We need OpenCV for the depth map calculation so may as well fail the build if its not installed
 
 # optional libraries
 #find_package(LibZip QUIET) # We dont use libzip for Kitti so skip this to avoid errors

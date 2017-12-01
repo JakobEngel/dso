@@ -44,6 +44,8 @@
 
 #include "opencv2/calib3d.hpp"
 #include "opencv2/ximgproc/disparity_filter.hpp" // NOTE that this is in opencv_contrib. Be sure to have opencv compiled with the contrib library
+#include "opencv2/imgproc/imgproc.hpp" // add to use cvtColor to solve CV_8UC1 image type problem
+#include <opencv2/highgui/highgui.hpp> // for wait function
 
 namespace dso
 {
@@ -88,9 +90,12 @@ void CoarseInitializer::setFirstStereoPair(float* imL, float* imR, int w, int h)
 {
 
     cv::Size sz(w, h);
+//    firstFrameL = cv::Mat(sz, CV_32FC1, (void*)imL); // Construct cv::Mat objects for left and right
+//    firstFrameR = cv::Mat(sz, CV_32FC1, (void*)imR);
     firstFrameL = cv::Mat(sz, CV_32FC1, (void*)imL); // Construct cv::Mat objects for left and right
     firstFrameR = cv::Mat(sz, CV_32FC1, (void*)imR);
-
+    firstFrameL.convertTo(firstFrameL, CV_8U);
+    firstFrameR.convertTo(firstFrameR, CV_8U);
 }
 
 /******************************/
@@ -817,24 +822,25 @@ void CoarseInitializer::setFirst(CalibHessian* HCalib, FrameHessian* newFrameHes
 	/****** Edits by Nate ***************************************/
         /* Code partially taken from https://docs.opencv.org/3.1.0/d3/d14/tutorial_ximgproc_disparity_filtering.html */
 
-
-        int max_disp = 16;
+	// Woosik modified
+	//Disparity map settings
+        int max_disp = 256;
         int wsize = 15;
 	cv::Ptr<cv::StereoBM> left_matcher = cv::StereoBM::create(max_disp,wsize);
         cv::Ptr<cv::ximgproc::DisparityWLSFilter> wls_filter = cv::ximgproc::createDisparityWLSFilter(left_matcher);
         cv::Ptr<cv::StereoMatcher> right_matcher = cv::ximgproc::createRightMatcher(left_matcher);	        
-	// Perform stereo matching and filtering from both images to get a more accurate disparity map
-        cv::Mat dispL = cv::Mat::zeros(firstFrameL.size(), firstFrameL.type()); // constuct disparity Mat objects
-        cv::Mat dispR = cv::Mat::zeros(firstFrameR.size(), firstFrameR.type());
-        cv::Mat fDisp = cv::Mat::zeros(firstFrameR.size(), firstFrameR.type()); // final filtered disp
-    
+	
+	cv::Mat dispL,dispR;
         left_matcher->compute(firstFrameL, firstFrameR, dispL); // Compute disparities
         right_matcher->compute(firstFrameR, firstFrameL, dispR);
-
-
-        wls_filter->filter(dispL, fDisp, dispR); // filter the two into the one filtered disp
-        
-
+        /* Check the disperity map by displaying it
+	normalize(dispL, dispL, 0, 255, CV_MINMAX, CV_8U);
+	normalize(dispR, dispR, 0, 255, CV_MINMAX, CV_8U);
+	imshow("disparity left", dispL);
+	imshow("disparity right", dispR);
+	imshow("image left", firstFrameL);
+	imshow("image right", firstFrameR);
+	cv::waitKey(0);*/
         /*************************************************************/
 
         int wl = w[lvl], hl = h[lvl];
