@@ -35,6 +35,8 @@
 #include "FullSystem/Residuals.h"
 #include "util/ImageAndExposure.h"
 
+// INclude opencv core for cv::Mat in FrameHessian
+#include "opencv2/core.hpp"
 
 namespace dso
 {
@@ -105,10 +107,13 @@ struct FrameFramePrecalc
 
 
 
-
+// This struct is what ships the image data after it is read into ImageAndExposure objects from the source (dataset of real-time). Since the ImageAndExposure objects' data are converted to Eigen
 
 struct FrameHessian
 {
+
+
+
     EIGEN_MAKE_ALIGNED_OPERATOR_NEW;
     EFFrame* efFrame;
 
@@ -117,6 +122,8 @@ struct FrameHessian
     FrameShell* shell;
 
     Eigen::Vector3f* dI;                 // trace, fine tracking. Used for direction select (not for gradient histograms etc.)
+    
+    // This is what holds the image pyramid
     Eigen::Vector3f* dIp[PYR_LEVELS];    // coarse tracking / coarse initializer. NAN in [0] only.
     float* absSquaredGrad[PYR_LEVELS];  // only used for pixel select (histograms etc.). no NAN.
 
@@ -256,7 +263,7 @@ struct FrameHessian
         debugImage=0;
     };
 
-
+    // Takes the float* image directly from the ImageAndExposure object to ship elsewhere in the system
     void makeImages(float* color, CalibHessian* HCalib);
 
     inline Vec10 getPrior()

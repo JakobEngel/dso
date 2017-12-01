@@ -829,6 +829,7 @@ void FullSystem::addActiveFrame( ImageAndExposure* image, int id )
     fh->ab_exposure = image->exposure_time;
 
     // TODO: right now we just pass the left image
+    // TODO: ideally we would want to do the direct for both left & right
     fh->makeImages(image->imageL, &Hcalib);
 
 
@@ -839,7 +840,13 @@ void FullSystem::addActiveFrame( ImageAndExposure* image, int id )
         // use initializer!
         if(coarseInitializer->frameID<0)    // first frame set. fh is kept by coarseInitializer.
         {
+
+            // Hand off the rectified stereo pair of the first frame to the initializer
+	        coarseInitializer->setFirstStereoPair(image->imageL, image->imageR, image->w, image->h);
+
+            // TODO: Do we need to remove this once the stereo version works?
             coarseInitializer->setFirst(&Hcalib, fh);
+             
         }
         else if(coarseInitializer->trackFrame(fh, outputWrapper))   // if SNAPPED
         {

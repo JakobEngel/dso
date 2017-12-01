@@ -139,6 +139,7 @@ void FrameHessian::makeImages(float* color, CalibHessian* HCalib)
     // make d0
     int w=wG[0];
     int h=hG[0];
+    // Copies image into dgI
     for(int i=0;i<w*h;i++)
         dI[i][0] = color[i];
 

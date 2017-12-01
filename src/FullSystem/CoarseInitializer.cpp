@@ -42,6 +42,11 @@
 #include "SSE2NEON.h"
 #endif
 
+#include "opencv2/calib3d.hpp"
+#include "opencv2/ximgproc/disparity_filter.hpp" // NOTE that this is in opencv_contrib. Be sure to have opencv compiled with the contrib library
+#include "opencv2/imgproc/imgproc.hpp" // add to use cvtColor to solve CV_8UC1 image type problem
+#include <opencv2/highgui/highgui.hpp> // for wait function
+
 namespace dso
 {
 
@@ -77,6 +82,23 @@ CoarseInitializer::~CoarseInitializer()
     delete[] JbBuffer_new;
 }
 
+/**************************************
+* Edits from Nate
+***************************************/
+
+void CoarseInitializer::setFirstStereoPair(float* imL, float* imR, int w, int h) 
+{
+
+    cv::Size sz(w, h);
+//    firstFrameL = cv::Mat(sz, CV_32FC1, (void*)imL); // Construct cv::Mat objects for left and right
+//    firstFrameR = cv::Mat(sz, CV_32FC1, (void*)imR);
+    firstFrameL = cv::Mat(sz, CV_32FC1, (void*)imL); // Construct cv::Mat objects for left and right
+    firstFrameR = cv::Mat(sz, CV_32FC1, (void*)imR);
+    firstFrameL.convertTo(firstFrameL, CV_8U);
+    firstFrameR.convertTo(firstFrameR, CV_8U);
+}
+
+/******************************/
 
 bool CoarseInitializer::trackFrame(FrameHessian* newFrameHessian, std::vector<IOWrap::Output3DWrapper*> &wraps)
 {
@@ -790,50 +812,85 @@ void CoarseInitializer::setFirst(CalibHessian* HCalib, FrameHessian* newFrameHes
         if(points[lvl] != 0) delete[] points[lvl];
         points[lvl] = new Pnt[npts];
 
-        // set idepth map to initially 1 everywhere.
+
+       /******************************************************************************
+	* This is where the depth map is set to one as the initial guess. This is where we 
+	* should calculate the depth map. Only once though.
+        * -Nate
+	********************************************************************/
+
+	/****** Edits by Nate ***************************************/
+        /* Code partially taken from https://docs.opencv.org/3.1.0/d3/d14/tutorial_ximgproc_disparity_filtering.html */
+
+	// Woosik modified
+	//Disparity map settings
+        int max_disp = 256;
+        int wsize = 15;
+	cv::Ptr<cv::StereoBM> left_matcher = cv::StereoBM::create(max_disp,wsize);
+        cv::Ptr<cv::ximgproc::DisparityWLSFilter> wls_filter = cv::ximgproc::createDisparityWLSFilter(left_matcher);
+        cv::Ptr<cv::StereoMatcher> right_matcher = cv::ximgproc::createRightMatcher(left_matcher);	        
+	
+	cv::Mat dispL,dispR;
+        left_matcher->compute(firstFrameL, firstFrameR, dispL); // Compute disparities
+        right_matcher->compute(firstFrameR, firstFrameL, dispR);
+        /* Check the disperity map by displaying it
+	normalize(dispL, dispL, 0, 255, CV_MINMAX, CV_8U);
+	normalize(dispR, dispR, 0, 255, CV_MINMAX, CV_8U);
+	imshow("disparity left", dispL);
+	imshow("disparity right", dispR);
+	imshow("image left", firstFrameL);
+	imshow("image right", firstFrameR);
+	cv::waitKey(0);*/
+        /*************************************************************/
+
         int wl = w[lvl], hl = h[lvl];
         Pnt* pl = points[lvl];
         int nl = 0;
         for(int y=patternPadding+1;y<hl-patternPadding-2;y++)
-        for(int x=patternPadding+1;x<wl-patternPadding-2;x++)
-        {
-            //if(x==2) printf("y=%d!\n",y);
-            if((lvl!=0 && statusMapB[x+y*wl]) || (lvl==0 && statusMap[x+y*wl] != 0))
-            {
-                //assert(patternNum==9);
-                pl[nl].u = x+0.1;
-                pl[nl].v = y+0.1;
-                pl[nl].idepth = 1;
-                pl[nl].iR = 1;
-                pl[nl].isGood=true;
-                pl[nl].energy.setZero();
-                pl[nl].lastHessian=0;
-                pl[nl].lastHessian_new=0;
-                pl[nl].my_type= (lvl!=0) ? 1 : statusMap[x+y*wl];
+	{
+	    for(int x=patternPadding+1;x<wl-patternPadding-2;x++)
+	    {
+	        //if(x==2) printf("y=%d!\n",y);
+	        if((lvl!=0 && statusMapB[x+y*wl]) || (lvl==0 && statusMap[x+y*wl] != 0))
+	        {
+		    //assert(patternNum==9);
+		    pl[nl].u = x+0.1;
+	 	    pl[nl].v = y+0.1;
 
-                Eigen::Vector3f* cpt = firstFrame->dIp[lvl] + x + y*w[lvl];
-                float sumGrad2=0;
-                for(int idx=0;idx<patternNum;idx++)
-                {
-                    int dx = patternP[idx][0];
-                    int dy = patternP[idx][1];
-                    float absgrad = cpt[dx + dy*w[lvl]].tail<2>().squaredNorm();
-                    sumGrad2 += absgrad;
-                }
+		    /**** Changes by Nate *****************/
+		    pl[nl].idepth = 1;
+                    /**************************************/
 
-//              float gth = setting_outlierTH * (sqrtf(sumGrad2)+setting_outlierTHSumComponent);
-//              pl[nl].outlierTH = patternNum*gth*gth;
+		    pl[nl].iR = 1;
+		    pl[nl].isGood=true;
+		    pl[nl].energy.setZero();
+		    pl[nl].lastHessian=0;
+		    pl[nl].lastHessian_new=0;
+		    pl[nl].my_type= (lvl!=0) ? 1 : statusMap[x+y*wl];
+
+		    Eigen::Vector3f* cpt = firstFrame->dIp[lvl] + x + y*w[lvl];
+		    float sumGrad2=0;
+		    for(int idx=0;idx<patternNum;idx++)
+		    {
+		        int dx = patternP[idx][0];
+		        int dy = patternP[idx][1];
+		        float absgrad = cpt[dx + dy*w[lvl]].tail<2>().squaredNorm();
+		        sumGrad2 += absgrad;
+		    }
+
+//                  float gth = setting_outlierTH * (sqrtf(sumGrad2)+setting_outlierTHSumComponent);
+//                  pl[nl].outlierTH = patternNum*gth*gth;
 //
 
-                pl[nl].outlierTH = patternNum*setting_outlierTH;
+    		    pl[nl].outlierTH = patternNum*setting_outlierTH;
+  
 
 
-
-                nl++;
-                assert(nl <= npts);
-            }
-        }
-
+		    nl++;
+		    assert(nl <= npts);
+	        }
+	    }
+	}
 
         numPoints[lvl]=nl;
     }

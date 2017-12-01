@@ -13,19 +13,19 @@ set(LIBRARY_OUTPUT_PATH lib)
 set(CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake)
 
 # ROS
-find_package(catkin REQUIRED)
-catkin_package(INCLUDE_DIRS src thirdparty/Sophus thirdparty/sse2neon
+find_package(catkin REQUIRED cv_bridge)
+catkin_package(CATKIN_DEPENDS cv_bridge INCLUDE_DIRS src thirdparty/Sophus thirdparty/sse2neon
                LIBRARIES dso)
 
 # required libraries
 find_package(SuiteParse REQUIRED)
 find_package(Eigen3 REQUIRED)
 find_package(Boost COMPONENTS system thread) 
+find_package(OpenCV 3 REQUIRED) # We need OpenCV for the depth map calculation so may as well fail the build if its not installed
 
 # optional libraries
-find_package(LibZip QUIET)
+#find_package(LibZip QUIET) # We dont use libzip for Kitti so skip this to avoid errors
 find_package(Pangolin 0.2 QUIET)
-find_package(OpenCV QUIET)
 
 # flags
 add_definitions("-DENABLE_SSE")
@@ -83,32 +83,21 @@ else ()
 	set(HAS_PANGOLIN 0)
 endif ()
 
-# decide if we have openCV
-if (OpenCV_FOUND)
-	message("--- found OpenCV, compiling dso_opencv library.")
-	include_directories( ${OpenCV_INCLUDE_DIRS} )
-	set(dso_opencv_SOURCE_FILES 
-	  ${PROJECT_SOURCE_DIR}/src/IOWrapper/OpenCV/ImageDisplay_OpenCV.cpp
-	  ${PROJECT_SOURCE_DIR}/src/IOWrapper/OpenCV/ImageRW_OpenCV.cpp)
-	set(HAS_OPENCV 1)
-else ()
-	message("--- could not find OpenCV, not compiling dso_opencv library.")
-	message("    this means there will be no image display, and image read / load functionality.")
-	set(dso_opencv_SOURCE_FILES 
-	  ${PROJECT_SOURCE_DIR}/src/IOWrapper/ImageDisplay_dummy.cpp
-	  ${PROJECT_SOURCE_DIR}/src/IOWrapper/ImageRW_dummy.cpp)
-	set(HAS_OPENCV 0)
-endif ()
+include_directories( ${OpenCV_INCLUDE_DIRS} )
+set(dso_opencv_SOURCE_FILES 
+  ${PROJECT_SOURCE_DIR}/src/IOWrapper/OpenCV/ImageDisplay_OpenCV.cpp
+  ${PROJECT_SOURCE_DIR}/src/IOWrapper/OpenCV/ImageRW_OpenCV.cpp)
+set(HAS_OPENCV 1)
 
-# decide if we have ziplib.
-if (LIBZIP_LIBRARY)
-	message("--- found ziplib (${LIBZIP_VERSION}), compiling with zip capability.")
-	add_definitions(-DHAS_ZIPLIB=1)
-	include_directories( ${LIBZIP_INCLUDE_DIR_ZIP} ${LIBZIP_INCLUDE_DIR_ZIPCONF} ) 
-else()
-	message("--- not found ziplib (${LIBZIP_LIBRARY}), compiling without zip capability.")
-	set(LIBZIP_LIBRARY "")
-endif()
+# Skip libzip
+#if (LIBZIP_LIBRARY)
+#	message("--- found ziplib (${LIBZIP_VERSION}), compiling with zip capability.")
+#	add_definitions(-DHAS_ZIPLIB=1)
+#	include_directories( ${LIBZIP_INCLUDE_DIR_ZIP} ${LIBZIP_INCLUDE_DIR_ZIPCONF} ) 
+#else()
+#	message("--- not found ziplib (${LIBZIP_LIBRARY}), compiling without zip capability.")
+#	set(LIBZIP_LIBRARY "")
+#endif()
 
 
 # compile main library.

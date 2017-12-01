@@ -15,5 +15,6 @@
   <url>http://vision.in.tum.de/dso</url>
 
   <buildtool_depend>catkin</buildtool_depend>
-
+  <build_depend>cv_bridge</build_depend>
+  <run_depend>cv_bridge</run_depend>
 </package>
