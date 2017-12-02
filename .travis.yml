@@ -32,6 +32,12 @@ matrix:
   - compiler: clang
     os: osx
     env: BUILD_TYPE=Release
+# For now only run on xcode8.3, which is the default image, since OSX testing on Travis can take a long time.
+#    osx_image: xcode8.3
+#  - compiler: clang
+#    os: osx
+#    env: BUILD_TYPE=Release
+#    osx_image: xcode7.3
 
 env:
   global:

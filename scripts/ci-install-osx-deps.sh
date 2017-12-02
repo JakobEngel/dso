@@ -14,7 +14,8 @@ brew update
 
 # remove numpy, which is present in the travis image.
 # It will be installed from brew as opencv dependency, which fails if already present.
-/usr/bin/yes | pip uninstall numpy > /dev/null 2>&1
+PIP=`which pip` || PIP=pip2    # newer osx travis images don't have pip executable
+/usr/bin/yes | $PIP uninstall numpy > /dev/null  # 2>&1
 
 brew install eigen glew opencv libzip
 
