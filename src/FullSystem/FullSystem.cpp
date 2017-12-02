@@ -1355,10 +1355,29 @@ void FullSystem::initializeFromStereo(ImageAndExposure* image, int id) {
     // DSO GOOD POINTS TO TRACK
     //===========================================================================
 
+    // TODO: Loop through all the different pyramid levels
+    for(int lvl=0; lvl<pyrLevelsUsed; lvl++)
+    {
+        // TODO: Use our pixel selector to select good points in the current image level
 
 
+        // TODO: From there lets create a point for each one
+        // TODO: Note that we should use the depth map to init our depth of this point
 
 
+    }
+
+
+    // TODO: Loop through all these points and add them as immature points
+
+
+    // TODO: Now add the first two frames into the graph (left and right)
+    // TODO: Note we need to add both to ensure that the we are stable
+
+
+    // TODO: Finally mark this as initialized
+    //initialized=true;
+    //printf("INITIALIZE FROM INITIALIZER (%d pts)!\n", (int)fhL->pointHessians.size());
 
 }
 
