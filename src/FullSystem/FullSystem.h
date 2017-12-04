@@ -55,6 +55,7 @@ class CoarseTracker;
 struct FrameHessian;
 struct PointHessian;
 class CoarseInitializer;
+class CoarseInitializerStereo;
 struct ImmaturePointTemporaryResidual;
 class ImageAndExposure;
 class CoarseDistanceMap;
@@ -181,7 +182,6 @@ private:
     void flagPointsForRemoval();
     void makeNewTraces(FrameHessian* newFrame, float* gtDepth);
     void initializeFromInitializer(FrameHessian* newFrame);
-    void initializeFromStereo(ImageAndExposure* image, int id);
     void flagFramesForMarginalization(FrameHessian* newFH);
 
 
@@ -252,7 +252,8 @@ private:
     // =================== changed by tracker-thread. protected by trackMutex ============
     boost::mutex trackMutex;
     std::vector<FrameShell*> allFrameHistory;
-    CoarseInitializer* coarseInitializer;
+    //CoarseInitializer* coarseInitializer;
+    CoarseInitializerStereo* coarseInitializerStereo;
     Vec5 lastCoarseRMSE;
 
 

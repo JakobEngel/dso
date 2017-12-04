@@ -29,6 +29,7 @@
  *      Author: engelj
  */
 
+#include "FullSystem/CoarseInitializerStereo.h"
 #include "FullSystem/CoarseInitializer.h"
 #include "FullSystem/FullSystem.h"
 #include "FullSystem/HessianBlocks.h"
@@ -36,16 +37,22 @@
 #include "FullSystem/PixelSelector.h"
 #include "FullSystem/PixelSelector2.h"
 #include "util/nanoflann.h"
+#include "util/ImageAndExposure.h"
 
 
 #if !defined(__SSE3__) && !defined(__SSE2__) && !defined(__SSE1__)
 #include "SSE2NEON.h"
 #endif
 
+#include "opencv2/calib3d.hpp"
+#include "opencv2/ximgproc/disparity_filter.hpp" // NOTE that this is in opencv_contrib. Be sure to have opencv compiled with the contrib library
+#include "opencv2/imgproc/imgproc.hpp" // add to use cvtColor to solve CV_8UC1 image type problem
+#include <opencv2/highgui/highgui.hpp> // for wait function
+
 namespace dso
 {
 
-    CoarseInitializer::CoarseInitializer(int ww, int hh) : thisToNext_aff(0,0), thisToNext(SE3())
+    CoarseInitializerStereo::CoarseInitializerStereo(int ww, int hh) : thisToNext_aff(0,0), thisToNext(SE3())
     {
         for(int lvl=0; lvl<pyrLevelsUsed; lvl++)
         {
@@ -58,7 +65,7 @@ namespace dso
 
 
         frameID=-1;
-        fixAffine=true;
+        fixAffine=false;
         printDebug=false;
 
         wM.diagonal()[0] = wM.diagonal()[1] = wM.diagonal()[2] = SCALE_XI_ROT;
@@ -66,7 +73,7 @@ namespace dso
         wM.diagonal()[6] = SCALE_A;
         wM.diagonal()[7] = SCALE_B;
     }
-    CoarseInitializer::~CoarseInitializer()
+    CoarseInitializerStereo::~CoarseInitializerStereo()
     {
         for(int lvl=0; lvl<pyrLevelsUsed; lvl++)
         {
@@ -78,31 +85,125 @@ namespace dso
     }
 
 
-    bool CoarseInitializer::trackFrame(FrameHessian* newFrameHessian, std::vector<IOWrap::Output3DWrapper*> &wraps)
-    {
-        newFrame = newFrameHessian;
+    /**
+     * Given a new image in, this will perform all the needed operations to initalize
+     * The normal initalize operation should be able to be called from the full system
+     */
+    bool CoarseInitializerStereo::initializeFromStereo(CalibHessian* HCalib, ImageAndExposure* image,
+                                                       std::vector<IOWrap::Output3DWrapper*> &wraps, int id, int idmarg) {
+
+        //===========================================================================
+        // DISPARITY CALCULATION
+        //===========================================================================
+        // First lets convert to opencv objects
+        // https://stackoverflow.com/a/8377144/7718197
+        cv::Size sz(image->w, image->h);
+        cv::Mat cvImgL = cv::Mat(sz, CV_32FC1, (void*)image->imageL);
+        cv::Mat cvImgR = cv::Mat(sz, CV_32FC1, (void*)image->imageR);
+        cvImgL.convertTo(cvImgL, CV_8UC1);
+        cvImgR.convertTo(cvImgR, CV_8UC1);
+
+        // Next lets calculate the depth map
+        // TODO: move these into a launch file variable
+        int max_disp = 256;
+        int wsize = 15;
+        cv::Ptr<cv::StereoBM> left_matcher = cv::StereoBM::create(max_disp,wsize);
+        cv::Ptr<cv::ximgproc::DisparityWLSFilter> wls_filter = cv::ximgproc::createDisparityWLSFilter(left_matcher);
+        cv::Ptr<cv::StereoMatcher> right_matcher = cv::ximgproc::createRightMatcher(left_matcher);
+
+        // Compute disparities
+        cv::Mat dispL, dispR;
+        left_matcher->compute(cvImgL, cvImgR, dispL);
+        right_matcher->compute(cvImgR, cvImgL, dispR);
+
+        // Filter it
+        cv::Mat disp;
+        double lambda = 8000.0;
+        double sigma = 1.5;
+        wls_filter->setLambda(lambda);
+        wls_filter->setSigmaColor(sigma);
+        wls_filter->filter(dispL,cvImgL,disp,dispR,cv::Rect(0,0,cvImgL.cols,cvImgL.rows),cvImgR);
+
+        // Check the disparity map by displaying it
+        cv::Mat filtered_disp_vis;
+        //cv::ximgproc::getDisparityVis(dispR,filtered_disp_vis,5.0);
+        cv::normalize(dispR, filtered_disp_vis, 0, 255, cv::NORM_MINMAX, CV_8UC1);
+        cv::imshow("disparity right", filtered_disp_vis);
+        cv::waitKey(15);
+
+
+        //===========================================================================
+        // DSO IMAGE GRADIENTS
+        // TODO: DO THIS IN PARALLEL
+        //===========================================================================
+        // Make our hessian frame objects (LEFT)
+        FrameHessian* fhL = new FrameHessian();
+        FrameShell* shellL = new FrameShell();
+        shellL->camToWorld = SE3();      // no lock required, as fh is not used anywhere yet.
+        shellL->aff_g2l = AffLight(0,0);
+        shellL->marginalizedAt = shellL->id = idmarg;
+        shellL->timestamp = image->timestamp;
+        shellL->incoming_id = id;
+        fhL->shell = shellL;
+        fhL->makeImages(image->imageL, HCalib);
+
+        // Make our hessian frame objects (RIGHT)
+        FrameHessian* fhR = new FrameHessian();
+        FrameShell* shellR = new FrameShell();
+        shellR->camToWorld = SE3();      // no lock required, as fh is not used anywhere yet.
+        shellR->aff_g2l = AffLight(0,0);
+        shellR->marginalizedAt = shellR->id = idmarg;
+        shellR->timestamp = image->timestamp;
+        shellR->incoming_id = id;
+        fhR->shell = shellR;
+        fhR->makeImages(image->imageR, HCalib);
+
+        //===========================================================================
+        // FIRST IMAGE (RIGHT)
+        //===========================================================================
+
+        // Set the first image (we use the right image here)
+        setFirst(HCalib, fhR, dispR, image->baseline);
+
+        //===========================================================================
+        // PROJECT TO SECOND (LEFT)
+        //===========================================================================
+
+        // Track those points onto the next frame
+        bool success = trackFrame(fhL, dispL, image->baseline, wraps);
+
+        // Return the result
+        return success;
+
+    }
+
+
+    bool CoarseInitializerStereo::trackFrame(FrameHessian* frameL, cv::Mat dispL, double baseline, std::vector<IOWrap::Output3DWrapper*> &wraps) {
+
+        // Set what the incoming from is
+        // Will track from right to left
+        newFrame = frameL;
 
         for(IOWrap::Output3DWrapper* ow : wraps)
-            ow->pushLiveFrame(newFrameHessian);
+            ow->pushLiveFrame(frameL);
 
-        int maxIterations[] = {5,5,10,30,50};
+        int maxIterations[] = {5, 5, 10, 30, 50};
 
-
-
-        alphaK = 2.5*2.5;//*freeDebugParam1*freeDebugParam1;
-        alphaW = 150*150;//*freeDebugParam2*freeDebugParam2;
+        alphaK = 2.5 * 2.5;//*freeDebugParam1*freeDebugParam1;
+        alphaW = 150 * 150;//*freeDebugParam2*freeDebugParam2;
         regWeight = 0.8;//*freeDebugParam4;
         couplingWeight = 1;//*freeDebugParam5;
 
-        if(!snapped)
-        {
+        if (!snapped) {
+            // Set our translation to zero
             thisToNext.translation().setZero();
-            for(int lvl=0;lvl<pyrLevelsUsed;lvl++)
-            {
+            // Then we have moved in the -x direction to the left frame
+            //thisToNext.translation()(0) = -baseline;
+            // Set what our point depths should be at the next frame
+            for (int lvl = 0; lvl < pyrLevelsUsed; lvl++) {
                 int npts = numPoints[lvl];
-                Pnt* ptsl = points[lvl];
-                for(int i=0;i<npts;i++)
-                {
+                Pnt *ptsl = points[lvl];
+                for (int i = 0; i < npts; i++) {
                     ptsl[i].iR = 1;
                     ptsl[i].idepth_new = 1;
                     ptsl[i].lastHessian = 0;
@@ -114,63 +215,57 @@ namespace dso
         SE3 refToNew_current = thisToNext;
         AffLight refToNew_aff_current = thisToNext_aff;
 
-        if(firstFrame->ab_exposure>0 && newFrame->ab_exposure>0)
-            refToNew_aff_current = AffLight(logf(newFrame->ab_exposure /  firstFrame->ab_exposure),0); // coarse approximation.
+        if (firstFrame->ab_exposure > 0 && newFrame->ab_exposure > 0)
+            refToNew_aff_current = AffLight(logf(newFrame->ab_exposure / firstFrame->ab_exposure), 0); // coarse approximation.
 
 
         Vec3f latestRes = Vec3f::Zero();
-        for(int lvl=pyrLevelsUsed-1; lvl>=0; lvl--)
-        {
+        for (int lvl = pyrLevelsUsed - 1; lvl >= 0; lvl--) {
 
+            if (lvl < pyrLevelsUsed - 1)
+                propagateDown(lvl + 1);
 
-
-            if(lvl<pyrLevelsUsed-1)
-                propagateDown(lvl+1);
-
-            Mat88f H,Hsc; Vec8f b,bsc;
+            Mat88f H, Hsc;
+            Vec8f b, bsc;
             resetPoints(lvl);
             Vec3f resOld = calcResAndGS(lvl, H, b, Hsc, bsc, refToNew_current, refToNew_aff_current, false);
             applyStep(lvl);
 
             float lambda = 0.1;
             float eps = 1e-4;
-            int fails=0;
+            int fails = 0;
 
-            if(printDebug)
-            {
+            if (printDebug) {
                 printf("lvl %d, it %d (l=%f) %s: %.3f+%.5f -> %.3f+%.5f (%.3f->%.3f) (|inc| = %f)! \t",
                        lvl, 0, lambda,
                        "INITIA",
-                       sqrtf((float)(resOld[0] / resOld[2])),
-                       sqrtf((float)(resOld[1] / resOld[2])),
-                       sqrtf((float)(resOld[0] / resOld[2])),
-                       sqrtf((float)(resOld[1] / resOld[2])),
-                       (resOld[0]+resOld[1]) / resOld[2],
-                       (resOld[0]+resOld[1]) / resOld[2],
+                       sqrtf((float) (resOld[0] / resOld[2])),
+                       sqrtf((float) (resOld[1] / resOld[2])),
+                       sqrtf((float) (resOld[0] / resOld[2])),
+                       sqrtf((float) (resOld[1] / resOld[2])),
+                       (resOld[0] + resOld[1]) / resOld[2],
+                       (resOld[0] + resOld[1]) / resOld[2],
                        0.0f);
-                std::cout << refToNew_current.log().transpose() << " AFF " << refToNew_aff_current.vec().transpose() <<"\n";
+                std::cout << refToNew_current.log().transpose() << " AFF " << refToNew_aff_current.vec().transpose() << "\n";
             }
 
-            int iteration=0;
-            while(true)
-            {
+            int iteration = 0;
+            while (true) {
                 Mat88f Hl = H;
-                for(int i=0;i<8;i++) Hl(i,i) *= (1+lambda);
-                Hl -= Hsc*(1/(1+lambda));
-                Vec8f bl = b - bsc*(1/(1+lambda));
+                for (int i = 0; i < 8; i++) Hl(i, i) *= (1 + lambda);
+                Hl -= Hsc * (1 / (1 + lambda));
+                Vec8f bl = b - bsc * (1 / (1 + lambda));
 
-                Hl = wM * Hl * wM * (0.01f/(w[lvl]*h[lvl]));
-                bl = wM * bl * (0.01f/(w[lvl]*h[lvl]));
+                Hl = wM * Hl * wM * (0.01f / (w[lvl] * h[lvl]));
+                bl = wM * bl * (0.01f / (w[lvl] * h[lvl]));
 
 
                 Vec8f inc;
-                if(fixAffine)
-                {
-                    inc.head<6>() = - (wM.toDenseMatrix().topLeftCorner<6,6>() * (Hl.topLeftCorner<6,6>().ldlt().solve(bl.head<6>())));
+                if (fixAffine) {
+                    inc.head<6>() = -(wM.toDenseMatrix().topLeftCorner<6, 6>() * (Hl.topLeftCorner<6, 6>().ldlt().solve(bl.head<6>())));
                     inc.tail<2>().setZero();
-                }
-                else
-                    inc = - (wM * (Hl.ldlt().solve(bl)));	//=-H^-1 * b.
+                } else
+                    inc = -(wM * (Hl.ldlt().solve(bl)));   //=-H^-1 * b.
 
 
                 SE3 refToNew_new = SE3::exp(inc.head<6>().cast<double>()) * refToNew_current;
@@ -180,37 +275,36 @@ namespace dso
                 doStep(lvl, lambda, inc);
 
 
-                Mat88f H_new, Hsc_new; Vec8f b_new, bsc_new;
+                Mat88f H_new, Hsc_new;
+                Vec8f b_new, bsc_new;
                 Vec3f resNew = calcResAndGS(lvl, H_new, b_new, Hsc_new, bsc_new, refToNew_new, refToNew_aff_new, false);
                 Vec3f regEnergy = calcEC(lvl);
 
-                float eTotalNew = (resNew[0]+resNew[1]+regEnergy[1]);
-                float eTotalOld = (resOld[0]+resOld[1]+regEnergy[0]);
+                float eTotalNew = (resNew[0] + resNew[1] + regEnergy[1]);
+                float eTotalOld = (resOld[0] + resOld[1] + regEnergy[0]);
 
 
                 bool accept = eTotalOld > eTotalNew;
 
-                if(printDebug)
-                {
+                if (printDebug) {
                     printf("lvl %d, it %d (l=%f) %s: %.5f + %.5f + %.5f -> %.5f + %.5f + %.5f (%.2f->%.2f) (|inc| = %f)! \t",
                            lvl, iteration, lambda,
                            (accept ? "ACCEPT" : "REJECT"),
-                           sqrtf((float)(resOld[0] / resOld[2])),
-                           sqrtf((float)(regEnergy[0] / regEnergy[2])),
-                           sqrtf((float)(resOld[1] / resOld[2])),
-                           sqrtf((float)(resNew[0] / resNew[2])),
-                           sqrtf((float)(regEnergy[1] / regEnergy[2])),
-                           sqrtf((float)(resNew[1] / resNew[2])),
+                           sqrtf((float) (resOld[0] / resOld[2])),
+                           sqrtf((float) (regEnergy[0] / regEnergy[2])),
+                           sqrtf((float) (resOld[1] / resOld[2])),
+                           sqrtf((float) (resNew[0] / resNew[2])),
+                           sqrtf((float) (regEnergy[1] / regEnergy[2])),
+                           sqrtf((float) (resNew[1] / resNew[2])),
                            eTotalOld / resNew[2],
                            eTotalNew / resNew[2],
                            inc.norm());
-                    std::cout << refToNew_new.log().transpose() << " AFF " << refToNew_aff_new.vec().transpose() <<"\n";
+                    std::cout << refToNew_new.log().transpose() << " AFF " << refToNew_aff_new.vec().transpose() << "\n";
                 }
 
-                if(accept)
-                {
+                if (accept) {
 
-                    if(resNew[1] == alphaK*numPoints[lvl])
+                    if (resNew[1] == alphaK * numPoints[lvl])
                         snapped = true;
                     H = H_new;
                     b = b_new;
@@ -222,27 +316,25 @@ namespace dso
                     applyStep(lvl);
                     optReg(lvl);
                     lambda *= 0.5;
-                    fails=0;
-                    if(lambda < 0.0001) lambda = 0.0001;
-                }
-                else
-                {
+                    fails = 0;
+                    if (lambda < 0.0001) lambda = 0.0001;
+                } else {
                     fails++;
                     lambda *= 4;
-                    if(lambda > 10000) lambda = 10000;
+                    if (lambda > 10000) lambda = 10000;
                 }
 
                 bool quitOpt = false;
 
-                if(!(inc.norm() > eps) || iteration >= maxIterations[lvl] || fails >= 2)
-                {
-                    Mat88f H,Hsc; Vec8f b,bsc;
+                if (!(inc.norm() > eps) || iteration >= maxIterations[lvl] || fails >= 2) {
+                    Mat88f H, Hsc;
+                    Vec8f b, bsc;
 
                     quitOpt = true;
                 }
 
 
-                if(quitOpt) break;
+                if (quitOpt) break;
                 iteration++;
             }
             latestRes = resOld;
@@ -250,32 +342,28 @@ namespace dso
         }
 
 
-
         thisToNext = refToNew_current;
         thisToNext_aff = refToNew_aff_current;
 
-        for(int i=0;i<pyrLevelsUsed-1;i++)
+        for (int i = 0; i < pyrLevelsUsed - 1; i++)
             propagateUp(i);
 
 
-
-
         frameID++;
-        if(!snapped) snappedAt=0;
+        if (!snapped) snappedAt = 0;
 
-        if(snapped && snappedAt==0)
+        if (snapped && snappedAt == 0)
             snappedAt = frameID;
 
 
-
-        debugPlot(0,wraps);
-
+        debugPlot(0, wraps);
 
 
-        return snapped && frameID > snappedAt+5;
+        return snapped; // && frameID > snappedAt + 5;
+        //return true;
     }
 
-    void CoarseInitializer::debugPlot(int lvl, std::vector<IOWrap::Output3DWrapper*> &wraps)
+    void CoarseInitializerStereo::debugPlot(int lvl, std::vector<IOWrap::Output3DWrapper*> &wraps)
     {
         bool needCall = false;
         for(IOWrap::Output3DWrapper* ow : wraps)
@@ -325,8 +413,8 @@ namespace dso
             ow->pushDepthImage(&iRImg);
     }
 
-// calculates residual, Hessian and Hessian-block neede for re-substituting depth.
-    Vec3f CoarseInitializer::calcResAndGS(
+    // calculates residual, Hessian and Hessian-block neede for re-substituting depth.
+    Vec3f CoarseInitializerStereo::calcResAndGS(
             int lvl, Mat88f &H_out, Vec8f &b_out,
             Mat88f &H_out_sc, Vec8f &b_out_sc,
             const SE3 &refToNew, AffLight refToNew_aff,
@@ -585,7 +673,7 @@ namespace dso
         return Vec3f(E.A, alphaEnergy ,E.num);
     }
 
-    float CoarseInitializer::rescale()
+    float CoarseInitializerStereo::rescale()
     {
         float factor = 20*thisToNext.translation().norm();
 //	float factori = 1.0f/factor;
@@ -607,8 +695,7 @@ namespace dso
         return factor;
     }
 
-
-    Vec3f CoarseInitializer::calcEC(int lvl)
+    Vec3f CoarseInitializerStereo::calcEC(int lvl)
     {
         if(!snapped) return Vec3f(0,0,numPoints[lvl]);
         AccumulatorX<2> E;
@@ -629,7 +716,7 @@ namespace dso
         //printf("ER: %f %f %f!\n", couplingWeight*E.A1m[0], couplingWeight*E.A1m[1], (float)E.num.numIn1m);
         return Vec3f(couplingWeight*E.A1m[0], couplingWeight*E.A1m[1], E.num);
     }
-    void CoarseInitializer::optReg(int lvl)
+    void CoarseInitializerStereo::optReg(int lvl)
     {
         int npts = numPoints[lvl];
         Pnt* ptsl = points[lvl];
@@ -668,7 +755,7 @@ namespace dso
 
 
 
-    void CoarseInitializer::propagateUp(int srcLvl)
+    void CoarseInitializerStereo::propagateUp(int srcLvl)
     {
         assert(srcLvl+1<pyrLevelsUsed);
         // set idepth of target
@@ -709,7 +796,7 @@ namespace dso
         optReg(srcLvl+1);
     }
 
-    void CoarseInitializer::propagateDown(int srcLvl)
+    void CoarseInitializerStereo::propagateDown(int srcLvl)
     {
         assert(srcLvl>0);
         // set idepth of target
@@ -740,7 +827,7 @@ namespace dso
     }
 
 
-    void CoarseInitializer::makeGradients(Eigen::Vector3f** data)
+    void CoarseInitializerStereo::makeGradients(Eigen::Vector3f** data)
     {
         for(int lvl=1; lvl<pyrLevelsUsed; lvl++)
         {
@@ -764,11 +851,10 @@ namespace dso
             }
         }
     }
-    void CoarseInitializer::setFirst(	CalibHessian* HCalib, FrameHessian* newFrameHessian)
-    {
+    void CoarseInitializerStereo::setFirst(CalibHessian* HCalib, FrameHessian* rightFrame, cv::Mat dispR, double baseline) {
 
         makeK(HCalib);
-        firstFrame = newFrameHessian;
+        firstFrame = rightFrame;
 
         PixelSelector sel(w[0],h[0]);
 
@@ -785,16 +871,14 @@ namespace dso
             else
                 npts = makePixelStatus(firstFrame->dIp[lvl], statusMapB, w[lvl], h[lvl], densities[lvl]*w[0]*h[0]);
 
-
-
             if(points[lvl] != 0) delete[] points[lvl];
             points[lvl] = new Pnt[npts];
 
-            // set idepth map to initially 1 everywhere.
             int wl = w[lvl], hl = h[lvl];
             Pnt* pl = points[lvl];
             int nl = 0;
             for(int y=patternPadding+1;y<hl-patternPadding-2;y++)
+            {
                 for(int x=patternPadding+1;x<wl-patternPadding-2;x++)
                 {
                     //if(x==2) printf("y=%d!\n",y);
@@ -803,7 +887,17 @@ namespace dso
                         //assert(patternNum==9);
                         pl[nl].u = x+0.1;
                         pl[nl].v = y+0.1;
-                        pl[nl].idepth = 1;
+
+                        //=============================================================================================
+                        //=============================================================================================
+                        // depth = (baseline*focalx) / disp
+                        // inv_depth = disp / (baseline*focalx)
+                        // Note: we also divide by 16 here since the disparity from opencv is scaled by 16
+                        // https://stackoverflow.com/a/28960650/7718197
+                        pl[nl].idepth = (float)(std::abs(dispR.at<double>(x+0.1,y+0.1))/16/ (std::abs(baseline)*K[lvl](0,0)));
+                        //=============================================================================================
+                        //=============================================================================================
+
                         pl[nl].iR = 1;
                         pl[nl].isGood=true;
                         pl[nl].energy.setZero();
@@ -821,19 +915,13 @@ namespace dso
                             sumGrad2 += absgrad;
                         }
 
-//				float gth = setting_outlierTH * (sqrtf(sumGrad2)+setting_outlierTHSumComponent);
-//				pl[nl].outlierTH = patternNum*gth*gth;
-//
-
                         pl[nl].outlierTH = patternNum*setting_outlierTH;
-
-
 
                         nl++;
                         assert(nl <= npts);
                     }
                 }
-
+            }
 
             numPoints[lvl]=nl;
         }
@@ -851,7 +939,7 @@ namespace dso
 
     }
 
-    void CoarseInitializer::resetPoints(int lvl)
+    void CoarseInitializerStereo::resetPoints(int lvl)
     {
         Pnt* pts = points[lvl];
         int npts = numPoints[lvl];
@@ -879,7 +967,7 @@ namespace dso
             }
         }
     }
-    void CoarseInitializer::doStep(int lvl, float lambda, Vec8f inc)
+    void CoarseInitializerStereo::doStep(int lvl, float lambda, Vec8f inc)
     {
 
         const float maxPixelStep = 0.25;
@@ -908,7 +996,7 @@ namespace dso
         }
 
     }
-    void CoarseInitializer::applyStep(int lvl)
+    void CoarseInitializerStereo::applyStep(int lvl)
     {
         Pnt* pts = points[lvl];
         int npts = numPoints[lvl];
@@ -927,7 +1015,7 @@ namespace dso
         std::swap<Vec10f*>(JbBuffer, JbBuffer_new);
     }
 
-    void CoarseInitializer::makeK(CalibHessian* HCalib)
+    void CoarseInitializerStereo::makeK(CalibHessian* HCalib)
     {
         w[0] = wG[0];
         h[0] = hG[0];
@@ -958,10 +1046,7 @@ namespace dso
         }
     }
 
-
-
-
-    void CoarseInitializer::makeNN()
+    void CoarseInitializerStereo::makeNN()
     {
         const float NNDistFactor=0.05;
 
@@ -1033,10 +1118,9 @@ namespace dso
         }
 
 
-
         // done.
-
         for(int i=0;i<pyrLevelsUsed;i++)
             delete indexes[i];
     }
 }
+

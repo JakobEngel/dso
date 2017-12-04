@@ -48,7 +48,7 @@ public:
     int w,h;                // width and height;
     double timestamp;       // timestamp of this image if we have it
     float exposure_time;    // exposure time in ms.
-    float baselinefx;       // baseline times focal length (top right of projection matrix)
+    float baseline;       // baseline times focal length (top right of projection matrix)
 
     /**
      * Default constructor

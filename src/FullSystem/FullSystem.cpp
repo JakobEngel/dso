@@ -46,6 +46,7 @@
 
 #include "FullSystem/CoarseTracker.h"
 #include "FullSystem/CoarseInitializer.h"
+#include "FullSystem/CoarseInitializerStereo.h"
 
 #include "OptimizationBackend/EnergyFunctional.h"
 #include "OptimizationBackend/EnergyFunctionalStructs.h"
@@ -142,7 +143,8 @@ FullSystem::FullSystem()
     coarseDistanceMap = new CoarseDistanceMap(wG[0], hG[0]);
     coarseTracker = new CoarseTracker(wG[0], hG[0]);
     coarseTracker_forNewKF = new CoarseTracker(wG[0], hG[0]);
-    coarseInitializer = new CoarseInitializer(wG[0], hG[0]);
+    //coarseInitializer = new CoarseInitializer(wG[0], hG[0]);
+    coarseInitializerStereo = new CoarseInitializerStereo(wG[0], hG[0]);
     pixelSelector = new PixelSelector(wG[0], hG[0]);
 
     statistics_lastNumOptIts=0;
@@ -210,7 +212,8 @@ FullSystem::~FullSystem()
     delete coarseDistanceMap;
     delete coarseTracker;
     delete coarseTracker_forNewKF;
-    delete coarseInitializer;
+    //delete coarseInitializer;
+    delete coarseInitializerStereo;
     delete pixelSelector;
     delete ef;
 }
@@ -845,8 +848,20 @@ void FullSystem::addActiveFrame( ImageAndExposure* image, int id )
     if(!initialized)
     {
         // Call on our stereo initialization
-        initializeFromStereo(image, id);
-        // Return so we can start tracking on the next go if initialization was successfull
+        if(coarseInitializerStereo->initializeFromStereo(&Hcalib, image, outputWrapper, id, (int)allFrameHistory.size()))
+        {
+            initializeFromInitializer(fhL);
+            lock.unlock();
+            deliverTrackedFrame(fhL, true);
+            printf("STEREO: INITIALIZED USING STEREO PAIR!!!\n");
+        }
+        else
+        {
+            // if still initializing
+            fhL->shell->poseValid = false;
+            delete fhL;
+            printf("STEREO: UNABLE TO INITIALIZE USING STEREO PAIR\n");
+        }
         return;
     }
     else    // do front-end operation.
@@ -1104,25 +1119,25 @@ void FullSystem::makeKeyFrame( FrameHessian* fh)
 
 
 
-    // =========================== Figure Out if INITIALIZATION FAILED =========================
-    if(allKeyFramesHistory.size() <= 4)
-    {
-        if(allKeyFramesHistory.size()==2 && rmse > 20*benchmark_initializerSlackFactor)
-        {
-            printf("I THINK INITIALIZATION FAILED! Resetting.\n");
-            initFailed=true;
-        }
-        if(allKeyFramesHistory.size()==3 && rmse > 13*benchmark_initializerSlackFactor)
-        {
-            printf("I THINK INITIALIZATION FAILED! Resetting.\n");
-            initFailed=true;
-        }
-        if(allKeyFramesHistory.size()==4 && rmse > 9*benchmark_initializerSlackFactor)
-        {
-            printf("I THINK INITIALIZATION FAILED! Resetting.\n");
-            initFailed=true;
-        }
-    }
+//     =========================== Figure Out if INITIALIZATION FAILED =========================
+//    if(allKeyFramesHistory.size() <= 4)
+//    {
+//        if(allKeyFramesHistory.size()==2 && rmse > 20*benchmark_initializerSlackFactor)
+//        {
+//            printf("I THINK INITIALIZATION FAILED! Resetting.\n");
+//            initFailed=true;
+//        }
+//        if(allKeyFramesHistory.size()==3 && rmse > 13*benchmark_initializerSlackFactor)
+//        {
+//            printf("I THINK INITIALIZATION FAILED! Resetting.\n");
+//            initFailed=true;
+//        }
+//        if(allKeyFramesHistory.size()==4 && rmse > 9*benchmark_initializerSlackFactor)
+//        {
+//            printf("I THINK INITIALIZATION FAILED! Resetting.\n");
+//            initFailed=true;
+//        }
+//    }
 
 
 
@@ -1203,7 +1218,7 @@ void FullSystem::initializeFromInitializer(FrameHessian* newFrame)
     boost::unique_lock<boost::mutex> lock(mapMutex);
 
     // add firstframe.
-    FrameHessian* firstFrame = coarseInitializer->firstFrame;
+    FrameHessian* firstFrame = coarseInitializerStereo->firstFrame;
     firstFrame->idx = frameHessians.size();
     frameHessians.push_back(firstFrame);
     firstFrame->frameID = allKeyFramesHistory.size();
@@ -1220,25 +1235,25 @@ void FullSystem::initializeFromInitializer(FrameHessian* newFrame)
 
 
     float sumID=1e-5, numID=1e-5;
-    for(int i=0;i<coarseInitializer->numPoints[0];i++)
+    for(int i=0;i<coarseInitializerStereo->numPoints[0];i++)
     {
-        sumID += coarseInitializer->points[0][i].iR;
+        sumID += coarseInitializerStereo->points[0][i].iR;
         numID++;
     }
     float rescaleFactor = 1 / (sumID / numID);
 
     // randomly sub-select the points I need.
-    float keepPercentage = setting_desiredPointDensity / coarseInitializer->numPoints[0];
+    float keepPercentage = setting_desiredPointDensity / coarseInitializerStereo->numPoints[0];
 
     if(!setting_debugout_runquiet)
         printf("Initialization: keep %.1f%% (need %d, have %d)!\n", 100*keepPercentage,
-                (int)(setting_desiredPointDensity), coarseInitializer->numPoints[0] );
+                (int)(setting_desiredPointDensity), coarseInitializerStereo->numPoints[0] );
 
-    for(int i=0;i<coarseInitializer->numPoints[0];i++)
+    for(int i=0;i<coarseInitializerStereo->numPoints[0];i++)
     {
         if(rand()/(float)RAND_MAX > keepPercentage) continue;
 
-        Pnt* point = coarseInitializer->points[0]+i;
+        Pnt* point = coarseInitializerStereo->points[0]+i;
         ImmaturePoint* pt = new ImmaturePoint(point->u+0.5f,point->v+0.5f,firstFrame,point->my_type, &Hcalib);
 
         if(!std::isfinite(pt->energyTH)) { delete pt; continue; }
@@ -1260,7 +1275,7 @@ void FullSystem::initializeFromInitializer(FrameHessian* newFrame)
 
 
 
-    SE3 firstToNew = coarseInitializer->thisToNext;
+    SE3 firstToNew = coarseInitializerStereo->thisToNext;
     firstToNew.translation() /= rescaleFactor;
 
 
@@ -1283,102 +1298,6 @@ void FullSystem::initializeFromInitializer(FrameHessian* newFrame)
 
     initialized=true;
     printf("INITIALIZE FROM INITIALIZER (%d pts)!\n", (int)firstFrame->pointHessians.size());
-}
-
-void FullSystem::initializeFromStereo(ImageAndExposure* image, int id) {
-
-    //===========================================================================
-    // DISPARITY CALCULATION
-    //===========================================================================
-    // First lets convert to opencv objects
-    // https://stackoverflow.com/a/8377144/7718197
-    cv::Size sz(image->w, image->h);
-    cv::Mat cvImgL = cv::Mat(sz, CV_32FC1, (void*)image->imageL);
-    cv::Mat cvImgR = cv::Mat(sz, CV_32FC1, (void*)image->imageR);
-    cvImgL.convertTo(cvImgL, CV_8UC1);
-    cvImgR.convertTo(cvImgR, CV_8UC1);
-
-    // Next lets calculate the depth map
-    // TODO: move these into a launch file variable
-    int max_disp = 256;
-    int wsize = 15;
-    cv::Ptr<cv::StereoBM> left_matcher = cv::StereoBM::create(max_disp,wsize);
-    cv::Ptr<cv::ximgproc::DisparityWLSFilter> wls_filter = cv::ximgproc::createDisparityWLSFilter(left_matcher);
-    cv::Ptr<cv::StereoMatcher> right_matcher = cv::ximgproc::createRightMatcher(left_matcher);
-
-    // Compute disparities
-    cv::Mat dispL, dispR;
-    left_matcher->compute(cvImgL, cvImgR, dispL);
-    right_matcher->compute(cvImgR, cvImgL, dispR);
-
-    // Filter it
-    cv::Mat disp;
-    double lambda = 8000.0;
-    double sigma = 1.5;
-    wls_filter->setLambda(lambda);
-    wls_filter->setSigmaColor(sigma);
-    wls_filter->filter(dispL,cvImgL,disp,dispR,cv::Rect(0,0,cvImgL.cols,cvImgL.rows),cvImgR);
-
-    // Check the disparity map by displaying it
-    cv::Mat filtered_disp_vis;
-    cv::ximgproc::getDisparityVis(disp,filtered_disp_vis,2.0);
-    cv::imshow("disparity filtered", filtered_disp_vis);
-    cv::waitKey(10);
-
-    //===========================================================================
-    // DSO IMAGE GRADIENTS (todo: do in parallel)
-    //===========================================================================
-    // Make our hessian frame objects (LEFT)
-    FrameHessian* fhL = new FrameHessian();
-    FrameShell* shellL = new FrameShell();
-    shellL->camToWorld = SE3();      // no lock required, as fh is not used anywhere yet.
-    shellL->aff_g2l = AffLight(0,0);
-    shellL->marginalizedAt = shellL->id = allFrameHistory.size();
-    shellL->timestamp = image->timestamp;
-    shellL->incoming_id = id;
-    fhL->shell = shellL;
-    fhL->makeImages(image->imageL, &Hcalib);
-
-    // Make our hessian frame objects (RIGHT)
-    FrameHessian* fhR = new FrameHessian();
-    FrameShell* shellR = new FrameShell();
-    shellR->camToWorld = SE3();      // no lock required, as fh is not used anywhere yet.
-    shellR->aff_g2l = AffLight(0,0);
-    shellR->marginalizedAt = shellR->id = allFrameHistory.size();
-    shellR->timestamp = image->timestamp;
-    shellR->incoming_id = id;
-    fhR->shell = shellR;
-    fhR->makeImages(image->imageR, &Hcalib);
-
-
-    //===========================================================================
-    // DSO GOOD POINTS TO TRACK
-    //===========================================================================
-
-    // TODO: Loop through all the different pyramid levels
-    for(int lvl=0; lvl<pyrLevelsUsed; lvl++)
-    {
-        // TODO: Use our pixel selector to select good points in the current image level
-
-
-        // TODO: From there lets create a point for each one
-        // TODO: Note that we should use the depth map to init our depth of this point
-
-
-    }
-
-
-    // TODO: Loop through all these points and add them as immature points
-
-
-    // TODO: Now add the first two frames into the graph (left and right)
-    // TODO: Note we need to add both to ensure that the we are stable
-
-
-    // TODO: Finally mark this as initialized
-    //initialized=true;
-    //printf("INITIALIZE FROM INITIALIZER (%d pts)!\n", (int)fhL->pointHessians.size());
-
 }
 
 void FullSystem::makeNewTraces(FrameHessian* newFrame, float* gtDepth)

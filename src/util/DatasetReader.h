@@ -217,12 +217,12 @@ public:
         // Done, lets read in the matrix
         float ic[1];
         std::sscanf(l1.c_str(),"%f",&ic[0]);
-        baselinefx = ic[0];
+        baseline = ic[0]/undistort->getK()(0,0);
 
         // Nice printing for the user
         printf("STEREO: Using following baseline:\n");
-        printf("%.4f (baselinetimes fx)\n", baselinefx);
-        printf("%.4f (meters)\n", baselinefx/undistort->getK()(0,0));
+        printf("%.4f (meters)\n", baseline);
+        printf("%.4f (baselinetimes fx)\n", ic[0]);
 
 
         // Load timestamps if possible.
@@ -425,7 +425,7 @@ private:
         delete minimgL;
         delete minimgR;
         // Set the stereo configuration values here
-        ret2->baselinefx = baselinefx;
+        ret2->baseline = baseline;
         return ret2;
     }
 
@@ -480,7 +480,7 @@ private:
     int widthOrg, heightOrg;
 
     // Stereo config information
-    float baselinefx;
+    float baseline;
 
     std::string pathL;
     std::string pathR;

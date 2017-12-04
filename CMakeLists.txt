@@ -48,6 +48,7 @@ set(dso_SOURCE_FILES
   ${PROJECT_SOURCE_DIR}/src/FullSystem/Residuals.cpp
   ${PROJECT_SOURCE_DIR}/src/FullSystem/CoarseTracker.cpp
   ${PROJECT_SOURCE_DIR}/src/FullSystem/CoarseInitializer.cpp
+  ${PROJECT_SOURCE_DIR}/src/FullSystem/CoarseInitializerStereo.cpp
   ${PROJECT_SOURCE_DIR}/src/FullSystem/ImmaturePoint.cpp
   ${PROJECT_SOURCE_DIR}/src/FullSystem/HessianBlocks.cpp
   ${PROJECT_SOURCE_DIR}/src/FullSystem/PixelSelector2.cpp
