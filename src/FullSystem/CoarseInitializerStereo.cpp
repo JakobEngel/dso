@@ -198,7 +198,7 @@ namespace dso
             // Set our translation to zero
             thisToNext.translation().setZero();
             // Then we have moved in the -x direction to the left frame
-            //thisToNext.translation()(0) = -baseline;
+            //thisToNext.translation()(0) = -std::abs(baseline);
             // Set what our point depths should be at the next frame
             for (int lvl = 0; lvl < pyrLevelsUsed; lvl++) {
                 int npts = numPoints[lvl];

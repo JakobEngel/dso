@@ -9,8 +9,8 @@
     <arg name="prefetch"  default="0" />
     <!-- Kitti dataset location information (gray scale and calibration) -->
     <arg name="calib"   default="$(find dso)/config/kitti_odom.txt" />
-    <arg name="filesL"  default="/home/patrick/datasets/kitti/odometry/00/image_0/" />
-    <arg name="filesR"  default="/home/patrick/datasets/kitti/odometry/00/image_1/" />
+    <arg name="filesL"  default="/home/patrick/datasets/kitti/odometry/01/image_0/" />
+    <arg name="filesR"  default="/home/patrick/datasets/kitti/odometry/01/image_1/" />
 
 
     <!-- Launch the DSO node -->
