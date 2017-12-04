@@ -25,6 +25,11 @@ set(CMAKE_OUTPUT_PATH ${LIBRARY_OUTPUT_PATH}/cmake/dso)
 set(PKGCONFIG_OUTPUT_PATH ${LIBRARY_OUTPUT_PATH}/pkgconfig)
 set(CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake)
 
+# avoid cmake policy warning by adopting new default
+if(APPLE)
+    set(CMAKE_MACOSX_RPATH ON)
+endif()
+
 # required libraries
 find_package(Eigen3 REQUIRED)
 find_package(Boost COMPONENTS system thread) 
@@ -44,6 +49,7 @@ set(CMAKE_CXX_FLAGS
 
 #message("   CMAKE_CXX_FLAGS: ${CMAKE_CXX_FLAGS}")
 
+# Note that with a static library, it seems you might get (slightly) better runtime performence.
 option(DSO_BUILD_STATIC_LIBRARY        "Build a static dso library, instead of shared" OFF)
 
 if (MSVC)

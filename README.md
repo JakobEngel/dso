@@ -93,6 +93,7 @@ and proceed below.
 this will by default compile a dynamic library `libdso.so`, which can be linked from external projects.
 It will also build a binary `dso_dataset`, to run DSO on datasets. However, for this
 OpenCV and Pangolin need to be installed. You can switch to building a static library with `cmake -DDSO_BUILD_STATIC_LIBRARY=ON`.
+Note that with a static library, it seems you might get (slightly) better runtime performance.
 
 
 
