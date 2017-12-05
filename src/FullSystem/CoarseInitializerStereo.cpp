@@ -116,18 +116,17 @@ namespace dso
         left_matcher->compute(cvImgL, cvImgR, dispL);
         right_matcher->compute(cvImgR, cvImgL, dispR);
 
-        // Filter it
+        // Filter it with left and right disparities to avoid occlusions
         cv::Mat disp;
         double lambda = 8000.0;
         double sigma = 1.5;
         wls_filter->setLambda(lambda);
         wls_filter->setSigmaColor(sigma);
-        wls_filter->filter(dispL,cvImgL,disp,dispR,cv::Rect(0,0,cvImgL.cols,cvImgL.rows),cvImgR);
+        wls_filter->filter(dispL, cvImgL, disp, dispR, cv::Rect(0,0,cvImgR.cols, cvImgR.rows),cvImgR);
 
         // Check the disparity map by displaying it
         cv::Mat filtered_disp_vis;
-        //cv::ximgproc::getDisparityVis(dispR,filtered_disp_vis,5.0);
-        cv::normalize(dispR, filtered_disp_vis, 0, 255, cv::NORM_MINMAX, CV_8UC1);
+        cv::normalize(disp, filtered_disp_vis, 0, 255, cv::NORM_MINMAX, CV_8UC1);
         cv::imshow("disparity right", filtered_disp_vis);
         cv::waitKey(15);
 

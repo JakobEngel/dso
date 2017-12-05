@@ -35,9 +35,6 @@
 #include "FullSystem/Residuals.h"
 #include "util/ImageAndExposure.h"
 
-// INclude opencv core for cv::Mat in FrameHessian
-#include "opencv2/core.hpp"
-
 namespace dso
 {
 
