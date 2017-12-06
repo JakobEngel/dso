@@ -112,8 +112,8 @@ namespace dso
         cv::Ptr<cv::StereoMatcher> right_matcher = cv::ximgproc::createRightMatcher(left_matcher);
 
         // Compute disparities
-        cv::Mat dispL, dispR;
-        left_matcher->compute(cvImgL, cvImgR, dispL);
+        cv::Mat dispR; //, dispR;
+        //left_matcher->compute(cvImgL, cvImgR, dispL);
         right_matcher->compute(cvImgR, cvImgL, dispR);
 
         // Filter it with left and right disparities to avoid occlusions
@@ -122,7 +122,7 @@ namespace dso
         double sigma = 1.5;
         wls_filter->setLambda(lambda);
         wls_filter->setSigmaColor(sigma);
-        wls_filter->filter(dispL, cvImgL, disp, dispR, cv::Rect(0,0,cvImgR.cols, cvImgR.rows),cvImgR);
+        wls_filter->filter(dispR, cvImgR, disp, dispR); //, cv::Rect(0,0,cvImgR.cols, cvImgR.rows),cvImgR);
 
         // Check the disparity map by displaying it
         cv::Mat filtered_disp_vis;
@@ -133,7 +133,6 @@ namespace dso
 
         //===========================================================================
         // DSO IMAGE GRADIENTS
-        // TODO: DO THIS IN PARALLEL
         //===========================================================================
         // Make our hessian frame objects (LEFT)
         FrameHessian* fhL = new FrameHessian();
@@ -169,7 +168,7 @@ namespace dso
         //===========================================================================
 
         // Track those points onto the next frame
-        bool success = trackFrame(fhL, dispL, image->baseline, wraps);
+        bool success = trackFrame(fhL, wraps);
 
         // Return the result
         return success;
@@ -177,7 +176,7 @@ namespace dso
     }
 
 
-    bool CoarseInitializerStereo::trackFrame(FrameHessian* frameL, cv::Mat dispL, double baseline, std::vector<IOWrap::Output3DWrapper*> &wraps) {
+    bool CoarseInitializerStereo::trackFrame(FrameHessian* frameL, std::vector<IOWrap::Output3DWrapper*> &wraps) {
 
         // Set what the incoming from is
         // Will track from right to left

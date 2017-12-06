@@ -1,0 +1,22 @@
+<launch>
+
+
+    <!-- 0=photometric calib, 1=NO photometric calib, 2=images not photometrically distorted -->
+    <arg name="mode"    default="2" />
+    <!-- 0=non-realtime 2k points, 1=realtime 2k points, 2=fast 800 points nonrealtime, 3=fast super-realtime (5x)  -->
+    <arg name="preset"  default="0" />
+    <!-- 0=do not preload images, 1=preload images -->
+    <arg name="prefetch"  default="0" />
+    <!-- Kitti dataset location information (gray scale and calibration) -->
+    <arg name="calib"   default="$(find dso)/config/kitti_odom.txt" />
+    <arg name="filesL"  default="$(find dso)/kitti_odom/00/image_0/" />
+    <arg name="filesR"  default="$(find dso)/kitti_odom/00/image_1/" />
+
+
+    <!-- Launch the DSO node -->
+    <node name="dso" pkg="dso" type="dso_dataset" output="screen"
+          args="filesL=$(arg filesL) filesR=$(arg filesR) calib=$(arg calib) preset=$(arg preset) mode=$(arg mode) prefetch=$(arg prefetch)">
+    </node>
+
+
+</launch>

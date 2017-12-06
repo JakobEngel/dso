@@ -51,7 +51,7 @@ public:
 
     bool initializeFromStereo(CalibHessian* HCalib, ImageAndExposure* image, std::vector<IOWrap::Output3DWrapper*> &wraps, int id, int idmarg);
     void setFirst(CalibHessian* HCalib, FrameHessian* rightFrame, cv::Mat dispR, double baseline);
-    bool trackFrame(FrameHessian* frameL, cv::Mat dispL, double baseline, std::vector<IOWrap::Output3DWrapper*> &wraps);
+    bool trackFrame(FrameHessian* frameL, std::vector<IOWrap::Output3DWrapper*> &wraps);
     void calcTGrads(FrameHessian* newFrameHessian);
 
     int frameID;

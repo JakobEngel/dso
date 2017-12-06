@@ -16,3 +16,5 @@ Build
 cmake-build-debug
 .DS_Store
 *.swp
+kitti_odom
+kitti_odom.zip
