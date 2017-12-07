@@ -3,7 +3,7 @@
 
 ## Changes in this repository
 
-* Created FullSystem/CoarseInitializerStereo for stereo initialization
+* Created FullSystem/CoarseInitializerStereo for stereo initializationi - note that we stick with block matching since it is fast and the quality of the inverse depth will not affect dso horribly, since it solves for it
 * Altered util/ImageAndExposure to carry two images and baseline
 * Altered util/DatasetReader to read kiti stereo data
 
@@ -50,7 +50,7 @@ $ source devel/setup.bash # or setup.zsh if you use zsh
 
 ## How to Run on KITTI Sequence 00 
 
-* Download the dataset [here]() and unzip it
+* Download the dataset [here](https://drive.google.com/open?id=1u4aV863xfdwLZOhlHw1J0-hkjf5kUBMl) and unzip it
 * Move the directory kitti_odom containing the directory called 00 into /path/to/dso 
 * We provide a launch file for general use located at /path/to/dso/launch/kitti_general.launch
 	* Note that if you did not move the dataset to /path/to/dso you can change the relative path in the launch file to run it
