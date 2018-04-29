@@ -24,6 +24,7 @@
 
 
 #include "util/settings.h"
+#include "globalCalib.h"
 #include <boost/bind.hpp>
 
 
@@ -35,9 +36,9 @@ int pyrLevelsUsed = PYR_LEVELS;
 /* Parameters controlling when KF's are taken */
 float setting_keyframesPerSecond = 0;   // if !=0, takes a fixed number of KF per second.
 bool setting_realTimeMaxKF = false;   // if true, takes as many KF's as possible (will break the system if the camera stays stationary)
-float setting_maxShiftWeightT= 0.04f * (640+480);
-float setting_maxShiftWeightR= 0.0f * (640+480);
-float setting_maxShiftWeightRT= 0.02f * (640+480);
+float setting_maxShiftWeightT= 0.04f * (wG[0]+hG[0]);
+float setting_maxShiftWeightR= 0.0f * (wG[0]+hG[0]);
+float setting_maxShiftWeightRT= 0.02f * (wG[0]+hG[0]);
 float setting_kfGlobalWeight = 1;   // general weight on threshold, the larger the more KF's are taken (e.g., 2 = double the amount of KF's).
 float setting_maxAffineWeight= 2;
 
