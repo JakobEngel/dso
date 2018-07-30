@@ -156,19 +156,19 @@ Furthermore, it should be straight-forward to implement other camera models.
 i.e., DSO computes the camera matrix `K` as
 
 		K(0,0) = width * fx
-		K(1,1) = width * fy
+		K(1,1) = height * fy
 		K(0,2) = width * cx - 0.5
-		K(1,2) = width * cy - 0.5
+		K(1,2) = height * cy - 0.5
 For backwards-compatibility, if the given `cx` and `cy` are larger than 1, DSO assumes all four parameters to directly be the entries of K, 
 and ommits the above computation. 
 
 
 **That strange "0.5" offset:**
- Internally, DSO uses the convention that the pixel at integer position (1,1) in the image 
+ Internally, DSO uses the convention that the pixel at integer position (1,1) in the image, i.e. the pixel in the second row and second column,
 contains the integral over the continuous image function from (0.5,0.5) to (1.5,1.5), i.e., approximates a "point-sample" of the 
 continuous image functions at (1.0, 1.0).
 In turn, there seems to be no unifying convention across calibration toolboxes whether the pixel at integer position (1,1)
-contains the integral over (0.5,0.5) to (1.5,1.5), or the integral over (1,1) to (0,0). The above conversion assumes that 
+contains the integral over (0.5,0.5) to (1.5,1.5), or the integral over (1,1) to (2,2). The above conversion assumes that 
 the given calibration in the calibration file uses the latter convention, and thus applies the -0.5 correction.
 Note that this also is taken into account when creating the scale-pyramid (see `globalCalib.cpp`).
 

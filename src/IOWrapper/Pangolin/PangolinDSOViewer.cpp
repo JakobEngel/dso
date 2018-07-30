@@ -182,7 +182,7 @@ void PangolinDSOViewer::run()
 				if(this->settings_showKFCameras) fh->drawCam(1,blue,0.1);
 
 
-				refreshed =+ (int)(fh->refreshPC(refreshed < 10, this->settings_scaledVarTH, this->settings_absVarTH,
+				refreshed += (int)(fh->refreshPC(refreshed < 10, this->settings_scaledVarTH, this->settings_absVarTH,
 						this->settings_pointCloudMode, this->settings_minRelBS, this->settings_sparsity));
 				fh->drawPC(1);
 			}
@@ -419,7 +419,7 @@ void PangolinDSOViewer::drawConstraints()
 
 
 
-void PangolinDSOViewer::publishGraph(const std::map<uint64_t,Eigen::Vector2i> &connectivity)
+void PangolinDSOViewer::publishGraph(const std::map<uint64_t, Eigen::Vector2i, std::less<uint64_t>, Eigen::aligned_allocator<std::pair<const uint64_t, Eigen::Vector2i>>> &connectivity)
 {
     if(!setting_render_display3D) return;
     if(disableAllDisplay) return;
