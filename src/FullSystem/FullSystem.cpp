@@ -1026,6 +1026,8 @@ void FullSystem::blockUntilMappingIsFinished()
 {
 	{
 		std::unique_lock<std::mutex> lock(trackMapSyncMutex);
+		// check if mapping thread already down
+		if (!runMapping) { return; }
 		runMapping = false;
 		trackedFrameSignal.notify_all();
 	}

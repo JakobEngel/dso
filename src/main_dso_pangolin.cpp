@@ -23,6 +23,7 @@
 
 
 
+#include <atomic>
 #include <thread>
 #include <locale.h>
 #include <signal.h>
@@ -65,6 +66,8 @@ float playbackSpeed=0;	// 0 for linearize (play as fast as possible, while seque
 bool preload=false;
 bool useSampleOutput=false;
 
+std::atomic<bool> exThreadKeepRunning(true);
+
 
 int mode=0;
 
@@ -88,7 +91,9 @@ void exitThread()
 	sigaction(SIGINT, &sigIntHandler, NULL);
 
 	firstRosSpin=true;
-	while(true) pause();
+	while(exThreadKeepRunning) {
+		std::this_thread::sleep_for (std::chrono::milliseconds(10));
+	}
 }
 
 
@@ -582,6 +587,10 @@ int main( int argc, char** argv )
 
 	printf("DELETE READER!\n");
 	delete reader;
+
+	// shutdown exThread
+	exThreadKeepRunning = false;
+	exThread.join();
 
 	printf("EXIT NOW!\n");
 	return 0;
