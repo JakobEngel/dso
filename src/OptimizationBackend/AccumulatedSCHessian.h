@@ -104,8 +104,12 @@ public:
 				bs[i] = VecX::Zero(nframes[0]*8+CPARS);
 			}
 
-			red->reduce(boost::bind(&AccumulatedSCHessianSSE::stitchDoubleInternal,
-				this,Hs, bs, EF,  _1, _2, _3, _4), 0, nframes[0]*nframes[0], 0);
+			red->reduce(std::bind(&AccumulatedSCHessianSSE::stitchDoubleInternal,
+				this,Hs, bs, EF,
+				std::placeholders::_1,
+				std::placeholders::_2,
+				std::placeholders::_3,
+				std::placeholders::_4), 0, nframes[0]*nframes[0], 0);
 
 			// sum up results
 			H = Hs[0];

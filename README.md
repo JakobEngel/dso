@@ -18,7 +18,7 @@ Get some datasets from [https://vision.in.tum.de/mono-dataset](https://vision.in
 ##### suitesparse and eigen3 (required).
 Required. Install with
 
-		sudo apt-get install libsuitesparse-dev libeigen3-dev libboost-all-dev
+		sudo apt-get install libsuitesparse-dev libeigen3-dev
 
 
 

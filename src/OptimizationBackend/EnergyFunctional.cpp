@@ -198,9 +198,17 @@ void EnergyFunctional::accumulateAF_MT(MatXX &H, VecX &b, bool MT)
 {
 	if(MT)
 	{
-		red->reduce(boost::bind(&AccumulatedTopHessianSSE::setZero, accSSE_top_A, nFrames,  _1, _2, _3, _4), 0, 0, 0);
-		red->reduce(boost::bind(&AccumulatedTopHessianSSE::addPointsInternal<0>,
-				accSSE_top_A, &allPoints, this,  _1, _2, _3, _4), 0, allPoints.size(), 50);
+		red->reduce(std::bind(&AccumulatedTopHessianSSE::setZero, accSSE_top_A, nFrames,
+					std::placeholders::_1,
+					std::placeholders::_2,
+					std::placeholders::_3,
+					std::placeholders::_4), 0, 0, 0);
+		red->reduce(std::bind(&AccumulatedTopHessianSSE::addPointsInternal<0>,
+				accSSE_top_A, &allPoints, this,
+				std::placeholders::_1,
+				std::placeholders::_2,
+				std::placeholders::_3,
+				std::placeholders::_4), 0, allPoints.size(), 50);
 		accSSE_top_A->stitchDoubleMT(red,H,b,this,false,true);
 		resInA = accSSE_top_A->nres[0];
 	}
@@ -220,9 +228,17 @@ void EnergyFunctional::accumulateLF_MT(MatXX &H, VecX &b, bool MT)
 {
 	if(MT)
 	{
-		red->reduce(boost::bind(&AccumulatedTopHessianSSE::setZero, accSSE_top_L, nFrames,  _1, _2, _3, _4), 0, 0, 0);
-		red->reduce(boost::bind(&AccumulatedTopHessianSSE::addPointsInternal<1>,
-				accSSE_top_L, &allPoints, this,  _1, _2, _3, _4), 0, allPoints.size(), 50);
+		red->reduce(std::bind(&AccumulatedTopHessianSSE::setZero, accSSE_top_L, nFrames,
+					std::placeholders::_1,
+					std::placeholders::_2,
+					std::placeholders::_3,
+					std::placeholders::_4), 0, 0, 0);
+		red->reduce(std::bind(&AccumulatedTopHessianSSE::addPointsInternal<1>,
+				accSSE_top_L, &allPoints, this,
+				std::placeholders::_1,
+				std::placeholders::_2,
+				std::placeholders::_3,
+				std::placeholders::_4), 0, allPoints.size(), 50);
 		accSSE_top_L->stitchDoubleMT(red,H,b,this,true,true);
 		resInL = accSSE_top_L->nres[0];
 	}
@@ -245,9 +261,17 @@ void EnergyFunctional::accumulateSCF_MT(MatXX &H, VecX &b, bool MT)
 {
 	if(MT)
 	{
-		red->reduce(boost::bind(&AccumulatedSCHessianSSE::setZero, accSSE_bot, nFrames,  _1, _2, _3, _4), 0, 0, 0);
-		red->reduce(boost::bind(&AccumulatedSCHessianSSE::addPointsInternal,
-				accSSE_bot, &allPoints, true,  _1, _2, _3, _4), 0, allPoints.size(), 50);
+		red->reduce(std::bind(&AccumulatedSCHessianSSE::setZero, accSSE_bot, nFrames,
+					std::placeholders::_1,
+					std::placeholders::_2,
+					std::placeholders::_3,
+					std::placeholders::_4), 0, 0, 0);
+		red->reduce(std::bind(&AccumulatedSCHessianSSE::addPointsInternal,
+				accSSE_bot, &allPoints, true,
+				std::placeholders::_1,
+				std::placeholders::_2,
+				std::placeholders::_3,
+				std::placeholders::_4), 0, allPoints.size(), 50);
 		accSSE_bot->stitchDoubleMT(red,H,b,this,true);
 	}
 	else
@@ -280,8 +304,12 @@ void EnergyFunctional::resubstituteF_MT(VecX x, CalibHessian* HCalib, bool MT)
 	}
 
 	if(MT)
-		red->reduce(boost::bind(&EnergyFunctional::resubstituteFPt,
-						this, cstep, xAd,  _1, _2, _3, _4), 0, allPoints.size(), 50);
+		red->reduce(std::bind(&EnergyFunctional::resubstituteFPt,
+						this, cstep, xAd,
+						std::placeholders::_1,
+						std::placeholders::_2,
+						std::placeholders::_3,
+						std::placeholders::_4), 0, allPoints.size(), 50);
 	else
 		resubstituteFPt(cstep, xAd, 0, allPoints.size(), 0,0);
 
@@ -406,8 +434,12 @@ double EnergyFunctional::calcLEnergyF_MT()
 
 	E += cDeltaF.cwiseProduct(cPriorF).dot(cDeltaF);
 
-	red->reduce(boost::bind(&EnergyFunctional::calcLEnergyPt,
-			this, _1, _2, _3, _4), 0, allPoints.size(), 50);
+	red->reduce(std::bind(&EnergyFunctional::calcLEnergyPt,
+			this,
+			std::placeholders::_1,
+			std::placeholders::_2,
+			std::placeholders::_3,
+			std::placeholders::_4), 0, allPoints.size(), 50);
 
 	return E+red->stats[0];
 }

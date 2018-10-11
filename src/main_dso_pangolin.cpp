@@ -29,12 +29,12 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <unistd.h>
+#include <sys/time.h>
 
 #include "IOWrapper/Output3DWrapper.h"
 #include "IOWrapper/ImageDisplay.h"
 
 
-#include <boost/thread.hpp>
 #include "util/settings.h"
 #include "util/globalFuncs.h"
 #include "util/DatasetReader.h"
@@ -358,7 +358,7 @@ int main( int argc, char** argv )
 		parseArgument(argv[i]);
 
 	// hook crtl+C.
-	boost::thread exThread = boost::thread(exitThread);
+	std::thread exThread(exitThread);
 
 
 	ImageFolderReader* reader = new ImageFolderReader(source,calib, gammaCalib, vignette);
