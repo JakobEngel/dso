@@ -25,13 +25,16 @@ find_package(OpenCV QUIET)
 # flags
 add_definitions("-DENABLE_SSE")
 set(CMAKE_CXX_FLAGS
-   "${SSE_FLAGS} -O3 -g -std=c++0x -march=native"
+   "${SSE_FLAGS} -O3 -g -march=native"
 #   "${SSE_FLAGS} -O3 -g -std=c++0x -fno-omit-frame-pointer"
 )
 
 if (MSVC)
      set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /EHsc")
 endif (MSVC)
+
+# use c++11 standard
+set (CMAKE_CXX_STANDARD 11)
 
 # Sources files
 set(dso_SOURCE_FILES
