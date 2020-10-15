@@ -7,3 +7,8 @@ build-*
 *.so
 *.a
 *.so.*
+.idea/
+.vscode/
+cmake-build-*/
+result.txt
+*.pyc

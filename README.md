@@ -241,6 +241,10 @@ using the TUM RGB-D / TUM monoVO format ([timestamp x y z qx qy qz qw] of the ca
 
 
 
+#### 3.6 Evaluation
+For the [TUM-VI dataset](https://vision.in.tum.de/data/datasets/visual-inertial-dataset) an evaluation script exists with `evaluation/tum-vi_run_all.py`. It runs many sequences multiple times and reports the median RMS ATE. Run `tum-vi_run_all.py -h` for usage instructions.
+
+
 
 ### 4 General Notes for Good Results
 
