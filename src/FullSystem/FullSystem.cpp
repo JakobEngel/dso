@@ -1141,10 +1141,11 @@ void FullSystem::makeKeyFrame( FrameHessian* fh)
 		coarseTracker_forNewKF->makeK(&Hcalib);
 		coarseTracker_forNewKF->setCoarseTrackingRef(frameHessians);
 
-
-
-        coarseTracker_forNewKF->debugPlotIDepthMap(&minIdJetVisTracker, &maxIdJetVisTracker, outputWrapper);
-        coarseTracker_forNewKF->debugPlotIDepthMapFloat(outputWrapper);
+		if(!outputWrapper.empty() || debugSaveImages)
+		{
+			coarseTracker_forNewKF->debugPlotIDepthMap(&minIdJetVisTracker, &maxIdJetVisTracker, outputWrapper);
+			coarseTracker_forNewKF->debugPlotIDepthMapFloat(outputWrapper);
+		}
 	}
 
 
