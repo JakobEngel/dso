@@ -806,48 +806,42 @@ void EnergyFunctional::solveSystemF(int iteration, double lambda, CalibHessian* 
 	MatXX HFinal_top;
 	VecX bFinal_top;
 
-	if(setting_solverMode & SOLVER_ORTHOGONALIZE_SYSTEM)
-	{
-		// have a look if prior is there.
-		bool haveFirstFrame = false;
-		for(EFFrame* f : frames) if(f->frameID==0) haveFirstFrame=true;
+	 if (setting_solverMode & SOLVER_ORTHOGONALIZE_SYSTEM) {
+            // have a look if prior is there.
+            bool haveFirstFrame = false;
+            for (EFFrame *f : frames) if (f->frameID == 0) haveFirstFrame = true;
 
 
+            MatXX HT_act = HL_top + HA_top - H_sc;
+            VecX bT_act = bL_top + bA_top - b_sc;
 
 
-		MatXX HT_act =  HL_top + HA_top - H_sc;
-		VecX bT_act =   bL_top + bA_top - b_sc;
+            if (!haveFirstFrame)
+                orthogonalize(&bT_act, &HT_act);
+
+            lastHS = HT_act + HM;
+            lastbS = bT_act + bM_top;
 
 
-		if(!haveFirstFrame)
-			orthogonalize(&bT_act, &HT_act);
+            HFinal_top = HL_top + HA_top;
+            bFinal_top = bL_top + bA_top;
 
-		HFinal_top = HT_act + HM;
-		bFinal_top = bT_act + bM_top;
+            for (int i = 0; i < 8 * nFrames + CPARS; i++) HFinal_top(i, i) *= (1 + lambda);
+            HFinal_top += (HM - H_sc) * (1.0f / (1 + lambda));
+            bFinal_top += (bM_top - b_sc) * (1.0f / (1 + lambda));
 
+        } else {
 
+            lastHS = HL_top + HM + HA_top - H_sc;
+            lastbS = bL_top + bM_top + bA_top - b_sc;
 
+            HFinal_top = HL_top + HA_top;
+            bFinal_top = bL_top + bA_top;
 
-
-		lastHS = HFinal_top;
-		lastbS = bFinal_top;
-
-		for(int i=0;i<8*nFrames+CPARS;i++) HFinal_top(i,i) *= (1+lambda);
-
-	}
-	else
-	{
-
-
-		HFinal_top = HL_top + HM + HA_top;
-		bFinal_top = bL_top + bM_top + bA_top - b_sc;
-
-		lastHS = HFinal_top - H_sc;
-		lastbS = bFinal_top;
-
-		for(int i=0;i<8*nFrames+CPARS;i++) HFinal_top(i,i) *= (1+lambda);
-		HFinal_top -= H_sc * (1.0f/(1+lambda));
-	}
+            for (int i = 0; i < 8 * nFrames + CPARS; i++) HFinal_top(i, i) *= (1 + lambda);
+            HFinal_top += (HM - H_sc) * (1.0f / (1 + lambda));
+            bFinal_top += (bM_top - b_sc) * (1.0f / (1 + lambda));
+        }
 
 
 
