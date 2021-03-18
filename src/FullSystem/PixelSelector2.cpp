@@ -368,8 +368,12 @@ Eigen::Vector3i PixelSelector::select(const FrameHessian* const fh,
 
 					if(xf<4 || xf>=w-5 || yf<4 || yf>h-4) continue;
 
+					int thIdx = (xf>>5) + (yf>>5) * thsStep;
+                   			int maxThIdx = (w >> 5) * (h >> 5);
+                    			if (thIdx >= maxThIdx) continue;
 
-					float pixelTH0 = thsSmoothed[(xf>>5) + (yf>>5) * thsStep];
+
+                    			float pixelTH0 = thsSmoothed[thIdx];
 					float pixelTH1 = pixelTH0*dw1;
 					float pixelTH2 = pixelTH1*dw2;
 
