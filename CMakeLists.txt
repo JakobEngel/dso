@@ -130,3 +130,6 @@ else()
 	message("--- not building dso_dataset, since either don't have openCV or Pangolin.")
 endif()
 
+add_executable(dso_converter ${PROJECT_SOURCE_DIR}/src/util/DatasetUndistorter.cpp)
+target_link_libraries(dso_converter dso boost_system cxsparse ${BOOST_THREAD_LIBRARY} ${LIBZIP_LIBRARY} ${OpenCV_LIBS})
+
