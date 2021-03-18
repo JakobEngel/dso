@@ -1,6 +1,6 @@
 /**
 * This file is part of DSO.
-* 
+*
 * Copyright 2016 Technical University of Munich and Intel.
 * Developed by Jakob Engel <engelj at in dot tum dot de>,
 * for more information see <http://vision.in.tum.de/dso>.
@@ -76,6 +76,19 @@ public:
 
         virtual void publishKeyframes( std::vector<FrameHessian*> &frames, bool final, CalibHessian* HCalib) override
         {
+            float fx = HCalib->fxl();
+            float fy = HCalib->fyl();
+            float cx = HCalib->cxl();
+            float cy = HCalib->cyl();
+            float fxi = 1/fx;
+            float fyi = 1/fy;
+            float cxi = -cx / fx;
+            float cyi = -cy / fy;
+
+            // Open stream to write in file "points.ply"
+            std::ofstream output_points;
+            output_points.open("points.ply", std::ios_base::app);
+
             for(FrameHessian* f : frames)
             {
                 printf("OUT: KF %d (%s) (id %d, tme %f): %d active, %d marginalized, %d immature points. CameraToWorld:\n",
@@ -95,7 +108,25 @@ public:
                     maxWrite--;
                     if(maxWrite==0) break;
                 }
+
+                auto const & m =  f->shell->camToWorld.matrix3x4();
+                auto const & points = f->pointHessiansMarginalized;
+
+                for (auto const * p : points) {
+                  float depth = 1.0f / p->idepth;
+                  auto const x = (p->u * fxi + cxi) * depth;
+                  auto const y = (p->v * fyi + cyi) * depth;
+                  auto const z = depth * (1 + 2*fxi);
+
+                  Eigen::Vector4d camPoint(x, y, z, 1.f);
+                  Eigen::Vector3d worldPoint = m * camPoint;
+
+                  output_points << worldPoint.transpose() << std::endl;
+                }
             }
+
+            // Close steam
+            output_points.close();
         }
 
         virtual void publishCamPose(FrameShell* frame, CalibHessian* HCalib) override
