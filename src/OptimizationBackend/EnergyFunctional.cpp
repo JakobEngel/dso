@@ -260,7 +260,7 @@ void EnergyFunctional::accumulateSCF_MT(MatXX &H, VecX &b, bool MT)
 	}
 }
 
-void EnergyFunctional::resubstituteF_MT(VecX x, CalibHessian* HCalib, bool MT)
+void EnergyFunctional::resubstituteF_MT(const VecX &x, CalibHessian* HCalib, bool MT)
 {
 	assert(x.size() == CPARS+nFrames*8);
 
@@ -419,7 +419,6 @@ EFResidual* EnergyFunctional::insertResidual(PointFrameResidual* r)
 	EFResidual* efr = new EFResidual(r, r->point->efPoint, r->host->efFrame, r->target->efFrame);
 	efr->idxInAll = r->point->efPoint->residualsAll.size();
 	r->point->efPoint->residualsAll.push_back(efr);
-
     connectivityMap[(((uint64_t)efr->host->frameID) << 32) + ((uint64_t)efr->target->frameID)][0]++;
 
 	nResiduals++;
@@ -488,7 +487,6 @@ void EnergyFunctional::dropResidual(EFResidual* r)
 		r->host->data->shell->statistics_goodResOnThis++;
 	else
 		r->host->data->shell->statistics_outlierResOnThis++;
-
 
     connectivityMap[(((uint64_t)r->host->frameID) << 32) + ((uint64_t)r->target->frameID)][0]--;
 	nResiduals--;
@@ -583,7 +581,7 @@ void EnergyFunctional::marginalizeFrame(EFFrame* fh)
 	}
 	frames.pop_back();
 	nFrames--;
-	fh->data->efFrame=0;
+	fh->data->efFrame=nullptr;
 
 	assert((int)frames.size()*8+CPARS == (int)HM.rows());
 	assert((int)frames.size()*8+CPARS == (int)HM.cols());
@@ -606,7 +604,6 @@ void EnergyFunctional::marginalizeFrame(EFFrame* fh)
 	EFDeltaValid=false;
 
 	makeIDX();
-	delete fh;
 }
 
 
@@ -629,8 +626,9 @@ void EnergyFunctional::marginalizePointsF()
 			{
 				p->priorF *= setting_idepthFixPriorMargFac;
 				for(EFResidual* r : p->residualsAll)
-					if(r->isActive())
+                    if(r->isActive()) {
                         connectivityMap[(((uint64_t)r->host->frameID) << 32) + ((uint64_t)r->target->frameID)][1]++;
+                    }
 				allPointsToMarg.push_back(p);
 			}
 		}

@@ -172,9 +172,9 @@ void FullSystem::marginalizeFrame(FrameHessian* frame)
 				if(r->target == frame)
 				{
 					if(ph->lastResiduals[0].first == r)
-						ph->lastResiduals[0].first=0;
+						ph->lastResiduals[0].first=nullptr;
 					else if(ph->lastResiduals[1].first == r)
-						ph->lastResiduals[1].first=0;
+						ph->lastResiduals[1].first=nullptr;
 
 
 					if(r->host->frameID < r->target->frameID)
@@ -190,7 +190,9 @@ void FullSystem::marginalizeFrame(FrameHessian* frame)
 		}
 	}
 
-
+    // efFrame is only unused once we finish droppping residuals
+    delete frame->efFrame;
+    frame->efFrame = nullptr;
 
     {
         std::vector<FrameHessian*> v;
@@ -206,8 +208,6 @@ void FullSystem::marginalizeFrame(FrameHessian* frame)
 	deleteOutOrder<FrameHessian>(frameHessians, frame);
 	for(unsigned int i=0;i<frameHessians.size();i++)
 		frameHessians[i]->idx = i;
-
-
 
 
 	setPrecalcValues();

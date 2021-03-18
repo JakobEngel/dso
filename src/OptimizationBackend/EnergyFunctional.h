@@ -124,7 +124,7 @@ private:
 
 	VecX getStitchedDeltaF() const;
 
-	void resubstituteF_MT(VecX x, CalibHessian* HCalib, bool MT);
+	void resubstituteF_MT(const VecX &x, CalibHessian* HCalib, bool MT);
     void resubstituteFPt(const VecCf &xc, Mat18f* xAd, int min, int max, Vec10* stats, int tid);
 
 	void accumulateAF_MT(MatXX &H, VecX &b, bool MT);
