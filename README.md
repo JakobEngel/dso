@@ -15,12 +15,14 @@ Get some datasets from [https://vision.in.tum.de/mono-dataset](https://vision.in
 
 #### 2.1 Required Dependencies
 
-##### suitesparse and eigen3 (required).
+The following instructions are tested on Ubuntu 16.04. Ubuntu 14.04
+should also work. Other platforms might work with minor adjustments.
+For Mac OS X, see below.
+
+##### eigen3 and boost (required).
 Required. Install with
 
-		sudo apt-get install libsuitesparse-dev libeigen3-dev libboost-all-dev
-
-
+    sudo apt-get install libeigen3-dev libboost-all-dev
 
 #### 2.2 Optional Dependencies
 
@@ -52,6 +54,12 @@ Used to read datasets with images as .zip, as e.g. in the TUM monoVO dataset.
 You can compile without this, however then you can only read images directly (i.e., have 
 to unzip the dataset image archives before loading them).
 
+On Ubuntu 16.04 and up, the version from apt should suffice:
+
+    sudo apt-get install libzip-dev
+
+On Ubuntu 14.04, you need to compile it manually:
+
 	sudo apt-get install zlib1g-dev
 	cd dso/thirdparty
 	tar -zxvf libzip-1.1.1.tar.gz
@@ -64,6 +72,16 @@ to unzip the dataset image archives before loading them).
 ##### sse2neon (required for ARM builds).
 After cloning, just run `git submodule update --init` to include this.  It translates Intel-native SSE functions to ARM-native NEON functions during the compilation process.
 
+##### Mac OS X
+
+You can install the dependencies with Homebrew.
+
+    brew install cmake pkgconfig boost eigen glew opencv libzip
+
+The install and build
+[Pangolin](https://github.com/stevenlovegrove/Pangolin.git) as above,
+and proceed below.
+
 #### 2.3 Build
 
 		cd dso
@@ -72,9 +90,10 @@ After cloning, just run `git submodule update --init` to include this.  It trans
 		cmake ..
 		make -j4
 	
-this will compile a library `libdso.a`, which can be linked from external projects. 
+this will by default compile a dynamic library `libdso.so`, which can be linked from external projects.
 It will also build a binary `dso_dataset`, to run DSO on datasets. However, for this
-OpenCV and Pangolin need to be installed.
+OpenCV and Pangolin need to be installed. You can switch to building a static library with `cmake -DDSO_BUILD_STATIC_LIBRARY=ON`.
+Note that with a static library, it seems you might get (slightly) better runtime performance.
 
 
 
@@ -172,6 +191,9 @@ contains the integral over (0.5,0.5) to (1.5,1.5), or the integral over (1,1) to
 the given calibration in the calibration file uses the latter convention, and thus applies the -0.5 correction.
 Note that this also is taken into account when creating the scale-pyramid (see `globalCalib.cpp`).
 
+It seems that Kalibr and OpenCV have the same internal representation as DSO, thus you should add an +0.5 offset to the
+calibration results from those, to cancel out the -0.5 correction that DSO does when loading the calibration files.
+See also [this discussion](https://github.com/ethz-asl/kalibr/issues/115) in the Kalibr issue tracker.
 
 **Rectification modes:**
  For image rectification, DSO either supports rectification to a user-defined pinhole model (`fx fy cx cy 0`),

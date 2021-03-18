@@ -1,0 +1,57 @@
+# no xenial support from travis yet...
+dist: trusty
+sudo: enabled
+language: cpp
+cache: ccache
+
+# get c++14 compatible gcc version
+addons:
+  apt:
+    sources:
+      - ubuntu-toolchain-r-test
+    packages:
+      - gcc-5
+      - g++-5
+
+# See: https://docs.travis-ci.com/user/languages/c/
+# We don't include clang builds, since there are issues
+# with C++11/14 and libc++ on Trusty, e.g. when including
+# OpenCV headers.
+matrix:
+  include:
+  - compiler: gcc
+    os: linux
+    env:
+      - BUILD_TYPE=Release
+      - MATRIX_EVAL="CC=gcc-5 && CXX=g++-5"
+  - compiler: gcc
+    os: linux
+    env:
+      - BUILD_TYPE=Debug
+      - MATRIX_EVAL="CC=gcc-5 && CXX=g++-5"
+  - compiler: clang
+    os: osx
+    env: BUILD_TYPE=Release
+# For now only run on xcode8.3, which is the default image, since OSX testing on Travis can take a long time.
+#    osx_image: xcode8.3
+#  - compiler: clang
+#    os: osx
+#    env: BUILD_TYPE=Release
+#    osx_image: xcode7.3
+
+env:
+  global:
+    - MAKEFLAGS="-j 2"
+
+before_install:
+  - eval "${MATRIX_EVAL}"
+  - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then scripts/ci-install-linux-deps.sh ; fi
+  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then scripts/ci-install-osx-deps.sh ; fi
+
+script:
+  - mkdir build
+  - cd build
+  - cmake -DCMAKE_CXX_COMPILER_LAUNCHER=ccache -DCMAKE_BUILD_TYPE=$BUILD_TYPE ..
+  - make
+  - sudo make install
+#  - make test
