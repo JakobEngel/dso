@@ -46,7 +46,8 @@ public:
 		nextIndex = 0;
 		maxIndex = 0;
 		stepSize = 1;
-		callPerIndex = boost::bind(&IndexThreadReduce::callPerIndexDefault, this, _1, _2, _3, _4);
+        using namespace boost::placeholders;
+        callPerIndex = boost::bind(&IndexThreadReduce::callPerIndexDefault, this, _1, _2, _3, _4);
 
 		running = true;
 		for(int i=0;i<NUM_THREADS;i++)
@@ -131,7 +132,8 @@ public:
 
 		nextIndex = 0;
 		maxIndex = 0;
-		this->callPerIndex = boost::bind(&IndexThreadReduce::callPerIndexDefault, this, _1, _2, _3, _4);
+        using namespace boost::placeholders;
+        this->callPerIndex = boost::bind(&IndexThreadReduce::callPerIndexDefault, this, _1, _2, _3, _4);
 
 		//printf("reduce done (all threads finished)\n");
 	}

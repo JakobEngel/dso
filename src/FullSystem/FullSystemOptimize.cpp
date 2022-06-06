@@ -46,7 +46,7 @@ namespace dso
 {
 
 
-
+using namespace boost::placeholders;
 
 
 void FullSystem::linearizeAll_Reductor(bool fixLinearization, std::vector<PointFrameResidual*>* toRemove, int min, int max, Vec10* stats, int tid)
@@ -393,7 +393,7 @@ double FullSystem::calcMEnergy()
 
 void FullSystem::printOptRes(const Vec3 &res, double resL, double resM, double resPrior, double LExact, float a, float b)
 {
-	printf("A(%f)=(AV %.3f). Num: A(%'d) + M(%'d); ab %f %f!\n",
+	printf("A(%f)=(AV %.3f). Num: A(%d) + M(%d); ab %f %f!\n",
 			res[0],
 			sqrtf((float)(res[0] / (patternNum*ef->resInA))),
 			ef->resInA,

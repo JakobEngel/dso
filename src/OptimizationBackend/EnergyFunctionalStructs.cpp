@@ -38,7 +38,7 @@ namespace dso
 
 void EFResidual::takeDataF()
 {
-	std::swap<RawResidualJacobian*>(J, data->J);
+	std::swap(J, data->J);
 
 	Vec2f JI_JI_Jd = J->JIdx2 * J->Jpdd;
 

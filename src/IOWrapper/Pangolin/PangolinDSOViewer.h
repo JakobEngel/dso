@@ -29,7 +29,7 @@
 #include "IOWrapper/Output3DWrapper.h"
 #include <map>
 #include <deque>
-
+#include <chrono>
 
 namespace dso
 {
@@ -126,9 +126,10 @@ private:
 
 
 	// timings
-	struct timeval last_track;
-	struct timeval last_map;
-
+	//struct timeval last_track;
+	//struct timeval last_map;
+    std::chrono::time_point<std::chrono::system_clock> last_track;
+    std::chrono::time_point<std::chrono::system_clock> last_map;
 
 	std::deque<float> lastNTrackingMs;
 	std::deque<float> lastNMappingMs;

@@ -29,7 +29,8 @@
 
 #include <sstream>
 #include <fstream>
-#include <dirent.h>
+//#include <dirent.h>
+#include <filesystem>
 #include <algorithm>
 
 #include "util/Undistort.h"
@@ -47,6 +48,7 @@ using namespace dso;
 
 inline int getdir (std::string dir, std::vector<std::string> &files)
 {
+    /*
     DIR *dp;
     struct dirent *dirp;
     if((dp  = opendir(dir.c_str())) == NULL)
@@ -71,6 +73,17 @@ inline int getdir (std::string dir, std::vector<std::string> &files)
 		if(files[i].at(0) != '/')
 			files[i] = dir + files[i];
 	}
+    */
+
+    for (auto& p : std::filesystem::directory_iterator(dir))
+    {
+        if (p.is_regular_file())
+        {
+            files.push_back(p.path().string());
+        }
+    }
+
+    std::sort(files.begin(), files.end());
 
     return files.size();
 }
