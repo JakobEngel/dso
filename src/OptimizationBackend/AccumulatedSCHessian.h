@@ -104,6 +104,7 @@ public:
 				bs[i] = VecX::Zero(nframes[0]*8+CPARS);
 			}
 
+            using namespace boost::placeholders;
 			red->reduce(boost::bind(&AccumulatedSCHessianSSE::stitchDoubleInternal,
 				this,Hs, bs, EF,  _1, _2, _3, _4), 0, nframes[0]*nframes[0], 0);
 

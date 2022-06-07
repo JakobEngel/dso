@@ -102,7 +102,8 @@ public:
 				bs[i] = VecX::Zero(nframes[0]*8+CPARS);
 			}
 
-			red->reduce(boost::bind(&AccumulatedTopHessianSSE::stitchDoubleInternal,
+            using namespace boost::placeholders;
+            red->reduce(boost::bind(&AccumulatedTopHessianSSE::stitchDoubleInternal,
 				this,Hs, bs, EF, usePrior,  _1, _2, _3, _4), 0, nframes[0]*nframes[0], 0);
 
 			// sum up results

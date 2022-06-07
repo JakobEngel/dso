@@ -29,6 +29,8 @@
 #include "FullSystem/Residuals.h"
 #include "OptimizationBackend/AccumulatedSCHessian.h"
 #include "OptimizationBackend/AccumulatedTopHessian.h"
+#include "Eigen/src/Cholesky/LDLT.H"
+#include "Eigen/SVD"
 
 #if !defined(__SSE3__) && !defined(__SSE2__) && !defined(__SSE1__)
 #include "SSE2NEON.h"
@@ -37,6 +39,7 @@
 namespace dso
 {
 
+using namespace boost::placeholders;
 
 bool EFAdjointsValid = false;
 bool EFIndicesValid = false;
