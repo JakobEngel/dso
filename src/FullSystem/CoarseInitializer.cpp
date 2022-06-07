@@ -36,7 +36,33 @@
 #include "FullSystem/PixelSelector.h"
 #include "FullSystem/PixelSelector2.h"
 #include "util/nanoflann.h"
-#include "Eigen/src/Cholesky/LDLT.H"
+
+//#include "Eigen/src/Cholesky/LDLT.H"
+
+#include <Eigen/Cholesky>
+#include <Eigen/Core>
+#include <Eigen/Dense>
+#include <Eigen/Eigen>
+#include <Eigen/Eigenvalues>
+#include <Eigen/Geometry>
+#include <Eigen/Householder>
+#include <Eigen/IterativeLinearSolvers>
+#include <Eigen/Jacobi>
+#include <Eigen/LU>
+#include <Eigen/MetisSupport>
+#include <Eigen/OrderingMethods>
+#include <Eigen/QR>
+#include <Eigen/QtAlignedMalloc>
+#include <Eigen/Sparse>
+#include <Eigen/SparseCholesky>
+#include <Eigen/SparseCore>
+#include <Eigen/SparseLU>
+#include <Eigen/SparseQR>
+#include <Eigen/StdDeque>
+#include <Eigen/StdList>
+#include <Eigen/StdVector>
+#include <Eigen/SVD>
+
 
 #if !defined(__SSE3__) && !defined(__SSE2__) && !defined(__SSE1__)
 #include "SSE2NEON.h"
