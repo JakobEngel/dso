@@ -1104,31 +1104,39 @@ void FullSystem::makeKeyFrame( FrameHessian* fh)
 	// =========================== OPTIMIZE ALL =========================
 
 	fh->frameEnergyTH = frameHessians.back()->frameEnergyTH;
-	float rmse = optimize(setting_maxOptIterations);
+    try
+    {
+        float rmse = optimize(setting_maxOptIterations);
 
 
 
 
 
-	// =========================== Figure Out if INITIALIZATION FAILED =========================
-	if(allKeyFramesHistory.size() <= 4)
-	{
-		if(allKeyFramesHistory.size()==2 && rmse > 20*benchmark_initializerSlackFactor)
-		{
-			printf("I THINK INITIALIZATINO FAILED! Resetting.\n");
-			initFailed=true;
-		}
-		if(allKeyFramesHistory.size()==3 && rmse > 13*benchmark_initializerSlackFactor)
-		{
-			printf("I THINK INITIALIZATINO FAILED! Resetting.\n");
-			initFailed=true;
-		}
-		if(allKeyFramesHistory.size()==4 && rmse > 9*benchmark_initializerSlackFactor)
-		{
-			printf("I THINK INITIALIZATINO FAILED! Resetting.\n");
-			initFailed=true;
-		}
-	}
+        // =========================== Figure Out if INITIALIZATION FAILED =========================
+        if (allKeyFramesHistory.size() <= 4)
+        {
+            if (allKeyFramesHistory.size() == 2 && rmse > 20 * benchmark_initializerSlackFactor)
+            {
+                printf("I THINK INITIALIZATINO FAILED! Resetting.\n");
+                initFailed = true;
+            }
+            if (allKeyFramesHistory.size() == 3 && rmse > 13 * benchmark_initializerSlackFactor)
+            {
+                printf("I THINK INITIALIZATINO FAILED! Resetting.\n");
+                initFailed = true;
+            }
+            if (allKeyFramesHistory.size() == 4 && rmse > 9 * benchmark_initializerSlackFactor)
+            {
+                printf("I THINK INITIALIZATINO FAILED! Resetting.\n");
+                initFailed = true;
+            }
+        }
+    }
+    catch (const std::exception& ex)
+    {
+        printf("INITIALIZATINO FAILED! Resetting.\n");
+        initFailed = true;
+    }
 
 
 

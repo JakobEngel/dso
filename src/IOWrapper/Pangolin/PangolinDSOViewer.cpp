@@ -286,6 +286,8 @@ void PangolinDSOViewer::run()
 
 
 	    if(needReset) reset_internal();
+
+        std::this_thread::sleep_for(std::chrono::milliseconds(40));
 	}
 
 

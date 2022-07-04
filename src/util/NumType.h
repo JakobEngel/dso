@@ -24,9 +24,24 @@
 
 #pragma once
 
+#define SOPHUS_ENABLE_ENSURE_HANDLER
+
 #include "Eigen/Core"
 #include "sophus/sim3.hpp"
 #include "sophus/se3.hpp"
+
+#include <stdexcept>
+#include <string>
+
+namespace Sophus {
+
+inline void ensureFailed(char const* function, char const* file, int line,
+        char const* description)
+{
+    throw std::runtime_error("Ensure failed at " + (file + (':' + std::to_string(line))) + ": " + description);
+}
+
+}
 
 
 namespace dso
