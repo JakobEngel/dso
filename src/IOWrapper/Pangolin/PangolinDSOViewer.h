@@ -57,7 +57,7 @@ class PangolinDSOViewer : public Output3DWrapper
 {
 public:
 	EIGEN_MAKE_ALIGNED_OPERATOR_NEW;
-    PangolinDSOViewer(int w, int h, bool startRunThread=true);
+    PangolinDSOViewer(int w, int h, bool startRunThread = true, std::function<void()> stoppedCallback = {});
 	virtual ~PangolinDSOViewer();
 
 	void run();

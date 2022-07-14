@@ -39,7 +39,7 @@ namespace IOWrap
 
 
 
-PangolinDSOViewer::PangolinDSOViewer(int w, int h, bool startRunThread)
+PangolinDSOViewer::PangolinDSOViewer(int w, int h, bool startRunThread, std::function<void()> stoppedCallback)
 {
 	this->w = w;
 	this->h = h;
@@ -66,9 +66,13 @@ PangolinDSOViewer::PangolinDSOViewer(int w, int h, bool startRunThread)
 	needReset = false;
 
 
-    if(startRunThread)
-        runThread = std::thread(&PangolinDSOViewer::run, this);
-
+    if (startRunThread)
+    {
+        if (stoppedCallback)
+            runThread = std::thread([this, stoppedCallback] { run(); stoppedCallback(); });
+        else
+            runThread = std::thread(&PangolinDSOViewer::run, this);
+    }
 }
 
 
