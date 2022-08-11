@@ -947,7 +947,7 @@ void Undistort::readFromFile(const char* configFileName, int nPars, std::string 
 
 
 
-	printf("\nRectified Kamera Matrix:\n");
+	printf("\nRectified Camera Matrix:\n");
 	std::cout << K << "\n\n";
 
 }
