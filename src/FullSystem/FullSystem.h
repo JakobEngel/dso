@@ -145,9 +145,9 @@ public:
 
 	float optimize(int mnumOptIts);
 
-	void printResult(std::string file);
+	void printResult(const std::string& file);
 
-	void debugPlot(std::string name);
+	void debugPlot(const std::string& name);
 
 	void printFrameLifetimes();
 	// contains pointers to active frames
@@ -181,7 +181,7 @@ private:
 	void traceNewCoarse(FrameHessian* fh);
 	void activatePoints();
 	void activatePointsMT();
-	void activatePointsOldFirst();
+	static void activatePointsOldFirst();
 	void flagPointsForRemoval();
 	void makeNewTraces(FrameHessian* newFrame, float* gtDepth);
 	void initializeFromInitializer(FrameHessian* newFrame);
@@ -221,7 +221,7 @@ private:
 
 
 	void printLogLine();
-	void printEvalLine();
+	static void printEvalLine();
 	void printEigenValLine();
 	std::ofstream* calibLog;
 	std::ofstream* numsLog;

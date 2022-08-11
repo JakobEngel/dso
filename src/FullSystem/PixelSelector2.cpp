@@ -52,7 +52,7 @@ PixelSelector::PixelSelector(int w, int h)
 	thsSmoothed = new float[(w/32)*(h/32)+100];
 
 	allowFast=false;
-	gradHistFrame=0;
+	gradHistFrame=nullptr;
 }
 
 PixelSelector::~PixelSelector()
@@ -63,7 +63,7 @@ PixelSelector::~PixelSelector()
 	delete[] thsSmoothed;
 }
 
-int computeHistQuantil(int* hist, float below)
+int computeHistQuantil(const int* hist, float below)
 {
 	int th = hist[0]*below+0.5f;
 	for(int i=0;i<90;i++)

@@ -56,7 +56,7 @@ namespace dso
 {
 
 
-PointHessian::PointHessian(const ImmaturePoint* const rawPoint, CalibHessian* Hcalib)
+PointHessian::PointHessian(const ImmaturePoint* const rawPoint, CalibHessian*  /*Hcalib*/)
 {
 	instanceCounter++;
 	host = rawPoint->host;
@@ -82,7 +82,7 @@ PointHessian::PointHessian(const ImmaturePoint* const rawPoint, CalibHessian* Hc
 	memcpy(weights, rawPoint->weights, sizeof(float)*n);
 	energyTH = rawPoint->energyTH;
 
-	efPoint=0;
+	efPoint=nullptr;
 
 
 }
@@ -90,7 +90,8 @@ PointHessian::PointHessian(const ImmaturePoint* const rawPoint, CalibHessian* Hc
 
 void PointHessian::release()
 {
-	for(unsigned int i=0;i<residuals.size();i++) delete residuals[i];
+	for(auto & residual : residuals) { delete residual;
+	}
 	residuals.clear();
 }
 
@@ -136,10 +137,14 @@ void FrameHessian::release()
 {
 	// DELETE POINT
 	// DELETE RESIDUAL
-	for(unsigned int i=0;i<pointHessians.size();i++) delete pointHessians[i];
-	for(unsigned int i=0;i<pointHessiansMarginalized.size();i++) delete pointHessiansMarginalized[i];
-	for(unsigned int i=0;i<pointHessiansOut.size();i++) delete pointHessiansOut[i];
-	for(unsigned int i=0;i<immaturePoints.size();i++) delete immaturePoints[i];
+	for(auto & pointHessian : pointHessians) { delete pointHessian;
+	}
+	for(auto & i : pointHessiansMarginalized) { delete i;
+	}
+	for(auto & i : pointHessiansOut) { delete i;
+	}
+	for(auto & immaturePoint : immaturePoints) { delete immaturePoint;
+	}
 
 
 	pointHessians.clear();
@@ -149,7 +154,7 @@ void FrameHessian::release()
 }
 
 
-void FrameHessian::makeImages(float* color, CalibHessian* HCalib)
+void FrameHessian::makeImages(const float* color, CalibHessian* HCalib)
 {
 
 	for(int i=0;i<pyrLevelsUsed;i++)
@@ -205,7 +210,7 @@ void FrameHessian::makeImages(float* color, CalibHessian* HCalib)
 
 			dabs_l[idx] = dx*dx+dy*dy;
 
-			if(setting_gammaWeightsPixelSelect==1 && HCalib!=0)
+			if(setting_gammaWeightsPixelSelect==1 && HCalib!=nullptr)
 			{
 				float gw = HCalib->getBGradOnly((float)(dI_l[idx][0]));
 				dabs_l[idx] *= gw*gw;	// convert to gradient of original color space (before removing response).

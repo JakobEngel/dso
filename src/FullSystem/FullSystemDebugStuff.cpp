@@ -31,7 +31,7 @@
 
 #include "FullSystem/FullSystem.h"
  
-#include "stdio.h"
+#include <cstdio>
 #include "util/globalFuncs.h"
 #include <Eigen/LU>
 #include <algorithm>
@@ -106,7 +106,7 @@ namespace dso
 	}
 
 
-	void FullSystem::debugPlot(std::string name)
+	void FullSystem::debugPlot(const std::string& name)
 	{
 		if(disableAllDisplay) return;
 		if(!setting_render_renderWindowFrames) return;
@@ -119,16 +119,22 @@ namespace dso
 		if((int)(freeDebugParam5+0.5f) == 7 || (debugSaveImages&&false))
 		{
 			std::vector<float> allID;
-			for(unsigned int f=0;f<frameHessians.size();f++)
+			for(auto & frameHessian : frameHessians)
 			{
-				for(PointHessian* ph : frameHessians[f]->pointHessians)
-					if(ph!=0) allID.push_back(ph->idepth_scaled);
+				for(PointHessian* ph : frameHessian->pointHessians) {
+					if(ph!=nullptr) { allID.push_back(ph->idepth_scaled);
+					}
+				}
 
-				for(PointHessian* ph : frameHessians[f]->pointHessiansMarginalized)
-					if(ph!=0) allID.push_back(ph->idepth_scaled);
+				for(PointHessian* ph : frameHessian->pointHessiansMarginalized) {
+					if(ph!=nullptr) { allID.push_back(ph->idepth_scaled);
+					}
+				}
 
-				for(PointHessian* ph : frameHessians[f]->pointHessiansOut)
-					if(ph!=0) allID.push_back(ph->idepth_scaled);
+				for(PointHessian* ph : frameHessian->pointHessiansOut) {
+					if(ph!=nullptr) { allID.push_back(ph->idepth_scaled);
+					}
+				}
 			}
 			std::sort(allID.begin(), allID.end());
 			int n = allID.size()-1;
@@ -169,12 +175,12 @@ namespace dso
 
 
 		int wh = hG[0]*wG[0];
-		for(unsigned int f=0;f<frameHessians.size();f++)
+		for(auto & frameHessian : frameHessians)
 		{
-			MinimalImageB3* img = new MinimalImageB3(wG[0],hG[0]);
+			auto* img = new MinimalImageB3(wG[0],hG[0]);
 			images.push_back(img);
 			//float* fd = frameHessians[f]->I;
-			Eigen::Vector3f* fd = frameHessians[f]->dI;
+			Eigen::Vector3f* fd = frameHessian->dI;
 
 
 			for(int i=0;i<wh;i++)
@@ -186,32 +192,32 @@ namespace dso
 
 			if((int)(freeDebugParam5+0.5f) == 0)
 			{
-				for(PointHessian* ph : frameHessians[f]->pointHessians)
+				for(PointHessian* ph : frameHessian->pointHessians)
 				{
 					if(ph==0) continue;
 
 					img->setPixelCirc(ph->u+0.5f, ph->v+0.5f, makeRainbow3B(ph->idepth_scaled));
 				}
-				for(PointHessian* ph : frameHessians[f]->pointHessiansMarginalized)
+				for(PointHessian* ph : frameHessian->pointHessiansMarginalized)
 				{
 					if(ph==0) continue;
 					img->setPixelCirc(ph->u+0.5f, ph->v+0.5f, makeRainbow3B(ph->idepth_scaled));
 				}
-				for(PointHessian* ph : frameHessians[f]->pointHessiansOut)
+				for(PointHessian* ph : frameHessian->pointHessiansOut)
 					img->setPixelCirc(ph->u+0.5f, ph->v+0.5f, Vec3b(255,255,255));
 			}
 			else if((int)(freeDebugParam5+0.5f) == 1)
 			{
-				for(PointHessian* ph : frameHessians[f]->pointHessians)
+				for(PointHessian* ph : frameHessian->pointHessians)
 				{
 					if(ph==0) continue;
 					img->setPixelCirc(ph->u+0.5f, ph->v+0.5f, makeRainbow3B(ph->idepth_scaled));
 				}
 
-				for(PointHessian* ph : frameHessians[f]->pointHessiansMarginalized)
+				for(PointHessian* ph : frameHessian->pointHessiansMarginalized)
 					img->setPixelCirc(ph->u+0.5f, ph->v+0.5f, Vec3b(0,0,0));
 
-				for(PointHessian* ph : frameHessians[f]->pointHessiansOut)
+				for(PointHessian* ph : frameHessian->pointHessiansOut)
 					img->setPixelCirc(ph->u+0.5f, ph->v+0.5f, Vec3b(255,255,255));
 			}
 			else if((int)(freeDebugParam5+0.5f) == 2)
@@ -220,7 +226,7 @@ namespace dso
 			}
 			else if((int)(freeDebugParam5+0.5f) == 3)
 			{
-				for(ImmaturePoint* ph : frameHessians[f]->immaturePoints)
+				for(ImmaturePoint* ph : frameHessian->immaturePoints)
 				{
 					if(ph==0) continue;
 					if(ph->lastTraceStatus==ImmaturePointStatus::IPS_GOOD ||
@@ -238,7 +244,7 @@ namespace dso
 			}
 			else if((int)(freeDebugParam5+0.5f) == 4)
 			{
-				for(ImmaturePoint* ph : frameHessians[f]->immaturePoints)
+				for(ImmaturePoint* ph : frameHessian->immaturePoints)
 				{
 					if(ph==0) continue;
 
@@ -258,7 +264,7 @@ namespace dso
 			}
 			else if((int)(freeDebugParam5+0.5f) == 5)
 			{
-				for(ImmaturePoint* ph : frameHessians[f]->immaturePoints)
+				for(ImmaturePoint* ph : frameHessian->immaturePoints)
 				{
 					if(ph==0) continue;
 
@@ -272,7 +278,7 @@ namespace dso
 			}
 			else if((int)(freeDebugParam5+0.5f) == 6)
 			{
-				for(PointHessian* ph : frameHessians[f]->pointHessians)
+				for(PointHessian* ph : frameHessian->pointHessians)
 				{
 					if(ph==0) continue;
 					if(ph->my_type==0)
@@ -284,7 +290,7 @@ namespace dso
 					if(ph->my_type==3)
 						img->setPixelCirc(ph->u+0.5f, ph->v+0.5f, Vec3b(0,255,255));
 				}
-				for(PointHessian* ph : frameHessians[f]->pointHessiansMarginalized)
+				for(PointHessian* ph : frameHessian->pointHessiansMarginalized)
 				{
 					if(ph==0) continue;
 					if(ph->my_type==0)
@@ -300,11 +306,11 @@ namespace dso
 			}
 			if((int)(freeDebugParam5+0.5f) == 7)
 			{
-				for(PointHessian* ph : frameHessians[f]->pointHessians)
+				for(PointHessian* ph : frameHessian->pointHessians)
 				{
 					img->setPixelCirc(ph->u+0.5f, ph->v+0.5f, makeJet3B((ph->idepth_scaled-minID) / ((maxID-minID))));
 				}
-				for(PointHessian* ph : frameHessians[f]->pointHessiansMarginalized)
+				for(PointHessian* ph : frameHessian->pointHessiansMarginalized)
 				{
 					if(ph==0) continue;
 					img->setPixelCirc(ph->u+0.5f, ph->v+0.5f, Vec3b(0,0,0));
@@ -314,8 +320,9 @@ namespace dso
 		IOWrap::displayImageStitch(name.c_str(), images);
 		IOWrap::waitKey(5);
 
-		for(unsigned int i=0;i<images.size();i++)
-			delete images[i];
+		for(auto & image : images) {
+			delete image;
+		}
 
 
 
@@ -323,7 +330,7 @@ namespace dso
 		{
 			for(unsigned int f=0;f<frameHessians.size();f++)
 			{
-				MinimalImageB3* img = new MinimalImageB3(wG[0],hG[0]);
+				auto* img = new MinimalImageB3(wG[0],hG[0]);
 				Eigen::Vector3f* fd = frameHessians[f]->dI;
 
 				for(int i=0;i<wh;i++)

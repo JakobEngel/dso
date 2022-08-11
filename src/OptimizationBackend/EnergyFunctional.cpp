@@ -75,8 +75,8 @@ bool EFDeltaValid = false;
 void EnergyFunctional::setAdjointsF(CalibHessian* Hcalib)
 {
 
-	if(adHost != 0) delete[] adHost;
-	if(adTarget != 0) delete[] adTarget;
+	delete[] adHost;
+	delete[] adTarget;
 	adHost = new Mat88[nFrames*nFrames];
 	adTarget = new Mat88[nFrames*nFrames];
 
@@ -116,8 +116,8 @@ void EnergyFunctional::setAdjointsF(CalibHessian* Hcalib)
 	cPrior = VecC::Constant(setting_initialCalibHessian);
 
 
-	if(adHostF != 0) delete[] adHostF;
-	if(adTargetF != 0) delete[] adTargetF;
+	delete[] adHostF;
+	delete[] adTargetF;
 	adHostF = new Mat88f[nFrames*nFrames];
 	adTargetF = new Mat88f[nFrames*nFrames];
 
@@ -138,15 +138,15 @@ void EnergyFunctional::setAdjointsF(CalibHessian* Hcalib)
 
 EnergyFunctional::EnergyFunctional()
 {
-	adHost=0;
-	adTarget=0;
+	adHost=nullptr;
+	adTarget=nullptr;
 
 
-	red=0;
+	red=nullptr;
 
-	adHostF=0;
-	adTargetF=0;
-	adHTdeltaF=0;
+	adHostF=nullptr;
+	adTargetF=nullptr;
+	adHTdeltaF=nullptr;
 
 	nFrames = nResiduals = nPoints = 0;
 
@@ -169,23 +169,23 @@ EnergyFunctional::~EnergyFunctional()
 		{
 			for(EFResidual* r : p->residualsAll)
 			{
-				r->data->efResidual=0;
+				r->data->efResidual=nullptr;
 				delete r;
 			}
-			p->data->efPoint=0;
+			p->data->efPoint=nullptr;
 			delete p;
 		}
-		f->data->efFrame=0;
+		f->data->efFrame=nullptr;
 		delete f;
 	}
 
-	if(adHost != 0) delete[] adHost;
-	if(adTarget != 0) delete[] adTarget;
+	delete[] adHost;
+	delete[] adTarget;
 
 
-	if(adHostF != 0) delete[] adHostF;
-	if(adTargetF != 0) delete[] adTargetF;
-	if(adHTdeltaF != 0) delete[] adHTdeltaF;
+	delete[] adHostF;
+	delete[] adTargetF;
+	delete[] adHTdeltaF;
 
 
 
@@ -199,7 +199,7 @@ EnergyFunctional::~EnergyFunctional()
 
 void EnergyFunctional::setDeltaF(CalibHessian* HCalib)
 {
-	if(adHTdeltaF != 0) delete[] adHTdeltaF;
+	delete[] adHTdeltaF;
 	adHTdeltaF = new Mat18f[nFrames*nFrames];
 	for(int h=0;h<nFrames;h++)
 		for(int t=0;t<nFrames;t++)
@@ -318,7 +318,7 @@ void EnergyFunctional::resubstituteF_MT(VecX x, CalibHessian* HCalib, bool MT)
 }
 
 void EnergyFunctional::resubstituteFPt(
-        const VecCf &xc, Mat18f* xAd, int min, int max, Vec10* stats, int tid)
+        const VecCf &xc, Mat18f* xAd, int min, int max, Vec10*  /*stats*/, int  /*tid*/)
 {
 	for(int k=min;k<max;k++)
 	{
@@ -358,7 +358,7 @@ double EnergyFunctional::calcMEnergyF()
 }
 
 
-void EnergyFunctional::calcLEnergyPt(int min, int max, Vec10* stats, int tid)
+void EnergyFunctional::calcLEnergyPt(int min, int max, Vec10* stats, int  /*tid*/)
 {
 
 	Accumulator11 E;
@@ -445,7 +445,7 @@ double EnergyFunctional::calcLEnergyF_MT()
 
 EFResidual* EnergyFunctional::insertResidual(PointFrameResidual* r)
 {
-	EFResidual* efr = new EFResidual(r, r->point->efPoint, r->host->efFrame, r->target->efFrame);
+	auto* efr = new EFResidual(r, r->point->efPoint, r->host->efFrame, r->target->efFrame);
 	efr->idxInAll = r->point->efPoint->residualsAll.size();
 	r->point->efPoint->residualsAll.push_back(efr);
 
@@ -457,7 +457,7 @@ EFResidual* EnergyFunctional::insertResidual(PointFrameResidual* r)
 }
 EFFrame* EnergyFunctional::insertFrame(FrameHessian* fh, CalibHessian* Hcalib)
 {
-	EFFrame* eff = new EFFrame(fh);
+	auto* eff = new EFFrame(fh);
 	eff->idx = frames.size();
 	frames.push_back(eff);
 
@@ -490,7 +490,7 @@ EFFrame* EnergyFunctional::insertFrame(FrameHessian* fh, CalibHessian* Hcalib)
 }
 EFPoint* EnergyFunctional::insertPoint(PointHessian* ph)
 {
-	EFPoint* efp = new EFPoint(ph, ph->host->efFrame);
+	auto* efp = new EFPoint(ph, ph->host->efFrame);
 	efp->idxInPoints = ph->host->efFrame->points.size();
 	ph->host->efFrame->points.push_back(efp);
 
@@ -525,7 +525,7 @@ void EnergyFunctional::dropResidual(EFResidual* r)
         it->second[0]--;
     }
 	nResiduals--;
-	r->data->efResidual=0;
+	r->data->efResidual=nullptr;
 	delete r;
 }
 void EnergyFunctional::marginalizeFrame(EFFrame* fh)
@@ -616,7 +616,7 @@ void EnergyFunctional::marginalizeFrame(EFFrame* fh)
 	}
 	frames.pop_back();
 	nFrames--;
-	fh->data->efFrame=0;
+	fh->data->efFrame=nullptr;
 
 	assert((int)frames.size()*8+CPARS == (int)HM.rows());
 	assert((int)frames.size()*8+CPARS == (int)HM.cols());
@@ -655,15 +655,16 @@ void EnergyFunctional::marginalizePointsF()
 	allPointsToMarg.clear();
 	for(EFFrame* f : frames)
 	{
-		for(int i=0;i<(int)f->points.size();i++)
+		for(auto p : f->points)
 		{
-			EFPoint* p = f->points[i];
 			if(p->stateFlag == EFPointStatus::PS_MARGINALIZE)
 			{
 				p->priorF *= setting_idepthFixPriorMargFac;
-				for(EFResidual* r : p->residualsAll)
-					if(r->isActive())
+				for(EFResidual* r : p->residualsAll) {
+					if(r->isActive()) {
                         connectivityMap[(((uint64_t)r->host->frameID) << 32) + ((uint64_t)r->target->frameID)][1]++;
+					}
+				}
 				allPointsToMarg.push_back(p);
 			}
 		}
@@ -741,7 +742,7 @@ void EnergyFunctional::removePoint(EFPoint* p)
 	h->points.pop_back();
 
 	nPoints--;
-	p->data->efPoint = 0;
+	p->data->efPoint = nullptr;
 
 	EFIndicesValid = false;
 
@@ -930,7 +931,7 @@ void EnergyFunctional::solveSystemF(int iteration, double lambda, CalibHessian* 
 	if((setting_solverMode & SOLVER_ORTHOGONALIZE_X) || (iteration >= 2 && (setting_solverMode & SOLVER_ORTHOGONALIZE_X_LATER)))
 	{
 		VecX xOld = x;
-		orthogonalize(&x, 0);
+		orthogonalize(&x, nullptr);
 	}
 
 

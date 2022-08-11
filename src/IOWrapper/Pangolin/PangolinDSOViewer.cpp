@@ -39,7 +39,7 @@ namespace IOWrap
 
 
 
-PangolinDSOViewer::PangolinDSOViewer(int w, int h, bool startRunThread, std::function<void()> stoppedCallback)
+PangolinDSOViewer::PangolinDSOViewer(int w, int h, bool startRunThread, const std::function<void()>& stoppedCallback)
 {
 	this->w = w;
 	this->h = h;
@@ -322,7 +322,8 @@ void PangolinDSOViewer::reset()
 void PangolinDSOViewer::reset_internal()
 {
 	model3DMutex.lock();
-	for(size_t i=0; i<keyframes.size();i++) delete keyframes[i];
+	for(auto & keyframe : keyframes) { delete keyframe;
+	}
 	keyframes.clear();
 	allFramePoses.clear();
 	keyframesByKFID.clear();
@@ -351,16 +352,17 @@ void PangolinDSOViewer::drawConstraints()
 
 		glColor3f(0,1,0);
 		glBegin(GL_LINES);
-		for(unsigned int i=0;i<connections.size();i++)
+		for(auto & connection : connections)
 		{
-			if(connections[i].to == 0 || connections[i].from==0) continue;
-			int nAct = connections[i].bwdAct + connections[i].fwdAct;
-			int nMarg = connections[i].bwdMarg + connections[i].fwdMarg;
+			if(connection.to == nullptr || connection.from==nullptr) { continue;
+}
+			int nAct = connection.bwdAct + connection.fwdAct;
+			int nMarg = connection.bwdMarg + connection.fwdMarg;
 			if(nAct==0 && nMarg>0  )
 			{
-				Sophus::Vector3f t = connections[i].from->camToWorld.translation().cast<float>();
+				Sophus::Vector3f t = connection.from->camToWorld.translation().cast<float>();
 				glVertex3f((GLfloat) t[0],(GLfloat) t[1], (GLfloat) t[2]);
-				t = connections[i].to->camToWorld.translation().cast<float>();
+				t = connection.to->camToWorld.translation().cast<float>();
 				glVertex3f((GLfloat) t[0],(GLfloat) t[1], (GLfloat) t[2]);
 			}
 		}
@@ -372,16 +374,17 @@ void PangolinDSOViewer::drawConstraints()
 		glLineWidth(3);
 		glColor3f(0,0,1);
 		glBegin(GL_LINES);
-		for(unsigned int i=0;i<connections.size();i++)
+		for(auto & connection : connections)
 		{
-			if(connections[i].to == 0 || connections[i].from==0) continue;
-			int nAct = connections[i].bwdAct + connections[i].fwdAct;
+			if(connection.to == nullptr || connection.from==nullptr) { continue;
+			}
+			int nAct = connection.bwdAct + connection.fwdAct;
 
 			if(nAct>0)
 			{
-				Sophus::Vector3f t = connections[i].from->camToWorld.translation().cast<float>();
+				Sophus::Vector3f t = connection.from->camToWorld.translation().cast<float>();
 				glVertex3f((GLfloat) t[0],(GLfloat) t[1], (GLfloat) t[2]);
-				t = connections[i].to->camToWorld.translation().cast<float>();
+				t = connection.to->camToWorld.translation().cast<float>();
 				glVertex3f((GLfloat) t[0],(GLfloat) t[1], (GLfloat) t[2]);
 			}
 		}
@@ -395,11 +398,11 @@ void PangolinDSOViewer::drawConstraints()
 		glLineWidth(3);
 
 		glBegin(GL_LINE_STRIP);
-		for(unsigned int i=0;i<keyframes.size();i++)
+		for(auto & keyframe : keyframes)
 		{
-			glVertex3f((float)keyframes[i]->camToWorld.translation()[0],
-					(float)keyframes[i]->camToWorld.translation()[1],
-					(float)keyframes[i]->camToWorld.translation()[2]);
+			glVertex3f((float)keyframe->camToWorld.translation()[0],
+					(float)keyframe->camToWorld.translation()[1],
+					(float)keyframe->camToWorld.translation()[2]);
 		}
 		glEnd();
 	}
@@ -411,11 +414,11 @@ void PangolinDSOViewer::drawConstraints()
 		glLineWidth(3);
 
 		glBegin(GL_LINE_STRIP);
-		for(unsigned int i=0;i<allFramePoses.size();i++)
+		for(auto & allFramePose : allFramePoses)
 		{
-			glVertex3f((float)allFramePoses[i][0],
-					(float)allFramePoses[i][1],
-					(float)allFramePoses[i][2]);
+			glVertex3f((float)allFramePose[0],
+					(float)allFramePose[1],
+					(float)allFramePose[2]);
 		}
 		glEnd();
 	}
@@ -449,8 +452,8 @@ void PangolinDSOViewer::publishGraph(const std::map<uint64_t, Eigen::Vector2i, s
 
 		if(host > target) continue;
 
-		connections[runningID].from = keyframesByKFID.count(host) == 0 ? 0 : keyframesByKFID[host];
-		connections[runningID].to = keyframesByKFID.count(target) == 0 ? 0 : keyframesByKFID[target];
+		connections[runningID].from = keyframesByKFID.count(host) == 0 ? nullptr : keyframesByKFID[host];
+		connections[runningID].to = keyframesByKFID.count(target) == 0 ? nullptr : keyframesByKFID[target];
 		connections[runningID].fwdAct = p.second[0];
 		connections[runningID].fwdMarg = p.second[1];
 		totalActFwd += p.second[0];
@@ -472,7 +475,7 @@ void PangolinDSOViewer::publishGraph(const std::map<uint64_t, Eigen::Vector2i, s
 }
 void PangolinDSOViewer::publishKeyframes(
 		std::vector<FrameHessian*> &frames,
-		bool final,
+		bool  /*final*/,
 		CalibHessian* HCalib)
 {
 	if(!setting_render_display3D) return;
@@ -483,7 +486,7 @@ void PangolinDSOViewer::publishKeyframes(
 	{
 		if(keyframesByKFID.find(fh->frameID) == keyframesByKFID.end())
 		{
-			KeyFrameDisplay* kfd = new KeyFrameDisplay();
+			auto* kfd = new KeyFrameDisplay();
 			keyframesByKFID[fh->frameID] = kfd;
 			keyframes.push_back(kfd);
 		}

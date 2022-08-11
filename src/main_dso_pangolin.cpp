@@ -24,10 +24,10 @@
 
 
 #include <thread>
-#include <locale.h>
-#include <signal.h>
-#include <stdlib.h>
-#include <stdio.h>
+#include <clocale>
+#include <csignal>
+#include <cstdlib>
+#include <cstdio>
 //#include <unistd.h>
 
 #include "IOWrapper/Output3DWrapper.h"
@@ -51,10 +51,10 @@
 #include "IOWrapper/OutputWrapper/SampleOutputWrapper.h"
 
 
-std::string vignette = "";
-std::string gammaCalib = "";
-std::string source = "";
-std::string calib = "";
+std::string vignette;
+std::string gammaCalib;
+std::string source;
+std::string calib;
 double rescale = 1;
 bool reverse = false;
 bool disableROS = false;
@@ -370,12 +370,12 @@ int main( int argc, char** argv )
 	std::thread exThread = std::thread(exitThread);
 
 
-	ImageFolderReader* reader = new ImageFolderReader(source,calib, gammaCalib, vignette);
+	auto* reader = new ImageFolderReader(source,calib, gammaCalib, vignette);
 	reader->setGlobalCalibration();
 
 
 
-	if(setting_photometricCalibration > 0 && reader->getPhotometricGamma() == 0)
+	if(setting_photometricCalibration > 0 && reader->getPhotometricGamma() == nullptr)
 	{
 		printf("ERROR: dont't have photometric calibation. Need to use commandline options mode=1 or mode=2 ");
 		exit(1);
@@ -399,7 +399,7 @@ int main( int argc, char** argv )
 
 
 
-	FullSystem* fullSystem = new FullSystem();
+	auto* fullSystem = new FullSystem();
 	fullSystem->setGammaFunction(reader->getPhotometricGamma());
 	fullSystem->linearizeOperation = (playbackSpeed==0);
 
@@ -409,7 +409,7 @@ int main( int argc, char** argv )
 
 
 
-    IOWrap::PangolinDSOViewer* viewer = 0;
+    IOWrap::PangolinDSOViewer* viewer = nullptr;
 	if(!disableAllDisplay)
     {
         viewer = new IOWrap::PangolinDSOViewer(wG[0],hG[0], false);
@@ -431,7 +431,7 @@ int main( int argc, char** argv )
         for(int i=lstart;i>= 0 && i< reader->getNumImages() && linc*i < linc*lend;i+=linc)
         {
             idsToPlay.push_back(i);
-            if(timesToPlayAt.size() == 0)
+            if(timesToPlayAt.empty())
             {
                 timesToPlayAt.push_back((double)0);
             }
@@ -448,9 +448,8 @@ int main( int argc, char** argv )
         if(preload)
         {
             printf("LOADING ALL IMAGES!\n");
-            for(int ii=0;ii<(int)idsToPlay.size(); ii++)
+            for(int i : idsToPlay)
             {
-                int i = idsToPlay[ii];
                 preloadedImages.push_back(reader->getImage(i));
             }
         }

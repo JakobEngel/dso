@@ -152,7 +152,7 @@ private:
 	float rescale();
 
 	void resetPoints(int lvl);
-	void doStep(int lvl, float lambda, Vec8f inc);
+	void doStep(int lvl, float lambda, const Vec8f& inc);
 	void applyStep(int lvl);
 
 	void makeGradients(Eigen::Vector3f** data);

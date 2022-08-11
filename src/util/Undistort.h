@@ -41,7 +41,7 @@ class PhotometricUndistorter
 {
 public:
 	EIGEN_MAKE_ALIGNED_OPERATOR_NEW;
-	PhotometricUndistorter(std::string file, std::string noiseImage, std::string vignetteImage, int w_, int h_);
+	PhotometricUndistorter(const std::string& file, const std::string& noiseImage, const std::string& vignetteImage, int w_, int h_);
 	~PhotometricUndistorter();
 
 	// removes readout noise, and converts to irradiance.
@@ -81,7 +81,7 @@ public:
 
 	template<typename T>
 	ImageAndExposure* undistort(const MinimalImage<T>* image_raw, float exposure=0, double timestamp=0, float factor=1) const;
-	static Undistort* getUndistorterForFile(std::string configFilename, std::string gammaFilename, std::string vignetteFilename);
+	static Undistort* getUndistorterForFile(const std::string& configFilename, std::string gammaFilename, std::string vignetteFilename);
 
 	void loadPhotometricCalibration(std::string file, std::string noiseImage, std::string vignetteImage);
 
@@ -101,9 +101,9 @@ protected:
 	void applyBlurNoise(float* img) const;
 
 	void makeOptimalK_crop();
-	void makeOptimalK_full();
+	static void makeOptimalK_full();
 
-	void readFromFile(const char* configFileName, int nPars, std::string prefix = "");
+	void readFromFile(const char* configFileName, int nPars, const std::string& prefix = "");
 };
 
 class UndistortFOV : public Undistort

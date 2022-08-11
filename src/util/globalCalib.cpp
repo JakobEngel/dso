@@ -24,7 +24,7 @@
 
 
 #include "util/globalCalib.h"
-#include "stdio.h"
+#include <cstdio>
 #include <iostream>
 
 #include <Eigen/Cholesky>

@@ -77,7 +77,7 @@ void AccumulatedSCHessianSSE::addPoint(EFPoint* p, bool shiftPriorToZero, int ti
 }
 void AccumulatedSCHessianSSE::stitchDoubleInternal(
 		MatXX* H, VecX* b, EnergyFunctional const * const EF,
-		int min, int max, Vec10* stats, int tid)
+		int min, int max, Vec10*  /*stats*/, int tid)
 {
 	int toAggregate = NUM_THREADS;
 	if(tid == -1) { toAggregate = 1; tid = 0; }	// special case: if we dont do multithreading, dont aggregate.

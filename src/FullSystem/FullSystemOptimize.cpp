@@ -25,7 +25,7 @@
 
 #include "FullSystem/FullSystem.h"
  
-#include "stdio.h"
+#include <cstdio>
 #include "util/globalFuncs.h"
 #include <Eigen/LU>
 #include <algorithm>
@@ -85,7 +85,7 @@ void FullSystem::linearizeAll_Reductor(bool fixLinearization, std::vector<PointF
 }
 
 
-void FullSystem::applyRes_Reductor(bool copyJacobians, int min, int max, Vec10* stats, int tid)
+void FullSystem::applyRes_Reductor(bool  /*copyJacobians*/, int min, int max, Vec10*  /*stats*/, int  /*tid*/)
 {
 	for(int k=min;k<max;k++)
 		activeResiduals[k]->applyRes(true);
@@ -105,7 +105,7 @@ void FullSystem::setNewFrameEnergyTH()
 
 		}
 
-	if(allResVec.size()==0)
+	if(allResVec.empty())
 	{
 		newFrame->frameEnergyTH = 12*12*patternNum;
 		return;		// should never happen, but lets make sure.
@@ -147,7 +147,8 @@ Vec3 FullSystem::linearizeAll(bool fixLinearization)
 
 
 	std::vector<PointFrameResidual*> toRemove[NUM_THREADS];
-	for(int i=0;i<NUM_THREADS;i++) toRemove[i].clear();
+	for(auto & i : toRemove) { i.clear();
+	}
 
 	if(multiThreading)
 	{
@@ -181,9 +182,9 @@ Vec3 FullSystem::linearizeAll(bool fixLinearization)
 		}
 
 		int nResRemoved=0;
-		for(int i=0;i<NUM_THREADS;i++)
+		for(auto & i : toRemove)
 		{
-			for(PointFrameResidual* r : toRemove[i])
+			for(PointFrameResidual* r : i)
 			{
 				PointHessian* ph = r->point;
 
@@ -391,7 +392,7 @@ double FullSystem::calcMEnergy()
 }
 
 
-void FullSystem::printOptRes(const Vec3 &res, double resL, double resM, double resPrior, double LExact, float a, float b)
+void FullSystem::printOptRes(const Vec3 &res, double  /*resL*/, double  /*resM*/, double  /*resPrior*/, double  /*LExact*/, float a, float b)
 {
 	printf("A(%f)=(AV %.3f). Num: A(%d) + M(%d); ab %f %f!\n",
 			res[0],
@@ -574,7 +575,7 @@ float FullSystem::optimize(int mnumOptIts)
 
 	statistics_lastFineTrackRMSE = sqrtf((float)(lastEnergy[0] / (patternNum*ef->resInA)));
 
-	if(calibLog != 0)
+	if(calibLog != nullptr)
 	{
 		(*calibLog) << Hcalib.value_scaled.transpose() <<
 				" " << frameHessians.back()->get_state_scaled().transpose() <<
@@ -638,7 +639,7 @@ void FullSystem::removeOutliers()
 			PointHessian* ph = fh->pointHessians[i];
 			if(ph==0) continue;
 
-			if(ph->residuals.size() == 0)
+			if(ph->residuals.empty())
 			{
 				fh->pointHessiansOut.push_back(ph);
 				ph->efPoint->stateFlag = EFPointStatus::PS_DROP;
