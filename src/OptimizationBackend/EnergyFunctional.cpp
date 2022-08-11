@@ -449,7 +449,7 @@ EFResidual* EnergyFunctional::insertResidual(PointFrameResidual* r)
 	efr->idxInAll = r->point->efPoint->residualsAll.size();
 	r->point->efPoint->residualsAll.push_back(efr);
 
-    connectivityMap[(((uint64_t)efr->host->frameID) << 32) + ((uint64_t)efr->target->frameID)][0]++;
+    connectivityMap[efr->connectivityId][0]++;
 
 	nResiduals++;
 	r->efResidual = efr;
@@ -519,7 +519,11 @@ void EnergyFunctional::dropResidual(EFResidual* r)
 		r->host->data->shell->statistics_outlierResOnThis++;
 
 
-    connectivityMap[(((uint64_t)r->host->frameID) << 32) + ((uint64_t)r->target->frameID)][0]--;
+    auto it = connectivityMap.find(r->connectivityId);
+    if (it != connectivityMap.end())
+    {
+        it->second[0]--;
+    }
 	nResiduals--;
 	r->data->efResidual=0;
 	delete r;

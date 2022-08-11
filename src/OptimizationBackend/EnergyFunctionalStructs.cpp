@@ -35,6 +35,17 @@
 namespace dso
 {
 
+EFResidual::EFResidual(PointFrameResidual* org, EFPoint* point_, EFFrame* host_, EFFrame* target_) :
+    data(org), point(point_), host(host_), target(target_)
+{
+    isLinearized = false;
+    isActiveAndIsGoodNEW = false;
+    J = new RawResidualJacobian();
+    assert(((long)this) % 16 == 0);
+    assert(((long)J) % 16 == 0);
+
+    connectivityId = (((uint64_t)host->frameID) << 32) + ((uint64_t)target->frameID);
+}
 
 void EFResidual::takeDataF()
 {
