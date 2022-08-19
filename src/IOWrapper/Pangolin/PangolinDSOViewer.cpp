@@ -291,7 +291,10 @@ void PangolinDSOViewer::run()
 
 	    if(needReset) reset_internal();
 
-        std::this_thread::sleep_for(std::chrono::milliseconds(40));
+        if (setting_viewer_run_loop_sleep_for_ms > 0)
+        {
+            std::this_thread::sleep_for(std::chrono::milliseconds(setting_viewer_run_loop_sleep_for_ms));
+        }
 	}
 
 

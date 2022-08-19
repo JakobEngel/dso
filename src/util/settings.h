@@ -188,6 +188,8 @@ extern bool goStepByStep;
 extern bool plotStereoImages;
 extern bool multiThreading;
 
+extern int setting_viewer_run_loop_sleep_for_ms;
+
 extern float freeDebugParam1;
 extern float freeDebugParam2;
 extern float freeDebugParam3;
