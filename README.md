@@ -37,7 +37,7 @@ Install with
 	sudo apt-get install libopencv-dev
 
 
-##### Pangolin (highly recommended).
+##### Pangolin v0.4! (highly recommended).
 Used for 3D visualization & the GUI.
 Pangolin is **only** used in `IOWrapper/Pangolin/*`. You can compile without Pangolin, 
 however then there is not going to be any visualization / GUI capability. 
@@ -45,6 +45,13 @@ Feel free to implement your own version of `Output3DWrapper` with your preferred
 and use it instead of `PangolinDSOViewer`
 
 Install from [https://github.com/stevenlovegrove/Pangolin](https://github.com/stevenlovegrove/Pangolin)
+
+Or install like bellow
+
+	git clone --recursive https://github.com/stevenlovegrove/Pangolin.git -b v0.4
+	cd Pangolin
+	cmake -B build
+	cmake --build build
 
 
 ##### ziplib (recommended).
@@ -102,13 +109,13 @@ other camera drivers, to use DSO interactively without ROS.
 The format assumed is that of [https://vision.in.tum.de/mono-dataset](https://vision.in.tum.de/mono-dataset).
 However, it should be easy to adapt it to your needs, if required. The binary is run with:
 
-- `files=XXX` where XXX is either a folder or .zip archive containing images. They are sorted *alphabetically*. for .zip to work, need to comiple with ziplib support.
+- `files=XXX` where XXX is either a folder or .zip archive containing images. They are sorted *alphabetically*. for .zip to work, need to comiple with ziplib support. You can use video_to_images.py in utils folder to split video into images. For example python video_to_images.py -v "path to video" . It create a folder 'images' desired sequence of images
 
-- `gamma=XXX` where XXX is a gamma calibration file, containing a single row with 256 values, mapping [0..255] to the respective irradiance value, i.e. containing the *discretized inverse response function*. See TUM monoVO dataset for an example.
+- `gamma=XXX` where XXX is a gamma calibration file, containing a single row with 256 values, mapping [0..255] to the respective irradiance value, i.e. containing the *discretized inverse response function*. See TUM monoVO dataset for an example or read this https://github.com/tum-vision/online_photometric_calibration
 
 - `vignette=XXX` where XXX is a monochrome 16bit or 8bit image containing the vignette as pixelwise attenuation factors. See TUM monoVO dataset for an example.
 
-- `calib=XXX` where XXX is a geometric camera calibration file. See below.
+- `calib=XXX` where XXX is a geometric camera calibration file. See below. If you want you can use calibration.py in utils it use chessboard 6*9, to check camera calibration settings. For example python calibration.py -i "path to images of chessboard"
 
 
 
@@ -117,14 +124,14 @@ However, it should be easy to adapt it to your needs, if required. The binary is
 
 ###### Calibration File for Pre-Rectified Images
 
-    Pinhole fx fy cx cy 0
+    fx fy cx cy 0
     in_width in_height
     "crop" / "full" / "none" / "fx fy cx cy 0"
     out_width out_height
 
 ###### Calibration File for FOV camera model:
 
-    FOV fx fy cx cy omega
+    fx fy cx cy omega
     in_width in_height
     "crop" / "full" / "fx fy cx cy 0"
     out_width out_height
@@ -132,7 +139,7 @@ However, it should be easy to adapt it to your needs, if required. The binary is
 
 ###### Calibration File for Radio-Tangential camera model
 
-    RadTan fx fy cx cy k1 k2 r1 r2
+    fx fy cx cy k1 k2 r1 r2
     in_width in_height
     "crop" / "full" / "fx fy cx cy 0"
     out_width out_height
@@ -140,7 +147,7 @@ However, it should be easy to adapt it to your needs, if required. The binary is
 
 ###### Calibration File for Equidistant camera model
 
-    EquiDistant fx fy cx cy k1 k2 k3 k4
+    fx fy cx cy k1 k2 k3 k4
     in_width in_height
     "crop" / "full" / "fx fy cx cy 0"
     out_width out_height
