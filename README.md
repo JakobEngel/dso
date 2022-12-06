@@ -11,7 +11,7 @@ Get some datasets from [https://vision.in.tum.de/mono-dataset](https://vision.in
 
 ### 2. Installation
 
-	git clone https://github.com/JakobEngel/dso.git
+	git clone https://github.com/IldarGreat/dso.git
 
 #### 2.1 Required Dependencies
 
@@ -48,7 +48,10 @@ Install from [https://github.com/stevenlovegrove/Pangolin](https://github.com/st
 
 Or install like bellow
 
-	git clone --recursive https://github.com/stevenlovegrove/Pangolin.git -b v0.4
+	git clone --recursive https://github.com/stevenlovegrove/Pangolin.git -b v0.6
+	apt-get clean
+        sudo apt install libglew-dev
+        sudo apt-get install libegl1-mesa-dev
 	cd Pangolin
 	cmake -B build
 	cmake --build build
