@@ -8,12 +8,30 @@ For more information see
 * **A Photometrically Calibrated Benchmark For Monocular Visual Odometry**, *J. Engel, V. Usenko, D. Cremers*, In arXiv:1607.02555, 2016
 
 Get some datasets from [https://vision.in.tum.de/mono-dataset](https://vision.in.tum.de/mono-dataset) .
+### 2. Installation with docker
 
-### 2. Installation
+#### 2.1 Get image
+##### Build image from Dockerfile.
+	git clone https://github.com/IldarGreat/dso.git
+	docker build . -t ildarthegreat/dso
+##### Or pull image from dockerhub
+	docker pull ildarthegreat/dso
+#### 2.2 Run container
+	docker run \
+	-v {path}:/app/dso/build/set \
+	-e mode=2 \
+	... other environment  (see Dockerfile)
+	ildarthegreat/dso
+path - it's folder that contains the calib file camera.txt and another folder named sequence that contains a sequence of images<br>
+Example: .../path<br>
+		-camera.txt<br>
+		-sequence
+
+### 3. Installation from source code
 
 	git clone https://github.com/IldarGreat/dso.git
 
-#### 2.1 Required Dependencies
+#### 3.1 Required Dependencies
 
 ##### suitesparse and eigen3 (required).
 Required. Install with
@@ -22,7 +40,7 @@ Required. Install with
 
 
 
-#### 2.2 Optional Dependencies
+#### 3.2 Optional Dependencies
 
 ##### OpenCV (highly recommended).
 Used to read / write / display images.
@@ -74,7 +92,7 @@ to unzip the dataset image archives before loading them).
 ##### sse2neon (required for ARM builds).
 After cloning, just run `git submodule update --init` to include this.  It translates Intel-native SSE functions to ARM-native NEON functions during the compilation process.
 
-#### 2.3 Build
+#### 3.3 Build
 
 		cd dso
 		mkdir build
@@ -91,7 +109,7 @@ OpenCV and Pangolin need to be installed.
 
 
 
-### 3 Usage
+### 4 Usage
 Run on a dataset from [https://vision.in.tum.de/mono-dataset](https://vision.in.tum.de/mono-dataset) using
 
 		bin/dso_dataset \
@@ -108,7 +126,7 @@ other camera drivers, to use DSO interactively without ROS.
 
 
 
-#### 3.1 Dataset Format.
+#### 4.1 Dataset Format.
 The format assumed is that of [https://vision.in.tum.de/mono-dataset](https://vision.in.tum.de/mono-dataset).
 However, it should be easy to adapt it to your needs, if required. The binary is run with:
 
@@ -193,7 +211,7 @@ outliers along those borders, and corrupt the scale-pyramid).
 
 
 
-#### 3.2 Commandline Options
+#### 4.2 Commandline Options
 there are many command line options available, see `main_dso_pangolin.cpp`. some examples include
 - `mode=X`: 
     -  `mode=0` use iff a photometric calibration exists (e.g. TUM monoVO dataset). 
@@ -220,11 +238,11 @@ there are many command line options available, see `main_dso_pangolin.cpp`. some
 
 
 
-#### 3.3 Runtime Options
+#### 4.3 Runtime Options
 Some parameters can be reconfigured from the Pangolin GUI at runtime. Feel free to add more.
 
 
-#### 3.4 Accessing Data.
+#### 4.4 Accessing Data.
 The easiest way to access the Data (poses, pointclouds, etc.) computed by DSO (in real-time)
 is to create your own `Output3DWrapper`, and add it to the system, i.e., to `FullSystem.outputWrapper`.
 The respective member functions will be called on various occations (e.g., when a new KF is created, 
@@ -243,7 +261,7 @@ using the TUM RGB-D / TUM monoVO format ([timestamp x y z qx qy qz qw] of the ca
 
 
 
-#### 3.5 Notes
+#### 4.5 Notes
 - the initializer is very slow, and does not work very reliably. Maybe replace by your own way to get an initialization.
 - see [https://github.com/JakobEngel/dso_ros](https://github.com/JakobEngel/dso_ros) for a minimal example project on how to use the library with your own input / output procedures.
 - see `settings.cpp` for a LOT of settings parameters. Most of which you shouldn't touch.
@@ -252,7 +270,7 @@ using the TUM RGB-D / TUM monoVO format ([timestamp x y z qx qy qz qw] of the ca
 
 
 
-### 4 General Notes for Good Results
+### 5 General Notes for Good Results
 
 #### Accurate Geometric Calibration
 - Please have a look at Chapter 4.3 from the DSO paper, in particular Figure 20 (Geometric Noise). Direct approaches suffer a LOT from bad geometric calibrations: Geometric distortions of 1.5 pixel already reduce the accuracy by factor 10.
@@ -282,7 +300,7 @@ little rotation) during initialization.
 Possibly replace by your own initializer.
 
 
-### 5 License
+### 6 License
 DSO was developed at the Technical University of Munich and Intel.
 The open-source version is licensed under the GNU General Public License
 Version 3 (GPLv3).
