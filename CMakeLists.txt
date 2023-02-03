@@ -33,7 +33,7 @@ set(CMAKE_CXX_FLAGS
 )
 
 if (MSVC)
-     set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /EHsc -D_USE_MATH_DEFINES -D__SSE3__")
+     set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /EHsc /bigobj -D_USE_MATH_DEFINES -D__SSE3__")
 endif (MSVC)
 
 # Sources files
