@@ -16,12 +16,14 @@ Get some datasets from [https://vision.in.tum.de/mono-dataset](https://vision.in
 	docker build . -t ildarthegreat/dso
 ##### Or pull image from dockerhub
 	docker pull ildarthegreat/dso
+##### If you have arm based system
+	docker pull ildarthegreat/dsoarm64
 #### 2.2 Run container
 	docker run \
 	-v {path}:/app/dso/build/set \
 	-e mode=2 \
 	... other environment  (see Dockerfile)
-	ildarthegreat/dso
+	ildarthegreat/dso (or ildarthegreat/dsoarm64)
 path - it's folder that contains the calib file camera.txt and another folder named sequence that contains a sequence of images<br>
 Example: .../path<br>
 		-camera.txt<br>
