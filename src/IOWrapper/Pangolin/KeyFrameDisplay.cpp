@@ -21,7 +21,12 @@
 * along with DSO. If not, see <http://www.gnu.org/licenses/>.
 */
 
+#ifdef _WIN32
+#define NOMINMAX
+#include <windows.h>
+#endif
 
+#include <GL/glew.h>
 
 #include <cstdio>
 #include "util/settings.h"
