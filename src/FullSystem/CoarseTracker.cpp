@@ -35,6 +35,34 @@
 #include "FullSystem/Residuals.h"
 #include "OptimizationBackend/EnergyFunctionalStructs.h"
 #include "IOWrapper/ImageRW.h"
+
+//#include "Eigen/src/Cholesky/LDLT.H"
+
+#include <Eigen/Cholesky>
+#include <Eigen/Core>
+#include <Eigen/Dense>
+#include <Eigen/Eigen>
+#include <Eigen/Eigenvalues>
+#include <Eigen/Geometry>
+#include <Eigen/Householder>
+#include <Eigen/IterativeLinearSolvers>
+#include <Eigen/Jacobi>
+#include <Eigen/LU>
+#include <Eigen/MetisSupport>
+#include <Eigen/OrderingMethods>
+#include <Eigen/QR>
+#include <Eigen/QtAlignedMalloc>
+#include <Eigen/Sparse>
+#include <Eigen/SparseCholesky>
+#include <Eigen/SparseCore>
+#include <Eigen/SparseLU>
+#include <Eigen/SparseQR>
+#include <Eigen/StdDeque>
+#include <Eigen/StdList>
+#include <Eigen/StdVector>
+#include <Eigen/SVD>
+
+
 #include <algorithm>
 
 #if !defined(__SSE3__) && !defined(__SSE2__) && !defined(__SSE1__)
@@ -86,8 +114,8 @@ CoarseTracker::CoarseTracker(int ww, int hh) : lastRef_aff_g2l(0,0)
     buf_warped_refColor = allocAligned<4,float>(ww*hh, ptrToDelete);
 
 
-	newFrame = 0;
-	lastRef = 0;
+	newFrame = nullptr;
+	lastRef = nullptr;
 	debugPlot = debugPrint = true;
 	w[0]=h[0]=0;
 	refFrameID=-1;
@@ -132,7 +160,7 @@ void CoarseTracker::makeK(CalibHessian* HCalib)
 
 
 
-void CoarseTracker::makeCoarseDepthL0(std::vector<FrameHessian*> frameHessians)
+void CoarseTracker::makeCoarseDepthL0(const std::vector<FrameHessian*>& frameHessians)
 {
 	// make coarse tracking templates for latstRef.
 	memset(idepth[0], 0, sizeof(float)*w[0]*h[0]);
@@ -293,7 +321,7 @@ void CoarseTracker::makeCoarseDepthL0(std::vector<FrameHessian*> frameHessians)
 
 
 
-void CoarseTracker::calcGSSSE(int lvl, Mat88 &H_out, Vec8 &b_out, const SE3 &refToNew, AffLight aff_g2l)
+void CoarseTracker::calcGSSSE(int lvl, Mat88 &H_out, Vec8 &b_out, const SE3 & /*refToNew*/, AffLight aff_g2l)
 {
 	acc.initialize();
 
@@ -383,7 +411,7 @@ Vec6 CoarseTracker::calcRes(int lvl, const SE3 &refToNew, AffLight aff_g2l, floa
 	float maxEnergy = 2*setting_huberTH*cutoffTH-setting_huberTH*setting_huberTH;	// energy for r=setting_coarseCutoffTH.
 
 
-    MinimalImageB3* resImage = 0;
+    MinimalImageB3* resImage = nullptr;
 	if(debugPlot)
 	{
 		resImage = new MinimalImageB3(wl,hl);
@@ -538,7 +566,7 @@ bool CoarseTracker::trackNewestCoarse(
 		SE3 &lastToNew_out, AffLight &aff_g2l_out,
 		int coarsestLvl,
 		Vec5 minResForAbort,
-		IOWrap::Output3DWrapper* wrap)
+		IOWrap::Output3DWrapper*  /*wrap*/)
 {
 	debugPlot = setting_render_displayCoarseTrackingFull;
 	debugPrint = false;
@@ -733,6 +761,13 @@ void CoarseTracker::debugPlotIDepthMap(float* minID_pt, float* maxID_pt, std::ve
 			if(idepth[lvl][i] > 0)
 				allID.push_back(idepth[lvl][i]);
 		}
+
+        if (allID.empty())
+        {
+            printf("\nallID is empty.\n");
+            return;
+        }
+
 		std::sort(allID.begin(), allID.end());
 		int n = allID.size()-1;
 
@@ -742,7 +777,7 @@ void CoarseTracker::debugPlotIDepthMap(float* minID_pt, float* maxID_pt, std::ve
 		float minID, maxID;
 		minID = minID_new;
 		maxID = maxID_new;
-		if(minID_pt!=0 && maxID_pt!=0)
+		if(minID_pt!=nullptr && maxID_pt!=nullptr)
 		{
 			if(*minID_pt < 0 || *maxID_pt < 0)
 			{
@@ -867,7 +902,7 @@ CoarseDistanceMap::~CoarseDistanceMap()
 
 
 void CoarseDistanceMap::makeDistanceMap(
-		std::vector<FrameHessian*> frameHessians,
+		const std::vector<FrameHessian*>& frameHessians,
 		FrameHessian* frame)
 {
 	int w1 = w[1];
@@ -907,7 +942,7 @@ void CoarseDistanceMap::makeDistanceMap(
 
 
 
-void CoarseDistanceMap::makeInlierVotes(std::vector<FrameHessian*> frameHessians)
+void CoarseDistanceMap::makeInlierVotes(const std::vector<FrameHessian*>& frameHessians)
 {
 
 }
@@ -921,7 +956,7 @@ void CoarseDistanceMap::growDistBFS(int bfsNum)
 	for(int k=1;k<40;k++)
 	{
 		int bfsNum2 = bfsNum;
-		std::swap<Eigen::Vector2i*>(bfsList1,bfsList2);
+		std::swap(bfsList1,bfsList2);
 		bfsNum=0;
 
 		if(k%2==0)

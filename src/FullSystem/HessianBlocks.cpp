@@ -28,11 +28,35 @@
 #include "FullSystem/ImmaturePoint.h"
 #include "OptimizationBackend/EnergyFunctionalStructs.h"
 
+#include <Eigen/Cholesky>
+#include <Eigen/Core>
+#include <Eigen/Dense>
+#include <Eigen/Eigen>
+#include <Eigen/Eigenvalues>
+#include <Eigen/Geometry>
+#include <Eigen/Householder>
+#include <Eigen/IterativeLinearSolvers>
+#include <Eigen/Jacobi>
+#include <Eigen/LU>
+#include <Eigen/MetisSupport>
+#include <Eigen/OrderingMethods>
+#include <Eigen/QR>
+#include <Eigen/QtAlignedMalloc>
+#include <Eigen/Sparse>
+#include <Eigen/SparseCholesky>
+#include <Eigen/SparseCore>
+#include <Eigen/SparseLU>
+#include <Eigen/SparseQR>
+#include <Eigen/StdDeque>
+#include <Eigen/StdList>
+#include <Eigen/StdVector>
+#include <Eigen/SVD>
+
 namespace dso
 {
 
 
-PointHessian::PointHessian(const ImmaturePoint* const rawPoint, CalibHessian* Hcalib)
+PointHessian::PointHessian(const ImmaturePoint* const rawPoint, CalibHessian*  /*Hcalib*/)
 {
 	instanceCounter++;
 	host = rawPoint->host;
@@ -58,7 +82,7 @@ PointHessian::PointHessian(const ImmaturePoint* const rawPoint, CalibHessian* Hc
 	memcpy(weights, rawPoint->weights, sizeof(float)*n);
 	energyTH = rawPoint->energyTH;
 
-	efPoint=0;
+	efPoint=nullptr;
 
 
 }
@@ -66,7 +90,8 @@ PointHessian::PointHessian(const ImmaturePoint* const rawPoint, CalibHessian* Hc
 
 void PointHessian::release()
 {
-	for(unsigned int i=0;i<residuals.size();i++) delete residuals[i];
+	for(auto & residual : residuals) { delete residual;
+	}
 	residuals.clear();
 }
 
@@ -81,8 +106,8 @@ void FrameHessian::setStateZero(const Vec10 &state_zero)
 	for(int i=0;i<6;i++)
 	{
 		Vec6 eps; eps.setZero(); eps[i] = 1e-3;
-		SE3 EepsP = Sophus::SE3::exp(eps);
-		SE3 EepsM = Sophus::SE3::exp(-eps);
+		SE3 EepsP = dso::SE3::exp(eps);
+		SE3 EepsM = dso::SE3::exp(-eps);
 		SE3 w2c_leftEps_P_x0 = (get_worldToCam_evalPT() * EepsP) * get_worldToCam_evalPT().inverse();
 		SE3 w2c_leftEps_M_x0 = (get_worldToCam_evalPT() * EepsM) * get_worldToCam_evalPT().inverse();
 		nullspaces_pose.col(i) = (w2c_leftEps_P_x0.log() - w2c_leftEps_M_x0.log())/(2e-3);
@@ -112,10 +137,14 @@ void FrameHessian::release()
 {
 	// DELETE POINT
 	// DELETE RESIDUAL
-	for(unsigned int i=0;i<pointHessians.size();i++) delete pointHessians[i];
-	for(unsigned int i=0;i<pointHessiansMarginalized.size();i++) delete pointHessiansMarginalized[i];
-	for(unsigned int i=0;i<pointHessiansOut.size();i++) delete pointHessiansOut[i];
-	for(unsigned int i=0;i<immaturePoints.size();i++) delete immaturePoints[i];
+	for(auto & pointHessian : pointHessians) { delete pointHessian;
+	}
+	for(auto & i : pointHessiansMarginalized) { delete i;
+	}
+	for(auto & i : pointHessiansOut) { delete i;
+	}
+	for(auto & immaturePoint : immaturePoints) { delete immaturePoint;
+	}
 
 
 	pointHessians.clear();
@@ -125,7 +154,7 @@ void FrameHessian::release()
 }
 
 
-void FrameHessian::makeImages(float* color, CalibHessian* HCalib)
+void FrameHessian::makeImages(const float* color, CalibHessian* HCalib)
 {
 
 	for(int i=0;i<pyrLevelsUsed;i++)
@@ -181,7 +210,7 @@ void FrameHessian::makeImages(float* color, CalibHessian* HCalib)
 
 			dabs_l[idx] = dx*dx+dy*dy;
 
-			if(setting_gammaWeightsPixelSelect==1 && HCalib!=0)
+			if(setting_gammaWeightsPixelSelect==1 && HCalib!=nullptr)
 			{
 				float gw = HCalib->getBGradOnly((float)(dI_l[idx][0]));
 				dabs_l[idx] *= gw*gw;	// convert to gradient of original color space (before removing response).

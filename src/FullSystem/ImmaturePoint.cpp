@@ -29,7 +29,7 @@
 
 namespace dso
 {
-ImmaturePoint::ImmaturePoint(int u_, int v_, FrameHessian* host_, float type, CalibHessian* HCalib)
+ImmaturePoint::ImmaturePoint(int u_, int v_, FrameHessian* host_, float type, CalibHessian*  /*HCalib*/)
 : u(u_), v(v_), host(host_), my_type(type), idepth_min(0), idepth_max(NAN), lastTraceStatus(IPS_UNINITIALIZED)
 {
 
@@ -61,8 +61,7 @@ ImmaturePoint::ImmaturePoint(int u_, int v_, FrameHessian* host_, float type, Ca
 }
 
 ImmaturePoint::~ImmaturePoint()
-{
-}
+= default;
 
 
 
@@ -396,7 +395,7 @@ ImmaturePointStatus ImmaturePoint::traceOn(FrameHessian* frame,const Mat33f &hos
 		idepth_min = (pr[2]*(bestV-errorInPixel*dy) - pr[1]) / (hostToFrame_Kt[1] - hostToFrame_Kt[2]*(bestV-errorInPixel*dy));
 		idepth_max = (pr[2]*(bestV+errorInPixel*dy) - pr[1]) / (hostToFrame_Kt[1] - hostToFrame_Kt[2]*(bestV+errorInPixel*dy));
 	}
-	if(idepth_min > idepth_max) std::swap<float>(idepth_min, idepth_max);
+	if(idepth_min > idepth_max) std::swap(idepth_min, idepth_max);
 
 
 	if(!std::isfinite(idepth_min) || !std::isfinite(idepth_max) || (idepth_max<0))
@@ -417,7 +416,7 @@ ImmaturePointStatus ImmaturePoint::traceOn(FrameHessian* frame,const Mat33f &hos
 float ImmaturePoint::getdPixdd(
 		CalibHessian *  HCalib,
 		ImmaturePointTemporaryResidual* tmpRes,
-		float idepth)
+		float idepth) const
 {
 	FrameFramePrecalc* precalc = &(host->targetPrecalc[tmpRes->target->idx]);
 	const Vec3f &PRE_tTll = precalc->PRE_tTll;
@@ -435,7 +434,7 @@ float ImmaturePoint::getdPixdd(
 
 
 float ImmaturePoint::calcResidual(
-		CalibHessian *  HCalib, const float outlierTHSlack,
+		CalibHessian *   /*HCalib*/, const float outlierTHSlack,
 		ImmaturePointTemporaryResidual* tmpRes,
 		float idepth)
 {

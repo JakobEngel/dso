@@ -21,9 +21,14 @@
 * along with DSO. If not, see <http://www.gnu.org/licenses/>.
 */
 
+#ifdef _WIN32
+#define NOMINMAX
+#include <windows.h>
+#endif
 
+#include <GL/glew.h>
 
-#include <stdio.h>
+#include <cstdio>
 #include "util/settings.h"
 
 //#include <GL/glx.h>
@@ -46,7 +51,7 @@ namespace IOWrap
 
 KeyFrameDisplay::KeyFrameDisplay()
 {
-	originalInputSparse = 0;
+	originalInputSparse = nullptr;
 	numSparseBufferSize=0;
 	numSparsePoints=0;
 
@@ -94,7 +99,7 @@ void KeyFrameDisplay::setFromKF(FrameHessian* fh, CalibHessian* HCalib)
 
 	if(numSparseBufferSize < npoints)
 	{
-		if(originalInputSparse != 0) delete originalInputSparse;
+		delete originalInputSparse;
 		numSparseBufferSize = npoints+100;
         originalInputSparse = new InputPointSparse<MAX_RES_PER_POINT>[numSparseBufferSize];
 	}
@@ -167,7 +172,6 @@ void KeyFrameDisplay::setFromKF(FrameHessian* fh, CalibHessian* HCalib)
 
 KeyFrameDisplay::~KeyFrameDisplay()
 {
-	if(originalInputSparse != 0)
 		delete[] originalInputSparse;
 }
 
@@ -330,7 +334,7 @@ void KeyFrameDisplay::drawCam(float lineWidth, float* color, float sizeFactor)
 		Sophus::Matrix4f m = camToWorld.matrix().cast<float>();
 		glMultMatrixf((GLfloat*)m.data());
 
-		if(color == 0)
+		if(color == nullptr)
 		{
 			glColor3f(1,0,0);
 		}
@@ -383,11 +387,11 @@ void KeyFrameDisplay::drawPC(float pointSize)
 
 
 		colorBuffer.Bind();
-		glColorPointer(colorBuffer.count_per_element, colorBuffer.datatype, 0, 0);
+		glColorPointer(colorBuffer.count_per_element, colorBuffer.datatype, 0, nullptr);
 		glEnableClientState(GL_COLOR_ARRAY);
 
 		vertexBuffer.Bind();
-		glVertexPointer(vertexBuffer.count_per_element, vertexBuffer.datatype, 0, 0);
+		glVertexPointer(vertexBuffer.count_per_element, vertexBuffer.datatype, 0, nullptr);
 		glEnableClientState(GL_VERTEX_ARRAY);
 		glDrawArrays(GL_POINTS, 0, numGLBufferGoodPoints);
 		glDisableClientState(GL_VERTEX_ARRAY);

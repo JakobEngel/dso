@@ -31,7 +31,7 @@
 
 #include "FullSystem/FullSystem.h"
  
-#include "stdio.h"
+#include <cstdio>
 #include "util/globalFuncs.h"
 #include <Eigen/LU>
 #include <algorithm>
@@ -63,7 +63,7 @@ PointFrameResidual::PointFrameResidual(PointHessian* point_, FrameHessian* host_
 	host(host_),
 	target(target_)
 {
-	efResidual=0;
+	efResidual=nullptr;
 	instanceCounter++;
 	resetOOB();
 	J = new RawResidualJacobian();
@@ -294,10 +294,11 @@ void PointFrameResidual::debugPlot()
 		else cT = Vec3b(255,255,255);
 	}
 
-	for(int i=0;i<patternNum;i++)
+	for(auto & i : projectedTo)
 	{
-		if((projectedTo[i][0] > 2 && projectedTo[i][1] > 2 && projectedTo[i][0] < wG[0]-3 && projectedTo[i][1] < hG[0]-3 ))
-			target->debugImage->setPixel1((float)projectedTo[i][0], (float)projectedTo[i][1],cT);
+		if((i[0] > 2 && i[1] > 2 && i[0] < wG[0]-3 && i[1] < hG[0]-3 )) {
+			target->debugImage->setPixel1((float)i[0], (float)i[1],cT);
+		}
 	}
 }
 

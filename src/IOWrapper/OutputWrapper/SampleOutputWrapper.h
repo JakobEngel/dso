@@ -23,7 +23,7 @@
 
 
 #pragma once
-#include "boost/thread.hpp"
+#include <thread>
 #include "util/MinimalImage.h"
 #include "IOWrapper/Output3DWrapper.h"
 
@@ -35,7 +35,7 @@
 namespace dso
 {
 
-class FrameHessian;
+struct FrameHessian;
 class CalibHessian;
 class FrameShell;
 

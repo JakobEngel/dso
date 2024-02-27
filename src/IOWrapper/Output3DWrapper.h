@@ -38,7 +38,7 @@ namespace cv {
 namespace dso
 {
 
-class FrameHessian;
+struct FrameHessian;
 class CalibHessian;
 class FrameShell;
 

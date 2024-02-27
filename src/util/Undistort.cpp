@@ -30,6 +30,7 @@
 
 #include <Eigen/Core>
 #include <iterator>
+#include <utility>
 #include "util/settings.h"
 #include "util/globalFuncs.h"
 #include "IOWrapper/ImageDisplay.h"
@@ -48,18 +49,18 @@ namespace dso
 
 
 PhotometricUndistorter::PhotometricUndistorter(
-		std::string file,
-		std::string noiseImage,
-		std::string vignetteImage,
+		const std::string& file,
+		const std::string&  /*noiseImage*/,
+		const std::string& vignetteImage,
 		int w_, int h_)
 {
 	valid=false;
-	vignetteMap=0;
-	vignetteMapInv=0;
+	vignetteMap=nullptr;
+	vignetteMapInv=nullptr;
 	w = w_;
 	h = h_;
 	output = new ImageAndExposure(w,h);
-	if(file=="" || vignetteImage=="")
+	if(file.empty() || vignetteImage.empty())
 	{
 		printf("NO PHOTOMETRIC Calibration!\n");
 	}
@@ -117,19 +118,19 @@ PhotometricUndistorter::PhotometricUndistorter(
 
 
 	printf("Reading Vignette Image from %s\n",vignetteImage.c_str());
-	MinimalImage<unsigned short>* vm16 = IOWrap::readImageBW_16U(vignetteImage.c_str());
-	MinimalImageB* vm8 = IOWrap::readImageBW_8U(vignetteImage.c_str());
+	MinimalImage<unsigned short>* vm16 = IOWrap::readImageBW_16U(vignetteImage);
+	MinimalImageB* vm8 = IOWrap::readImageBW_8U(vignetteImage);
 	vignetteMap = new float[w*h];
 	vignetteMapInv = new float[w*h];
 
-	if(vm16 != 0)
+	if(vm16 != nullptr)
 	{
 		if(vm16->w != w ||vm16->h != h)
 		{
 			printf("PhotometricUndistorter: Invalid vignette image size! got %d x %d, expected %d x %d\n",
 					vm16->w, vm16->h, w, h);
-			if(vm16!=0) delete vm16;
-			if(vm8!=0) delete vm8;
+			delete vm16;
+			delete vm8;
 			return;
 		}
 
@@ -146,8 +147,8 @@ PhotometricUndistorter::PhotometricUndistorter(
 		{
 			printf("PhotometricUndistorter: Invalid vignette image size! got %d x %d, expected %d x %d\n",
 					vm8->w, vm8->h, w, h);
-			if(vm16!=0) delete vm16;
-			if(vm8!=0) delete vm8;
+			delete vm16;
+			delete vm8;
 			return;
 		}
 
@@ -161,13 +162,13 @@ PhotometricUndistorter::PhotometricUndistorter(
 	else
 	{
 		printf("PhotometricUndistorter: Invalid vignette image\n");
-		if(vm16!=0) delete vm16;
-		if(vm8!=0) delete vm8;
+		delete vm16;
+		delete vm8;
 		return;
 	}
 
-	if(vm16!=0) delete vm16;
-	if(vm8!=0) delete vm8;
+	delete vm16;
+	delete vm8;
 
 
 	for(int i=0;i<w*h;i++)
@@ -179,8 +180,8 @@ PhotometricUndistorter::PhotometricUndistorter(
 }
 PhotometricUndistorter::~PhotometricUndistorter()
 {
-	if(vignetteMap != 0) delete[] vignetteMap;
-	if(vignetteMapInv != 0) delete[] vignetteMapInv;
+	delete[] vignetteMap;
+	delete[] vignetteMapInv;
 	delete output;
 }
 
@@ -259,11 +260,11 @@ template void PhotometricUndistorter::processFrame<unsigned short>(unsigned shor
 
 Undistort::~Undistort()
 {
-	if(remapX != 0) delete[] remapX;
-	if(remapY != 0) delete[] remapY;
+	delete[] remapX;
+	delete[] remapY;
 }
 
-Undistort* Undistort::getUndistorterForFile(std::string configFilename, std::string gammaFilename, std::string vignetteFilename)
+Undistort* Undistort::getUndistorterForFile(const std::string& configFilename, std::string gammaFilename, std::string vignetteFilename)
 {
 	printf("Reading Calibration from file %s",configFilename.c_str());
 
@@ -273,7 +274,7 @@ Undistort* Undistort::getUndistorterForFile(std::string configFilename, std::str
 		f.close();
 		printf(" ... not found. Cannot operate without calibration, shutting down.\n");
 		f.close();
-		return 0;
+		return nullptr;
 	}
 
 	printf(" ... found!\n");
@@ -292,7 +293,7 @@ Undistort* Undistort::getUndistorterForFile(std::string configFilename, std::str
 	{
         printf("found RadTan (OpenCV) camera model, building rectifier.\n");
         u = new UndistortRadTan(configFilename.c_str(), true);
-		if(!u->isValid()) {delete u; return 0; }
+		if(!u->isValid()) {delete u; return nullptr; }
     }
 
     // for backwards-compatibility: Use Pinhole / FoV model for 5 parameter.
@@ -303,13 +304,13 @@ Undistort* Undistort::getUndistorterForFile(std::string configFilename, std::str
 		{
 			printf("found PINHOLE camera model, building rectifier.\n");
             u = new UndistortPinhole(configFilename.c_str(), true);
-			if(!u->isValid()) {delete u; return 0; }
+			if(!u->isValid()) {delete u; return nullptr; }
 		}
 		else
 		{
 			printf("found ATAN camera model, building rectifier.\n");
             u = new UndistortFOV(configFilename.c_str(), true);
-			if(!u->isValid()) {delete u; return 0; }
+			if(!u->isValid()) {delete u; return nullptr; }
 		}
 	}
 
@@ -323,7 +324,7 @@ Undistort* Undistort::getUndistorterForFile(std::string configFilename, std::str
             &ic[4], &ic[5], &ic[6], &ic[7]) == 8)
     {
         u = new UndistortKB(configFilename.c_str(), false);
-        if(!u->isValid()) {delete u; return 0; }
+        if(!u->isValid()) {delete u; return nullptr; }
     }
 
 
@@ -332,7 +333,7 @@ Undistort* Undistort::getUndistorterForFile(std::string configFilename, std::str
             &ic[4], &ic[5], &ic[6], &ic[7]) == 8)
     {
         u = new UndistortRadTan(configFilename.c_str(), false);
-        if(!u->isValid()) {delete u; return 0; }
+        if(!u->isValid()) {delete u; return nullptr; }
     }
 
 
@@ -341,7 +342,7 @@ Undistort* Undistort::getUndistorterForFile(std::string configFilename, std::str
             &ic[4], &ic[5], &ic[6], &ic[7]) == 8)
     {
         u = new UndistortEquidistant(configFilename.c_str(), false);
-        if(!u->isValid()) {delete u; return 0; }
+        if(!u->isValid()) {delete u; return nullptr; }
     }
 
 
@@ -350,7 +351,7 @@ Undistort* Undistort::getUndistorterForFile(std::string configFilename, std::str
             &ic[4]) == 5)
     {
         u = new UndistortFOV(configFilename.c_str(), false);
-        if(!u->isValid()) {delete u; return 0; }
+        if(!u->isValid()) {delete u; return nullptr; }
     }
 
 
@@ -359,7 +360,7 @@ Undistort* Undistort::getUndistorterForFile(std::string configFilename, std::str
             &ic[4]) == 5)
     {
         u = new UndistortPinhole(configFilename.c_str(), false);
-        if(!u->isValid()) {delete u; return 0; }
+        if(!u->isValid()) {delete u; return nullptr; }
     }
 
 
@@ -370,16 +371,16 @@ Undistort* Undistort::getUndistorterForFile(std::string configFilename, std::str
     }
 
 	u->loadPhotometricCalibration(
-				gammaFilename,
+				std::move(gammaFilename),
 				"",
-				vignetteFilename);
+				std::move(vignetteFilename));
 
 	return u;
 }
 
 void Undistort::loadPhotometricCalibration(std::string file, std::string noiseImage, std::string vignetteImage)
 {
-	photometricUndist = new PhotometricUndistorter(file, noiseImage, vignetteImage,getOriginalSize()[0], getOriginalSize()[1]);
+	photometricUndist = new PhotometricUndistorter(std::move(file), std::move(noiseImage), std::move(vignetteImage),getOriginalSize()[0], getOriginalSize()[1]);
 }
 
 template<typename T>
@@ -392,7 +393,7 @@ ImageAndExposure* Undistort::undistort(const MinimalImage<T>* image_raw, float e
 	}
 
 	photometricUndist->processFrame<T>(image_raw->data, exposure, factor);
-	ImageAndExposure* result = new ImageAndExposure(w, h, timestamp);
+	auto* result = new ImageAndExposure(w, h, timestamp);
 	photometricUndist->output->copyMetaTo(*result);
 
 	if (!passthrough)
@@ -400,8 +401,8 @@ ImageAndExposure* Undistort::undistort(const MinimalImage<T>* image_raw, float e
 		float* out_data = result->image;
 		float* in_data = photometricUndist->output->image;
 
-		float* noiseMapX=0;
-		float* noiseMapY=0;
+		float* noiseMapX=nullptr;
+		float* noiseMapY=nullptr;
 		if(benchmark_varNoise>0)
 		{
 			int numnoise=(benchmark_noiseGridsize+8)*(benchmark_noiseGridsize+8);
@@ -713,13 +714,13 @@ void Undistort::makeOptimalK_full()
 	assert(false);
 }
 
-void Undistort::readFromFile(const char* configFileName, int nPars, std::string prefix)
+void Undistort::readFromFile(const char* configFileName, int nPars, const std::string& prefix)
 {
-	photometricUndist=0;
+	photometricUndist=nullptr;
 	valid = false;
 	passthrough=false;
-	remapX = 0;
-	remapY = 0;
+	remapX = nullptr;
+	remapY = nullptr;
 	
 	float outputCalibration[5];
 
@@ -947,7 +948,7 @@ void Undistort::readFromFile(const char* configFileName, int nPars, std::string 
 
 
 
-	printf("\nRectified Kamera Matrix:\n");
+	printf("\nRectified Camera Matrix:\n");
 	std::cout << K << "\n\n";
 
 }
@@ -963,8 +964,7 @@ UndistortFOV::UndistortFOV(const char* configFileName, bool noprefix)
         readFromFile(configFileName, 5, "FOV ");
 }
 UndistortFOV::~UndistortFOV()
-{
-}
+= default;
 
 void UndistortFOV::distortCoordinates(float* in_x, float* in_y, float* out_x, float* out_y, int n) const
 {
@@ -1019,8 +1019,7 @@ UndistortRadTan::UndistortRadTan(const char* configFileName, bool noprefix)
         readFromFile(configFileName, 8,"RadTan ");
 }
 UndistortRadTan::~UndistortRadTan()
-{
-}
+= default;
 
 void UndistortRadTan::distortCoordinates(float* in_x, float* in_y, float* out_x, float* out_y, int n) const
 {
@@ -1079,8 +1078,7 @@ UndistortEquidistant::UndistortEquidistant(const char* configFileName, bool nopr
         readFromFile(configFileName, 8,"EquiDistant ");
 }
 UndistortEquidistant::~UndistortEquidistant()
-{
-}
+= default;
 
 void UndistortEquidistant::distortCoordinates(float* in_x, float* in_y, float* out_x, float* out_y, int n) const
 {
@@ -1138,8 +1136,7 @@ UndistortKB::UndistortKB(const char* configFileName, bool noprefix)
         readFromFile(configFileName, 8,"KannalaBrandt ");
 }
 UndistortKB::~UndistortKB()
-{
-}
+= default;
 
 void UndistortKB::distortCoordinates(float* in_x, float* in_y, float* out_x, float* out_y, int n) const
 {
@@ -1203,8 +1200,7 @@ UndistortPinhole::UndistortPinhole(const char* configFileName, bool noprefix)
 
 }
 UndistortPinhole::~UndistortPinhole()
-{
-}
+= default;
 
 void UndistortPinhole::distortCoordinates(float* in_x, float* in_y, float* out_x, float* out_y, int n) const
 {

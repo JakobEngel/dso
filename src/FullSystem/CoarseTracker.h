@@ -90,7 +90,7 @@ public:
 private:
 
 
-	void makeCoarseDepthL0(std::vector<FrameHessian*> frameHessians);
+	void makeCoarseDepthL0(const std::vector<FrameHessian*>& frameHessians);
 	float* idepth[PYR_LEVELS];
 	float* weightSums[PYR_LEVELS];
 	float* weightSums_bak[PYR_LEVELS];
@@ -135,11 +135,11 @@ public:
 	~CoarseDistanceMap();
 
 	void makeDistanceMap(
-			std::vector<FrameHessian*> frameHessians,
+			const std::vector<FrameHessian*>& frameHessians,
 			FrameHessian* frame);
 
 	void makeInlierVotes(
-			std::vector<FrameHessian*> frameHessians);
+			const std::vector<FrameHessian*>& frameHessians);
 
 	void makeK( CalibHessian* HCalib);
 

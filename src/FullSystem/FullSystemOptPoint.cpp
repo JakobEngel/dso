@@ -31,7 +31,7 @@
 
 #include "FullSystem/FullSystem.h"
  
-#include "stdio.h"
+#include <cstdio>
 #include "util/globalFuncs.h"
 #include <Eigen/LU>
 #include <algorithm>
@@ -41,7 +41,7 @@
 #include <Eigen/SVD>
 #include <Eigen/Eigenvalues>
 #include "FullSystem/ImmaturePoint.h"
-#include "math.h"
+#include <cmath>
 
 namespace dso
 {
@@ -90,7 +90,7 @@ PointHessian* FullSystem::optimizeImmaturePoint(
 		if(print)
 			printf("OptPoint: Not well-constrained (%d res, H=%.1f). E=%f. SKIP!\n",
 				nres, lastHdd, lastEnergy);
-		return 0;
+		return nullptr;
 	}
 
 	if(print) printf("Activate point. %d residuals. H=%f. Initial Energy: %f. Initial Id=%f\n" ,
@@ -166,7 +166,7 @@ PointHessian* FullSystem::optimizeImmaturePoint(
 
 
 
-	PointHessian* p = new PointHessian(point, &Hcalib);
+	auto* p = new PointHessian(point, &Hcalib);
 	if(!std::isfinite(p->energyTH)) {delete p; return (PointHessian*)((long)(-1));}
 
 	p->lastResiduals[0].first = 0;
@@ -180,7 +180,7 @@ PointHessian* FullSystem::optimizeImmaturePoint(
 	for(int i=0;i<nres;i++)
 		if(residuals[i].state_state == ResState::IN)
 		{
-			PointFrameResidual* r = new PointFrameResidual(p, p->host, residuals[i].target);
+			auto* r = new PointFrameResidual(p, p->host, residuals[i].target);
 			r->state_NewEnergy = r->state_energy = 0;
 			r->state_NewState = ResState::OUTLIER;
 			r->setState(ResState::IN);

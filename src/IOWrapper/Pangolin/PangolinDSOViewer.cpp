@@ -21,7 +21,12 @@
 * along with DSO. If not, see <http://www.gnu.org/licenses/>.
 */
 
+#ifdef _WIN32
+#define NOMINMAX
+#include <windows.h>
+#endif
 
+#include <GL/glew.h>
 
 #include "PangolinDSOViewer.h"
 #include "KeyFrameDisplay.h"
@@ -39,7 +44,7 @@ namespace IOWrap
 
 
 
-PangolinDSOViewer::PangolinDSOViewer(int w, int h, bool startRunThread)
+PangolinDSOViewer::PangolinDSOViewer(int w, int h, bool startRunThread, const std::function<void()>& stoppedCallback)
 {
 	this->w = w;
 	this->h = h;
@@ -47,7 +52,7 @@ PangolinDSOViewer::PangolinDSOViewer(int w, int h, bool startRunThread)
 
 
 	{
-		boost::unique_lock<boost::mutex> lk(openImagesMutex);
+		std::unique_lock<std::mutex> lk(openImagesMutex);
 		internalVideoImg = new MinimalImageB3(w,h);
 		internalKFImg = new MinimalImageB3(w,h);
 		internalResImg = new MinimalImageB3(w,h);
@@ -66,9 +71,13 @@ PangolinDSOViewer::PangolinDSOViewer(int w, int h, bool startRunThread)
 	needReset = false;
 
 
-    if(startRunThread)
-        runThread = boost::thread(&PangolinDSOViewer::run, this);
-
+    if (startRunThread)
+    {
+        if (stoppedCallback)
+            runThread = std::thread([this, stoppedCallback] { run(); stoppedCallback(); });
+        else
+            runThread = std::thread(&PangolinDSOViewer::run, this);
+    }
 }
 
 
@@ -173,7 +182,7 @@ void PangolinDSOViewer::run()
 		{
 			// Activate efficiently by object
 			Visualization3D_display.Activate(Visualization3D_camera);
-			boost::unique_lock<boost::mutex> lk3d(model3DMutex);
+			std::unique_lock<std::mutex> lk3d(model3DMutex);
 			//pangolin::glDrawColouredCube();
 			int refreshed=0;
 			for(KeyFrameDisplay* fh : keyframes)
@@ -286,13 +295,19 @@ void PangolinDSOViewer::run()
 
 
 	    if(needReset) reset_internal();
+
+        if (setting_viewer_run_loop_sleep_for_ms > 0)
+        {
+            std::this_thread::sleep_for(std::chrono::milliseconds(setting_viewer_run_loop_sleep_for_ms));
+        }
 	}
 
 
 	printf("QUIT Pangolin thread!\n");
-	printf("I'll just kill the whole process.\nSo Long, and Thanks for All the Fish!\n");
+	//printf("I'll just kill the whole process.\nSo Long, and Thanks for All the Fish!\n");
 
-	exit(1);
+    pangolin::DestroyWindow("Main");
+	//exit(1);
 }
 
 
@@ -315,7 +330,8 @@ void PangolinDSOViewer::reset()
 void PangolinDSOViewer::reset_internal()
 {
 	model3DMutex.lock();
-	for(size_t i=0; i<keyframes.size();i++) delete keyframes[i];
+	for(auto & keyframe : keyframes) { delete keyframe;
+	}
 	keyframes.clear();
 	allFramePoses.clear();
 	keyframesByKFID.clear();
@@ -344,16 +360,17 @@ void PangolinDSOViewer::drawConstraints()
 
 		glColor3f(0,1,0);
 		glBegin(GL_LINES);
-		for(unsigned int i=0;i<connections.size();i++)
+		for(auto & connection : connections)
 		{
-			if(connections[i].to == 0 || connections[i].from==0) continue;
-			int nAct = connections[i].bwdAct + connections[i].fwdAct;
-			int nMarg = connections[i].bwdMarg + connections[i].fwdMarg;
+			if(connection.to == nullptr || connection.from==nullptr) { continue;
+}
+			int nAct = connection.bwdAct + connection.fwdAct;
+			int nMarg = connection.bwdMarg + connection.fwdMarg;
 			if(nAct==0 && nMarg>0  )
 			{
-				Sophus::Vector3f t = connections[i].from->camToWorld.translation().cast<float>();
+				Sophus::Vector3f t = connection.from->camToWorld.translation().cast<float>();
 				glVertex3f((GLfloat) t[0],(GLfloat) t[1], (GLfloat) t[2]);
-				t = connections[i].to->camToWorld.translation().cast<float>();
+				t = connection.to->camToWorld.translation().cast<float>();
 				glVertex3f((GLfloat) t[0],(GLfloat) t[1], (GLfloat) t[2]);
 			}
 		}
@@ -365,16 +382,17 @@ void PangolinDSOViewer::drawConstraints()
 		glLineWidth(3);
 		glColor3f(0,0,1);
 		glBegin(GL_LINES);
-		for(unsigned int i=0;i<connections.size();i++)
+		for(auto & connection : connections)
 		{
-			if(connections[i].to == 0 || connections[i].from==0) continue;
-			int nAct = connections[i].bwdAct + connections[i].fwdAct;
+			if(connection.to == nullptr || connection.from==nullptr) { continue;
+			}
+			int nAct = connection.bwdAct + connection.fwdAct;
 
 			if(nAct>0)
 			{
-				Sophus::Vector3f t = connections[i].from->camToWorld.translation().cast<float>();
+				Sophus::Vector3f t = connection.from->camToWorld.translation().cast<float>();
 				glVertex3f((GLfloat) t[0],(GLfloat) t[1], (GLfloat) t[2]);
-				t = connections[i].to->camToWorld.translation().cast<float>();
+				t = connection.to->camToWorld.translation().cast<float>();
 				glVertex3f((GLfloat) t[0],(GLfloat) t[1], (GLfloat) t[2]);
 			}
 		}
@@ -388,11 +406,11 @@ void PangolinDSOViewer::drawConstraints()
 		glLineWidth(3);
 
 		glBegin(GL_LINE_STRIP);
-		for(unsigned int i=0;i<keyframes.size();i++)
+		for(auto & keyframe : keyframes)
 		{
-			glVertex3f((float)keyframes[i]->camToWorld.translation()[0],
-					(float)keyframes[i]->camToWorld.translation()[1],
-					(float)keyframes[i]->camToWorld.translation()[2]);
+			glVertex3f((float)keyframe->camToWorld.translation()[0],
+					(float)keyframe->camToWorld.translation()[1],
+					(float)keyframe->camToWorld.translation()[2]);
 		}
 		glEnd();
 	}
@@ -404,11 +422,11 @@ void PangolinDSOViewer::drawConstraints()
 		glLineWidth(3);
 
 		glBegin(GL_LINE_STRIP);
-		for(unsigned int i=0;i<allFramePoses.size();i++)
+		for(auto & allFramePose : allFramePoses)
 		{
-			glVertex3f((float)allFramePoses[i][0],
-					(float)allFramePoses[i][1],
-					(float)allFramePoses[i][2]);
+			glVertex3f((float)allFramePose[0],
+					(float)allFramePose[1],
+					(float)allFramePose[2]);
 		}
 		glEnd();
 	}
@@ -442,8 +460,8 @@ void PangolinDSOViewer::publishGraph(const std::map<uint64_t, Eigen::Vector2i, s
 
 		if(host > target) continue;
 
-		connections[runningID].from = keyframesByKFID.count(host) == 0 ? 0 : keyframesByKFID[host];
-		connections[runningID].to = keyframesByKFID.count(target) == 0 ? 0 : keyframesByKFID[target];
+		connections[runningID].from = keyframesByKFID.count(host) == 0 ? nullptr : keyframesByKFID[host];
+		connections[runningID].to = keyframesByKFID.count(target) == 0 ? nullptr : keyframesByKFID[target];
 		connections[runningID].fwdAct = p.second[0];
 		connections[runningID].fwdMarg = p.second[1];
 		totalActFwd += p.second[0];
@@ -465,18 +483,18 @@ void PangolinDSOViewer::publishGraph(const std::map<uint64_t, Eigen::Vector2i, s
 }
 void PangolinDSOViewer::publishKeyframes(
 		std::vector<FrameHessian*> &frames,
-		bool final,
+		bool  /*final*/,
 		CalibHessian* HCalib)
 {
 	if(!setting_render_display3D) return;
     if(disableAllDisplay) return;
 
-	boost::unique_lock<boost::mutex> lk(model3DMutex);
+	std::unique_lock<std::mutex> lk(model3DMutex);
 	for(FrameHessian* fh : frames)
 	{
 		if(keyframesByKFID.find(fh->frameID) == keyframesByKFID.end())
 		{
-			KeyFrameDisplay* kfd = new KeyFrameDisplay();
+			auto* kfd = new KeyFrameDisplay();
 			keyframesByKFID[fh->frameID] = kfd;
 			keyframes.push_back(kfd);
 		}
@@ -489,10 +507,12 @@ void PangolinDSOViewer::publishCamPose(FrameShell* frame,
     if(!setting_render_display3D) return;
     if(disableAllDisplay) return;
 
-	boost::unique_lock<boost::mutex> lk(model3DMutex);
-	struct timeval time_now;
-	gettimeofday(&time_now, NULL);
-	lastNTrackingMs.push_back(((time_now.tv_sec-last_track.tv_sec)*1000.0f + (time_now.tv_usec-last_track.tv_usec)/1000.0f));
+	std::unique_lock<std::mutex> lk(model3DMutex);
+	//struct timeval time_now;
+	//gettimeofday(&time_now, NULL);
+    auto time_now = std::chrono::system_clock::now();
+    lastNTrackingMs.push_back(std::chrono::duration<double, std::milli>(time_now - last_track).count());
+        //((time_now.tv_sec-last_track.tv_sec)*1000.0f + (time_now.tv_usec-last_track.tv_usec)/1000.0f));
 	if(lastNTrackingMs.size() > 10) lastNTrackingMs.pop_front();
 	last_track = time_now;
 
@@ -508,7 +528,7 @@ void PangolinDSOViewer::pushLiveFrame(FrameHessian* image)
 	if(!setting_render_displayVideo) return;
     if(disableAllDisplay) return;
 
-	boost::unique_lock<boost::mutex> lk(openImagesMutex);
+	std::unique_lock<std::mutex> lk(openImagesMutex);
 
 	for(int i=0;i<w*h;i++)
 		internalVideoImg->data[i][0] =
@@ -529,11 +549,13 @@ void PangolinDSOViewer::pushDepthImage(MinimalImageB3* image)
     if(!setting_render_displayDepth) return;
     if(disableAllDisplay) return;
 
-	boost::unique_lock<boost::mutex> lk(openImagesMutex);
+	std::unique_lock<std::mutex> lk(openImagesMutex);
 
-	struct timeval time_now;
-	gettimeofday(&time_now, NULL);
-	lastNMappingMs.push_back(((time_now.tv_sec-last_map.tv_sec)*1000.0f + (time_now.tv_usec-last_map.tv_usec)/1000.0f));
+	//struct timeval time_now;
+	//gettimeofday(&time_now, NULL);
+    auto time_now = std::chrono::system_clock::now();
+    lastNMappingMs.push_back(std::chrono::duration<double, std::milli>(time_now - last_map).count());
+        //((time_now.tv_sec-last_map.tv_sec)*1000.0f + (time_now.tv_usec-last_map.tv_usec)/1000.0f));
 	if(lastNMappingMs.size() > 10) lastNMappingMs.pop_front();
 	last_map = time_now;
 

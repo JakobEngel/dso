@@ -37,6 +37,32 @@
 #include "FullSystem/PixelSelector2.h"
 #include "util/nanoflann.h"
 
+//#include "Eigen/src/Cholesky/LDLT.H"
+
+#include <Eigen/Cholesky>
+#include <Eigen/Core>
+#include <Eigen/Dense>
+#include <Eigen/Eigen>
+#include <Eigen/Eigenvalues>
+#include <Eigen/Geometry>
+#include <Eigen/Householder>
+#include <Eigen/IterativeLinearSolvers>
+#include <Eigen/Jacobi>
+#include <Eigen/LU>
+#include <Eigen/MetisSupport>
+#include <Eigen/OrderingMethods>
+#include <Eigen/QR>
+#include <Eigen/QtAlignedMalloc>
+#include <Eigen/Sparse>
+#include <Eigen/SparseCholesky>
+#include <Eigen/SparseCore>
+#include <Eigen/SparseLU>
+#include <Eigen/SparseQR>
+#include <Eigen/StdDeque>
+#include <Eigen/StdList>
+#include <Eigen/StdVector>
+#include <Eigen/SVD>
+
 
 #if !defined(__SSE3__) && !defined(__SSE2__) && !defined(__SSE1__)
 #include "SSE2NEON.h"
@@ -45,11 +71,11 @@
 namespace dso
 {
 
-CoarseInitializer::CoarseInitializer(int ww, int hh) : thisToNext_aff(0,0), thisToNext(SE3())
+CoarseInitializer::CoarseInitializer(int ww, int hh) : thisToNext_aff(0,0)
 {
 	for(int lvl=0; lvl<pyrLevelsUsed; lvl++)
 	{
-		points[lvl] = 0;
+		points[lvl] = nullptr;
 		numPoints[lvl] = 0;
 	}
 
@@ -70,7 +96,7 @@ CoarseInitializer::~CoarseInitializer()
 {
 	for(int lvl=0; lvl<pyrLevelsUsed; lvl++)
 	{
-		if(points[lvl] != 0) delete[] points[lvl];
+		delete[] points[lvl];
 	}
 
 	delete[] JbBuffer;
@@ -648,11 +674,13 @@ void CoarseInitializer::optReg(int lvl)
 
 		float idnn[10];
 		int nnn=0;
-		for(int j=0;j<10;j++)
+		for(int neighbour : point->neighbours)
 		{
-			if(point->neighbours[j] == -1) continue;
-			Pnt* other = ptsl+point->neighbours[j];
-			if(!other->isGood) continue;
+			if(neighbour == -1) { continue;
+			}
+			Pnt* other = ptsl+neighbour;
+			if(!other->isGood) { continue;
+			}
 			idnn[nnn] = other->iR;
 			nnn++;
 		}
@@ -787,7 +815,7 @@ void CoarseInitializer::setFirst(	CalibHessian* HCalib, FrameHessian* newFrameHe
 
 
 
-		if(points[lvl] != 0) delete[] points[lvl];
+		delete[] points[lvl];
 		points[lvl] = new Pnt[npts];
 
 		// set idepth map to initially 1 everywhere.
@@ -863,11 +891,13 @@ void CoarseInitializer::resetPoints(int lvl)
 
 		if(lvl==pyrLevelsUsed-1 && !pts[i].isGood)
 		{
-			float snd=0, sn=0;
-			for(int n = 0;n<10;n++)
+			float snd=0;
+			float sn=0;
+			for(int neighbour : pts[i].neighbours)
 			{
-				if(pts[i].neighbours[n] == -1 || !pts[pts[i].neighbours[n]].isGood) continue;
-				snd += pts[pts[i].neighbours[n]].iR;
+				if(neighbour == -1 || !pts[neighbour].isGood) { continue;
+				}
+				snd += pts[neighbour].iR;
 				sn += 1;
 			}
 
@@ -879,7 +909,7 @@ void CoarseInitializer::resetPoints(int lvl)
 		}
 	}
 }
-void CoarseInitializer::doStep(int lvl, float lambda, Vec8f inc)
+void CoarseInitializer::doStep(int lvl, float lambda, const Vec8f& inc)
 {
 
 	const float maxPixelStep = 0.25;
@@ -924,7 +954,7 @@ void CoarseInitializer::applyStep(int lvl)
 		pts[i].idepth = pts[i].idepth_new;
 		pts[i].lastHessian = pts[i].lastHessian_new;
 	}
-	std::swap<Vec10f*>(JbBuffer, JbBuffer_new);
+	std::swap(JbBuffer, JbBuffer_new);
 }
 
 void CoarseInitializer::makeK(CalibHessian* HCalib)
@@ -1009,8 +1039,9 @@ void CoarseInitializer::makeNN()
 				assert(ret_index[k]>=0 && ret_index[k] < npts);
 				myidx++;
 			}
-			for(int k=0;k<nn;k++)
-				pts[i].neighboursDist[k] *= 10/sumDF;
+			for(float & k : pts[i].neighboursDist) {
+				k *= 10/sumDF;
+			}
 
 
 			if(lvl < pyrLevelsUsed-1 )

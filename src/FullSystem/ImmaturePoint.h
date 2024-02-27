@@ -97,7 +97,7 @@ public:
 	float getdPixdd(
 			CalibHessian *  HCalib,
 			ImmaturePointTemporaryResidual* tmpRes,
-			float idepth);
+			float idepth) const;
 
 	float calcResidual(
 			CalibHessian *  HCalib, const float outlierTHSlack,

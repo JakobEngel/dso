@@ -257,7 +257,7 @@ struct FrameHessian
 	};
 
 
-    void makeImages(float* color, CalibHessian* HCalib);
+    void makeImages(const float* color, CalibHessian* HCalib);
 
 	inline Vec10 getPrior()
 	{
@@ -469,7 +469,7 @@ struct PointHessian
 		int visInToMarg = 0;
 		for(PointFrameResidual* r : residuals)
 		{
-			if(r->state_state != ResState::IN) continue;
+			if(r->state_state != IN) continue;
 			for(FrameHessian* k : toMarg)
 				if(r->target == k) visInToMarg++;
 		}

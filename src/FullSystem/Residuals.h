@@ -34,10 +34,12 @@
 #include "util/globalFuncs.h"
 #include "OptimizationBackend/RawResidualJacobian.h"
 
+#undef IN
+
 namespace dso
 {
 class PointHessian;
-class FrameHessian;
+struct FrameHessian;
 class CalibHessian;
 
 class EFResidual;
@@ -81,7 +83,7 @@ public:
 
 
 	Eigen::Vector2f projectedTo[MAX_RES_PER_POINT];
-	Vec3f centerProjectedTo;
+	dso::Vec3f centerProjectedTo;
 
 	~PointFrameResidual();
 	PointFrameResidual();
@@ -92,15 +94,15 @@ public:
 	void resetOOB()
 	{
 		state_NewEnergy = state_energy = 0;
-		state_NewState = ResState::OUTLIER;
+		state_NewState = OUTLIER;
 
-		setState(ResState::IN);
+		setState(IN);
 	};
 	void applyRes( bool copyJacobians);
 
 	void debugPlot();
 
-	void printRows(std::vector<VecX> &v, VecX &r, int nFrames, int nPoints, int M, int res);
+	void printRows(std::vector<dso::VecX> &v, dso::VecX &r, int nFrames, int nPoints, int M, int res);
 };
 }
 

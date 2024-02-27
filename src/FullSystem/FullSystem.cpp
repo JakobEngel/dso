@@ -31,14 +31,16 @@
 
 #include "FullSystem/FullSystem.h"
  
-#include "stdio.h"
+#include <cstdio>
 #include "util/globalFuncs.h"
-#include <Eigen/LU>
 #include <algorithm>
 #include "IOWrapper/ImageDisplay.h"
 #include "util/globalCalib.h"
+
+#include <Eigen/LU>
 #include <Eigen/SVD>
 #include <Eigen/Eigenvalues>
+
 #include "FullSystem/PixelSelector.h"
 #include "FullSystem/PixelSelector2.h"
 #include "FullSystem/ResidualProjections.h"
@@ -55,6 +57,7 @@
 #include "util/ImageAndExposure.h"
 
 #include <cmath>
+#include <iomanip>
 
 namespace dso
 {
@@ -116,14 +119,14 @@ FullSystem::FullSystem()
 	}
 	else
 	{
-		nullspacesLog=0;
-		variancesLog=0;
-		DiagonalLog=0;
-		eigenALog=0;
-		eigenPLog=0;
-		eigenAllLog=0;
-		numsLog=0;
-		calibLog=0;
+		nullspacesLog=nullptr;
+		variancesLog=nullptr;
+		DiagonalLog=nullptr;
+		eigenALog=nullptr;
+		eigenPLog=nullptr;
+		eigenAllLog=nullptr;
+		numsLog=nullptr;
+		calibLog=nullptr;
 	}
 
 	assert(retstat!=293847);
@@ -164,7 +167,7 @@ FullSystem::FullSystem()
 
 	linearizeOperation=true;
 	runMapping=true;
-	mappingThread = boost::thread(&FullSystem::mappingLoop, this);
+	mappingThread = std::thread(&FullSystem::mappingLoop, this);
 	lastRefStopID=0;
 
 
@@ -242,10 +245,10 @@ void FullSystem::setGammaFunction(float* BInv)
 
 
 
-void FullSystem::printResult(std::string file)
+void FullSystem::printResult(const std::string& file)
 {
-	boost::unique_lock<boost::mutex> lock(trackMutex);
-	boost::unique_lock<boost::mutex> crlock(shellPoseMutex);
+	std::unique_lock<std::mutex> lock(trackMutex);
+	std::unique_lock<std::mutex> crlock(shellPoseMutex);
 
 	std::ofstream myfile;
 	myfile.open (file.c_str());
@@ -284,16 +287,17 @@ Vec4 FullSystem::trackNewCoarse(FrameHessian* fh)
 	AffLight aff_last_2_l = AffLight(0,0);
 
 	std::vector<SE3,Eigen::aligned_allocator<SE3>> lastF_2_fh_tries;
-	if(allFrameHistory.size() == 2)
-		for(unsigned int i=0;i<lastF_2_fh_tries.size();i++) lastF_2_fh_tries.push_back(SE3());
-	else
+	if(allFrameHistory.size() == 2) {
+		for(unsigned int i=0;i<lastF_2_fh_tries.size();i++) { lastF_2_fh_tries.emplace_back();
+	        }
+	} else
 	{
 		FrameShell* slast = allFrameHistory[allFrameHistory.size()-2];
 		FrameShell* sprelast = allFrameHistory[allFrameHistory.size()-3];
 		SE3 slast_2_sprelast;
 		SE3 lastF_2_slast;
 		{	// lock on global pose consistency!
-			boost::unique_lock<boost::mutex> crlock(shellPoseMutex);
+			std::unique_lock<std::mutex> crlock(shellPoseMutex);
 			slast_2_sprelast = sprelast->camToWorld.inverse() * slast->camToWorld;
 			lastF_2_slast = slast->camToWorld.inverse() * lastF->shell->camToWorld;
 			aff_last_2_l = slast->aff_g2l;
@@ -306,7 +310,7 @@ Vec4 FullSystem::trackNewCoarse(FrameHessian* fh)
 		lastF_2_fh_tries.push_back(fh_2_slast.inverse() * fh_2_slast.inverse() * lastF_2_slast);	// assume double motion (frame skipped)
 		lastF_2_fh_tries.push_back(SE3::exp(fh_2_slast.log()*0.5).inverse() * lastF_2_slast); // assume half motion.
 		lastF_2_fh_tries.push_back(lastF_2_slast); // assume zero motion.
-		lastF_2_fh_tries.push_back(SE3()); // assume zero motion FROM KF.
+		lastF_2_fh_tries.emplace_back(); // assume zero motion FROM KF.
 
 
 		// just try a TON of different initializations (all rotations). In the end,
@@ -314,38 +318,40 @@ Vec4 FullSystem::trackNewCoarse(FrameHessian* fh)
 		// also, if tracking rails here we loose, so we really, really want to avoid that.
 		for(float rotDelta=0.02; rotDelta < 0.05; rotDelta++)
 		{
-			lastF_2_fh_tries.push_back(fh_2_slast.inverse() * lastF_2_slast * SE3(Sophus::Quaterniond(1,rotDelta,0,0), Vec3(0,0,0)));			// assume constant motion.
-			lastF_2_fh_tries.push_back(fh_2_slast.inverse() * lastF_2_slast * SE3(Sophus::Quaterniond(1,0,rotDelta,0), Vec3(0,0,0)));			// assume constant motion.
-			lastF_2_fh_tries.push_back(fh_2_slast.inverse() * lastF_2_slast * SE3(Sophus::Quaterniond(1,0,0,rotDelta), Vec3(0,0,0)));			// assume constant motion.
-			lastF_2_fh_tries.push_back(fh_2_slast.inverse() * lastF_2_slast * SE3(Sophus::Quaterniond(1,-rotDelta,0,0), Vec3(0,0,0)));			// assume constant motion.
-			lastF_2_fh_tries.push_back(fh_2_slast.inverse() * lastF_2_slast * SE3(Sophus::Quaterniond(1,0,-rotDelta,0), Vec3(0,0,0)));			// assume constant motion.
-			lastF_2_fh_tries.push_back(fh_2_slast.inverse() * lastF_2_slast * SE3(Sophus::Quaterniond(1,0,0,-rotDelta), Vec3(0,0,0)));			// assume constant motion.
-			lastF_2_fh_tries.push_back(fh_2_slast.inverse() * lastF_2_slast * SE3(Sophus::Quaterniond(1,rotDelta,rotDelta,0), Vec3(0,0,0)));	// assume constant motion.
-			lastF_2_fh_tries.push_back(fh_2_slast.inverse() * lastF_2_slast * SE3(Sophus::Quaterniond(1,0,rotDelta,rotDelta), Vec3(0,0,0)));	// assume constant motion.
-			lastF_2_fh_tries.push_back(fh_2_slast.inverse() * lastF_2_slast * SE3(Sophus::Quaterniond(1,rotDelta,0,rotDelta), Vec3(0,0,0)));	// assume constant motion.
-			lastF_2_fh_tries.push_back(fh_2_slast.inverse() * lastF_2_slast * SE3(Sophus::Quaterniond(1,-rotDelta,rotDelta,0), Vec3(0,0,0)));	// assume constant motion.
-			lastF_2_fh_tries.push_back(fh_2_slast.inverse() * lastF_2_slast * SE3(Sophus::Quaterniond(1,0,-rotDelta,rotDelta), Vec3(0,0,0)));	// assume constant motion.
-			lastF_2_fh_tries.push_back(fh_2_slast.inverse() * lastF_2_slast * SE3(Sophus::Quaterniond(1,-rotDelta,0,rotDelta), Vec3(0,0,0)));	// assume constant motion.
-			lastF_2_fh_tries.push_back(fh_2_slast.inverse() * lastF_2_slast * SE3(Sophus::Quaterniond(1,rotDelta,-rotDelta,0), Vec3(0,0,0)));	// assume constant motion.
-			lastF_2_fh_tries.push_back(fh_2_slast.inverse() * lastF_2_slast * SE3(Sophus::Quaterniond(1,0,rotDelta,-rotDelta), Vec3(0,0,0)));	// assume constant motion.
-			lastF_2_fh_tries.push_back(fh_2_slast.inverse() * lastF_2_slast * SE3(Sophus::Quaterniond(1,rotDelta,0,-rotDelta), Vec3(0,0,0)));	// assume constant motion.
-			lastF_2_fh_tries.push_back(fh_2_slast.inverse() * lastF_2_slast * SE3(Sophus::Quaterniond(1,-rotDelta,-rotDelta,0), Vec3(0,0,0)));	// assume constant motion.
-			lastF_2_fh_tries.push_back(fh_2_slast.inverse() * lastF_2_slast * SE3(Sophus::Quaterniond(1,0,-rotDelta,-rotDelta), Vec3(0,0,0)));	// assume constant motion.
-			lastF_2_fh_tries.push_back(fh_2_slast.inverse() * lastF_2_slast * SE3(Sophus::Quaterniond(1,-rotDelta,0,-rotDelta), Vec3(0,0,0)));	// assume constant motion.
-			lastF_2_fh_tries.push_back(fh_2_slast.inverse() * lastF_2_slast * SE3(Sophus::Quaterniond(1,-rotDelta,-rotDelta,-rotDelta), Vec3(0,0,0)));	// assume constant motion.
-			lastF_2_fh_tries.push_back(fh_2_slast.inverse() * lastF_2_slast * SE3(Sophus::Quaterniond(1,-rotDelta,-rotDelta,rotDelta), Vec3(0,0,0)));	// assume constant motion.
-			lastF_2_fh_tries.push_back(fh_2_slast.inverse() * lastF_2_slast * SE3(Sophus::Quaterniond(1,-rotDelta,rotDelta,-rotDelta), Vec3(0,0,0)));	// assume constant motion.
-			lastF_2_fh_tries.push_back(fh_2_slast.inverse() * lastF_2_slast * SE3(Sophus::Quaterniond(1,-rotDelta,rotDelta,rotDelta), Vec3(0,0,0)));	// assume constant motion.
-			lastF_2_fh_tries.push_back(fh_2_slast.inverse() * lastF_2_slast * SE3(Sophus::Quaterniond(1,rotDelta,-rotDelta,-rotDelta), Vec3(0,0,0)));	// assume constant motion.
-			lastF_2_fh_tries.push_back(fh_2_slast.inverse() * lastF_2_slast * SE3(Sophus::Quaterniond(1,rotDelta,-rotDelta,rotDelta), Vec3(0,0,0)));	// assume constant motion.
-			lastF_2_fh_tries.push_back(fh_2_slast.inverse() * lastF_2_slast * SE3(Sophus::Quaterniond(1,rotDelta,rotDelta,-rotDelta), Vec3(0,0,0)));	// assume constant motion.
-			lastF_2_fh_tries.push_back(fh_2_slast.inverse() * lastF_2_slast * SE3(Sophus::Quaterniond(1,rotDelta,rotDelta,rotDelta), Vec3(0,0,0)));	// assume constant motion.
+            typedef Eigen::Quaternion<double> Quaterniond;
+
+			lastF_2_fh_tries.push_back(fh_2_slast.inverse() * lastF_2_slast * SE3(Quaterniond(1,rotDelta,0,0), Vec3(0,0,0)));			// assume constant motion.
+			lastF_2_fh_tries.push_back(fh_2_slast.inverse() * lastF_2_slast * SE3(Quaterniond(1,0,rotDelta,0), Vec3(0,0,0)));			// assume constant motion.
+			lastF_2_fh_tries.push_back(fh_2_slast.inverse() * lastF_2_slast * SE3(Quaterniond(1,0,0,rotDelta), Vec3(0,0,0)));			// assume constant motion.
+			lastF_2_fh_tries.push_back(fh_2_slast.inverse() * lastF_2_slast * SE3(Quaterniond(1,-rotDelta,0,0), Vec3(0,0,0)));			// assume constant motion.
+			lastF_2_fh_tries.push_back(fh_2_slast.inverse() * lastF_2_slast * SE3(Quaterniond(1,0,-rotDelta,0), Vec3(0,0,0)));			// assume constant motion.
+			lastF_2_fh_tries.push_back(fh_2_slast.inverse() * lastF_2_slast * SE3(Quaterniond(1,0,0,-rotDelta), Vec3(0,0,0)));			// assume constant motion.
+			lastF_2_fh_tries.push_back(fh_2_slast.inverse() * lastF_2_slast * SE3(Quaterniond(1,rotDelta,rotDelta,0), Vec3(0,0,0)));	// assume constant motion.
+			lastF_2_fh_tries.push_back(fh_2_slast.inverse() * lastF_2_slast * SE3(Quaterniond(1,0,rotDelta,rotDelta), Vec3(0,0,0)));	// assume constant motion.
+			lastF_2_fh_tries.push_back(fh_2_slast.inverse() * lastF_2_slast * SE3(Quaterniond(1,rotDelta,0,rotDelta), Vec3(0,0,0)));	// assume constant motion.
+			lastF_2_fh_tries.push_back(fh_2_slast.inverse() * lastF_2_slast * SE3(Quaterniond(1,-rotDelta,rotDelta,0), Vec3(0,0,0)));	// assume constant motion.
+			lastF_2_fh_tries.push_back(fh_2_slast.inverse() * lastF_2_slast * SE3(Quaterniond(1,0,-rotDelta,rotDelta), Vec3(0,0,0)));	// assume constant motion.
+			lastF_2_fh_tries.push_back(fh_2_slast.inverse() * lastF_2_slast * SE3(Quaterniond(1,-rotDelta,0,rotDelta), Vec3(0,0,0)));	// assume constant motion.
+			lastF_2_fh_tries.push_back(fh_2_slast.inverse() * lastF_2_slast * SE3(Quaterniond(1,rotDelta,-rotDelta,0), Vec3(0,0,0)));	// assume constant motion.
+			lastF_2_fh_tries.push_back(fh_2_slast.inverse() * lastF_2_slast * SE3(Quaterniond(1,0,rotDelta,-rotDelta), Vec3(0,0,0)));	// assume constant motion.
+			lastF_2_fh_tries.push_back(fh_2_slast.inverse() * lastF_2_slast * SE3(Quaterniond(1,rotDelta,0,-rotDelta), Vec3(0,0,0)));	// assume constant motion.
+			lastF_2_fh_tries.push_back(fh_2_slast.inverse() * lastF_2_slast * SE3(Quaterniond(1,-rotDelta,-rotDelta,0), Vec3(0,0,0)));	// assume constant motion.
+			lastF_2_fh_tries.push_back(fh_2_slast.inverse() * lastF_2_slast * SE3(Quaterniond(1,0,-rotDelta,-rotDelta), Vec3(0,0,0)));	// assume constant motion.
+			lastF_2_fh_tries.push_back(fh_2_slast.inverse() * lastF_2_slast * SE3(Quaterniond(1,-rotDelta,0,-rotDelta), Vec3(0,0,0)));	// assume constant motion.
+			lastF_2_fh_tries.push_back(fh_2_slast.inverse() * lastF_2_slast * SE3(Quaterniond(1,-rotDelta,-rotDelta,-rotDelta), Vec3(0,0,0)));	// assume constant motion.
+			lastF_2_fh_tries.push_back(fh_2_slast.inverse() * lastF_2_slast * SE3(Quaterniond(1,-rotDelta,-rotDelta,rotDelta), Vec3(0,0,0)));	// assume constant motion.
+			lastF_2_fh_tries.push_back(fh_2_slast.inverse() * lastF_2_slast * SE3(Quaterniond(1,-rotDelta,rotDelta,-rotDelta), Vec3(0,0,0)));	// assume constant motion.
+			lastF_2_fh_tries.push_back(fh_2_slast.inverse() * lastF_2_slast * SE3(Quaterniond(1,-rotDelta,rotDelta,rotDelta), Vec3(0,0,0)));	// assume constant motion.
+			lastF_2_fh_tries.push_back(fh_2_slast.inverse() * lastF_2_slast * SE3(Quaterniond(1,rotDelta,-rotDelta,-rotDelta), Vec3(0,0,0)));	// assume constant motion.
+			lastF_2_fh_tries.push_back(fh_2_slast.inverse() * lastF_2_slast * SE3(Quaterniond(1,rotDelta,-rotDelta,rotDelta), Vec3(0,0,0)));	// assume constant motion.
+			lastF_2_fh_tries.push_back(fh_2_slast.inverse() * lastF_2_slast * SE3(Quaterniond(1,rotDelta,rotDelta,-rotDelta), Vec3(0,0,0)));	// assume constant motion.
+			lastF_2_fh_tries.push_back(fh_2_slast.inverse() * lastF_2_slast * SE3(Quaterniond(1,rotDelta,rotDelta,rotDelta), Vec3(0,0,0)));	// assume constant motion.
 		}
 
 		if(!slast->poseValid || !sprelast->poseValid || !lastF->shell->poseValid)
 		{
 			lastF_2_fh_tries.clear();
-			lastF_2_fh_tries.push_back(SE3());
+			lastF_2_fh_tries.emplace_back();
 		}
 	}
 
@@ -462,7 +468,7 @@ Vec4 FullSystem::trackNewCoarse(FrameHessian* fh)
 
 void FullSystem::traceNewCoarse(FrameHessian* fh)
 {
-	boost::unique_lock<boost::mutex> lock(mapMutex);
+	std::unique_lock<std::mutex> lock(mapMutex);
 
 	int trace_total=0, trace_good=0, trace_oob=0, trace_out=0, trace_skip=0, trace_badcondition=0, trace_uninitialized=0;
 
@@ -510,9 +516,9 @@ void FullSystem::traceNewCoarse(FrameHessian* fh)
 void FullSystem::activatePointsMT_Reductor(
 		std::vector<PointHessian*>* optimized,
 		std::vector<ImmaturePoint*>* toOptimize,
-		int min, int max, Vec10* stats, int tid)
+		int min, int max, Vec10*  /*stats*/, int  /*tid*/)
 {
-	ImmaturePointTemporaryResidual* tr = new ImmaturePointTemporaryResidual[frameHessians.size()];
+	auto* tr = new ImmaturePointTemporaryResidual[frameHessians.size()];
 	for(int k=min;k<max;k++)
 	{
 		(*optimized)[k] = optimizeImmaturePoint((*toOptimize)[k],1,tr);
@@ -642,8 +648,10 @@ void FullSystem::activatePointsMT()
 
 	std::vector<PointHessian*> optimized; optimized.resize(toOptimize.size());
 
+    using namespace std::placeholders;
+
 	if(multiThreading)
-		treadReduce.reduce(boost::bind(&FullSystem::activatePointsMT_Reductor, this, &optimized, &toOptimize, _1, _2, _3, _4), 0, toOptimize.size(), 50);
+		treadReduce.reduce(std::bind(&FullSystem::activatePointsMT_Reductor, this, &optimized, &toOptimize, _1, _2, _3, _4), 0, toOptimize.size(), 50);
 
 	else
 		activatePointsMT_Reductor(&optimized, &toOptimize, 0, toOptimize.size(), 0, 0);
@@ -654,7 +662,7 @@ void FullSystem::activatePointsMT()
 		PointHessian* newpoint = optimized[k];
 		ImmaturePoint* ph = toOptimize[k];
 
-		if(newpoint != 0 && newpoint != (PointHessian*)((long)(-1)))
+		if(newpoint != nullptr && newpoint != (PointHessian*)((long)(-1)))
 		{
 			newpoint->host->immaturePoints[ph->idxInImmaturePoints]=0;
 			newpoint->host->pointHessians.push_back(newpoint);
@@ -666,8 +674,8 @@ void FullSystem::activatePointsMT()
 		}
 		else if(newpoint == (PointHessian*)((long)(-1)) || ph->lastTraceStatus==IPS_OOB)
 		{
-			delete ph;
-			ph->host->immaturePoints[ph->idxInImmaturePoints]=0;
+            ph->host->immaturePoints[ph->idxInImmaturePoints] = 0; // ?
+            delete ph;
 		}
 		else
 		{
@@ -714,8 +722,10 @@ void FullSystem::flagPointsForRemoval()
 		for(int i=((int)frameHessians.size())-1;i>=0 && i >= ((int)frameHessians.size());i--)
 			if(!frameHessians[i]->flaggedForMarginalization) fhsToKeepPoints.push_back(frameHessians[i]);
 
-		for(int i=0; i< (int)frameHessians.size();i++)
-			if(frameHessians[i]->flaggedForMarginalization) fhsToMargPoints.push_back(frameHessians[i]);
+		for(auto & frameHessian : frameHessians) {
+			if(frameHessian->flaggedForMarginalization) { fhsToMargPoints.push_back(frameHessian);
+}
+}
 	}
 
 
@@ -731,7 +741,7 @@ void FullSystem::flagPointsForRemoval()
 			PointHessian* ph = host->pointHessians[i];
 			if(ph==0) continue;
 
-			if(ph->idepth_scaled < 0 || ph->residuals.size()==0)
+			if(ph->idepth_scaled < 0 || ph->residuals.empty())
 			{
 				host->pointHessiansOut.push_back(ph);
 				ph->efPoint->stateFlag = EFPointStatus::PS_DROP;
@@ -803,12 +813,12 @@ void FullSystem::addActiveFrame( ImageAndExposure* image, int id )
 {
 
     if(isLost) return;
-	boost::unique_lock<boost::mutex> lock(trackMutex);
+	std::unique_lock<std::mutex> lock(trackMutex);
 
 
 	// =========================== add into allFrameHistory =========================
-	FrameHessian* fh = new FrameHessian();
-	FrameShell* shell = new FrameShell();
+	auto* fh = new FrameHessian();
+	auto* shell = new FrameShell();
 	shell->camToWorld = SE3(); 		// no lock required, as fh is not used anywhere yet.
 	shell->aff_g2l = AffLight(0,0);
     shell->marginalizedAt = shell->id = allFrameHistory.size();
@@ -848,59 +858,57 @@ void FullSystem::addActiveFrame( ImageAndExposure* image, int id )
 		}
 		return;
 	}
-	else	// do front-end operation.
+	// do front-end operation.
+	// =========================== SWAP tracking reference?. =========================
+	if(coarseTracker_forNewKF->refFrameID > coarseTracker->refFrameID)
 	{
-		// =========================== SWAP tracking reference?. =========================
-		if(coarseTracker_forNewKF->refFrameID > coarseTracker->refFrameID)
-		{
-			boost::unique_lock<boost::mutex> crlock(coarseTrackerSwapMutex);
-			CoarseTracker* tmp = coarseTracker; coarseTracker=coarseTracker_forNewKF; coarseTracker_forNewKF=tmp;
-		}
-
-
-		Vec4 tres = trackNewCoarse(fh);
-		if(!std::isfinite((double)tres[0]) || !std::isfinite((double)tres[1]) || !std::isfinite((double)tres[2]) || !std::isfinite((double)tres[3]))
-        {
-            printf("Initial Tracking failed: LOST!\n");
-			isLost=true;
-            return;
-        }
-
-		bool needToMakeKF = false;
-		if(setting_keyframesPerSecond > 0)
-		{
-			needToMakeKF = allFrameHistory.size()== 1 ||
-					(fh->shell->timestamp - allKeyFramesHistory.back()->timestamp) > 0.95f/setting_keyframesPerSecond;
-		}
-		else
-		{
-			Vec2 refToFh=AffLight::fromToVecExposure(coarseTracker->lastRef->ab_exposure, fh->ab_exposure,
-					coarseTracker->lastRef_aff_g2l, fh->shell->aff_g2l);
-
-			// BRIGHTNESS CHECK
-			needToMakeKF = allFrameHistory.size()== 1 ||
-					setting_kfGlobalWeight*setting_maxShiftWeightT *  sqrtf((double)tres[1]) / (wG[0]+hG[0]) +
-					setting_kfGlobalWeight*setting_maxShiftWeightR *  sqrtf((double)tres[2]) / (wG[0]+hG[0]) +
-					setting_kfGlobalWeight*setting_maxShiftWeightRT * sqrtf((double)tres[3]) / (wG[0]+hG[0]) +
-					setting_kfGlobalWeight*setting_maxAffineWeight * fabs(logf((float)refToFh[0])) > 1 ||
-					2*coarseTracker->firstCoarseRMSE < tres[0];
-
-		}
-
-
-
-
-        for(IOWrap::Output3DWrapper* ow : outputWrapper)
-            ow->publishCamPose(fh->shell, &Hcalib);
-
-
-
-
-		lock.unlock();
-		deliverTrackedFrame(fh, needToMakeKF);
-		return;
+		std::unique_lock<std::mutex> crlock(coarseTrackerSwapMutex);
+		CoarseTracker* tmp = coarseTracker; coarseTracker=coarseTracker_forNewKF; coarseTracker_forNewKF=tmp;
 	}
+
+
+	Vec4 tres = trackNewCoarse(fh);
+	if(!std::isfinite((double)tres[0]) || !std::isfinite((double)tres[1]) || !std::isfinite((double)tres[2]) || !std::isfinite((double)tres[3]))
+    {
+        printf("Initial Tracking failed: LOST!\n");
+		isLost=true;
+        return;
+    }
+
+	bool needToMakeKF = false;
+	if(setting_keyframesPerSecond > 0)
+	{
+		needToMakeKF = allFrameHistory.size()== 1 ||
+				(fh->shell->timestamp - allKeyFramesHistory.back()->timestamp) > 0.95f/setting_keyframesPerSecond;
+	}
+	else
+	{
+		Vec2 refToFh=AffLight::fromToVecExposure(coarseTracker->lastRef->ab_exposure, fh->ab_exposure,
+				coarseTracker->lastRef_aff_g2l, fh->shell->aff_g2l);
+
+		// BRIGHTNESS CHECK
+		needToMakeKF = allFrameHistory.size()== 1 ||
+				setting_kfGlobalWeight*setting_maxShiftWeightT *  sqrtf((double)tres[1]) / (wG[0]+hG[0]) +
+				setting_kfGlobalWeight*setting_maxShiftWeightR *  sqrtf((double)tres[2]) / (wG[0]+hG[0]) +
+				setting_kfGlobalWeight*setting_maxShiftWeightRT * sqrtf((double)tres[3]) / (wG[0]+hG[0]) +
+				setting_kfGlobalWeight*setting_maxAffineWeight * fabs(logf((float)refToFh[0])) > 1 ||
+				2*coarseTracker->firstCoarseRMSE < tres[0];
+
+	}
+
+
+
+
+    for(IOWrap::Output3DWrapper* ow : outputWrapper)
+        ow->publishCamPose(fh->shell, &Hcalib);
+
+
+
+
+	lock.unlock();
+	deliverTrackedFrame(fh, needToMakeKF);
 }
+
 void FullSystem::deliverTrackedFrame(FrameHessian* fh, bool needKF)
 {
 
@@ -928,7 +936,7 @@ void FullSystem::deliverTrackedFrame(FrameHessian* fh, bool needKF)
 	}
 	else
 	{
-		boost::unique_lock<boost::mutex> lock(trackMapSyncMutex);
+		std::unique_lock<std::mutex> lock(trackMapSyncMutex);
 		unmappedTrackedFrames.push_back(fh);
 		if(needKF) needNewKFAfter=fh->shell->trackingRef->id;
 		trackedFrameSignal.notify_all();
@@ -944,11 +952,11 @@ void FullSystem::deliverTrackedFrame(FrameHessian* fh, bool needKF)
 
 void FullSystem::mappingLoop()
 {
-	boost::unique_lock<boost::mutex> lock(trackMapSyncMutex);
+	std::unique_lock<std::mutex> lock(trackMapSyncMutex);
 
 	while(runMapping)
 	{
-		while(unmappedTrackedFrames.size()==0)
+		while(unmappedTrackedFrames.empty())
 		{
 			trackedFrameSignal.wait(lock);
 			if(!runMapping) return;
@@ -972,18 +980,18 @@ void FullSystem::mappingLoop()
 			needToKetchupMapping=true;
 
 
-		if(unmappedTrackedFrames.size() > 0) // if there are other frames to tracke, do that first.
+		if(!unmappedTrackedFrames.empty()) // if there are other frames to tracke, do that first.
 		{
 			lock.unlock();
 			makeNonKeyFrame(fh);
 			lock.lock();
 
-			if(needToKetchupMapping && unmappedTrackedFrames.size() > 0)
+			if(needToKetchupMapping && !unmappedTrackedFrames.empty())
 			{
 				FrameHessian* fh = unmappedTrackedFrames.front();
 				unmappedTrackedFrames.pop_front();
 				{
-					boost::unique_lock<boost::mutex> crlock(shellPoseMutex);
+					std::unique_lock<std::mutex> crlock(shellPoseMutex);
 					assert(fh->shell->trackingRef != 0);
 					fh->shell->camToWorld = fh->shell->trackingRef->camToWorld * fh->shell->camToTrackingRef;
 					fh->setEvalPT_scaled(fh->shell->camToWorld.inverse(),fh->shell->aff_g2l);
@@ -1015,7 +1023,7 @@ void FullSystem::mappingLoop()
 
 void FullSystem::blockUntilMappingIsFinished()
 {
-	boost::unique_lock<boost::mutex> lock(trackMapSyncMutex);
+	std::unique_lock<std::mutex> lock(trackMapSyncMutex);
 	runMapping = false;
 	trackedFrameSignal.notify_all();
 	lock.unlock();
@@ -1028,7 +1036,7 @@ void FullSystem::makeNonKeyFrame( FrameHessian* fh)
 {
 	// needs to be set by mapping thread. no lock required since we are in mapping thread.
 	{
-		boost::unique_lock<boost::mutex> crlock(shellPoseMutex);
+		std::unique_lock<std::mutex> crlock(shellPoseMutex);
 		assert(fh->shell->trackingRef != 0);
 		fh->shell->camToWorld = fh->shell->trackingRef->camToWorld * fh->shell->camToTrackingRef;
 		fh->setEvalPT_scaled(fh->shell->camToWorld.inverse(),fh->shell->aff_g2l);
@@ -1042,7 +1050,7 @@ void FullSystem::makeKeyFrame( FrameHessian* fh)
 {
 	// needs to be set by mapping thread
 	{
-		boost::unique_lock<boost::mutex> crlock(shellPoseMutex);
+		std::unique_lock<std::mutex> crlock(shellPoseMutex);
 		assert(fh->shell->trackingRef != 0);
 		fh->shell->camToWorld = fh->shell->trackingRef->camToWorld * fh->shell->camToTrackingRef;
 		fh->setEvalPT_scaled(fh->shell->camToWorld.inverse(),fh->shell->aff_g2l);
@@ -1050,7 +1058,7 @@ void FullSystem::makeKeyFrame( FrameHessian* fh)
 
 	traceNewCoarse(fh);
 
-	boost::unique_lock<boost::mutex> lock(mapMutex);
+	std::unique_lock<std::mutex> lock(mapMutex);
 
 	// =========================== Flag Frames to be Marginalized. =========================
 	flagFramesForMarginalization(fh);
@@ -1074,7 +1082,7 @@ void FullSystem::makeKeyFrame( FrameHessian* fh)
 		if(fh1 == fh) continue;
 		for(PointHessian* ph : fh1->pointHessians)
 		{
-			PointFrameResidual* r = new PointFrameResidual(ph, fh1, fh);
+			auto* r = new PointFrameResidual(ph, fh1, fh);
 			r->setState(ResState::IN);
 			ph->residuals.push_back(r);
 			ef->insertResidual(r);
@@ -1097,31 +1105,39 @@ void FullSystem::makeKeyFrame( FrameHessian* fh)
 	// =========================== OPTIMIZE ALL =========================
 
 	fh->frameEnergyTH = frameHessians.back()->frameEnergyTH;
-	float rmse = optimize(setting_maxOptIterations);
+    try
+    {
+        float rmse = optimize(setting_maxOptIterations);
 
 
 
 
 
-	// =========================== Figure Out if INITIALIZATION FAILED =========================
-	if(allKeyFramesHistory.size() <= 4)
-	{
-		if(allKeyFramesHistory.size()==2 && rmse > 20*benchmark_initializerSlackFactor)
-		{
-			printf("I THINK INITIALIZATINO FAILED! Resetting.\n");
-			initFailed=true;
-		}
-		if(allKeyFramesHistory.size()==3 && rmse > 13*benchmark_initializerSlackFactor)
-		{
-			printf("I THINK INITIALIZATINO FAILED! Resetting.\n");
-			initFailed=true;
-		}
-		if(allKeyFramesHistory.size()==4 && rmse > 9*benchmark_initializerSlackFactor)
-		{
-			printf("I THINK INITIALIZATINO FAILED! Resetting.\n");
-			initFailed=true;
-		}
-	}
+        // =========================== Figure Out if INITIALIZATION FAILED =========================
+        if (allKeyFramesHistory.size() <= 4)
+        {
+            if (allKeyFramesHistory.size() == 2 && rmse > 20 * benchmark_initializerSlackFactor)
+            {
+                printf("I THINK INITIALIZATINO FAILED! Resetting.\n");
+                initFailed = true;
+            }
+            if (allKeyFramesHistory.size() == 3 && rmse > 13 * benchmark_initializerSlackFactor)
+            {
+                printf("I THINK INITIALIZATINO FAILED! Resetting.\n");
+                initFailed = true;
+            }
+            if (allKeyFramesHistory.size() == 4 && rmse > 9 * benchmark_initializerSlackFactor)
+            {
+                printf("I THINK INITIALIZATINO FAILED! Resetting.\n");
+                initFailed = true;
+            }
+        }
+    }
+    catch (const std::exception& ex)
+    {
+        printf("INITIALIZATINO FAILED! Resetting.\n");
+        initFailed = true;
+    }
 
 
 
@@ -1137,7 +1153,7 @@ void FullSystem::makeKeyFrame( FrameHessian* fh)
 
 
 	{
-		boost::unique_lock<boost::mutex> crlock(coarseTrackerSwapMutex);
+		std::unique_lock<std::mutex> crlock(coarseTrackerSwapMutex);
 		coarseTracker_forNewKF->makeK(&Hcalib);
 		coarseTracker_forNewKF->setCoarseTrackingRef(frameHessians);
 
@@ -1168,7 +1184,7 @@ void FullSystem::makeKeyFrame( FrameHessian* fh)
 
 
 	// =========================== add new Immature points & new residuals =========================
-	makeNewTraces(fh, 0);
+	makeNewTraces(fh, nullptr);
 
 
 
@@ -1198,7 +1214,7 @@ void FullSystem::makeKeyFrame( FrameHessian* fh)
 
 void FullSystem::initializeFromInitializer(FrameHessian* newFrame)
 {
-	boost::unique_lock<boost::mutex> lock(mapMutex);
+	std::unique_lock<std::mutex> lock(mapMutex);
 
 	// add firstframe.
 	FrameHessian* firstFrame = coarseInitializer->firstFrame;
@@ -1237,13 +1253,13 @@ void FullSystem::initializeFromInitializer(FrameHessian* newFrame)
 		if(rand()/(float)RAND_MAX > keepPercentage) continue;
 
 		Pnt* point = coarseInitializer->points[0]+i;
-		ImmaturePoint* pt = new ImmaturePoint(point->u+0.5f,point->v+0.5f,firstFrame,point->my_type, &Hcalib);
+		auto* pt = new ImmaturePoint(point->u+0.5f,point->v+0.5f,firstFrame,point->my_type, &Hcalib);
 
 		if(!std::isfinite(pt->energyTH)) { delete pt; continue; }
 
 
 		pt->idepth_max=pt->idepth_min=1;
-		PointHessian* ph = new PointHessian(pt, &Hcalib);
+		auto* ph = new PointHessian(pt, &Hcalib);
 		delete pt;
 		if(!std::isfinite(ph->energyTH)) {delete ph; continue;}
 
@@ -1264,11 +1280,11 @@ void FullSystem::initializeFromInitializer(FrameHessian* newFrame)
 
 	// really no lock required, as we are initializing.
 	{
-		boost::unique_lock<boost::mutex> crlock(shellPoseMutex);
+		std::unique_lock<std::mutex> crlock(shellPoseMutex);
 		firstFrame->shell->camToWorld = SE3();
 		firstFrame->shell->aff_g2l = AffLight(0,0);
 		firstFrame->setEvalPT_scaled(firstFrame->shell->camToWorld.inverse(),firstFrame->shell->aff_g2l);
-		firstFrame->shell->trackingRef=0;
+		firstFrame->shell->trackingRef=nullptr;
 		firstFrame->shell->camToTrackingRef = SE3();
 
 		newFrame->shell->camToWorld = firstToNew.inverse();
@@ -1283,7 +1299,7 @@ void FullSystem::initializeFromInitializer(FrameHessian* newFrame)
 	printf("INITIALIZE FROM INITIALIZER (%d pts)!\n", (int)firstFrame->pointHessians.size());
 }
 
-void FullSystem::makeNewTraces(FrameHessian* newFrame, float* gtDepth)
+void FullSystem::makeNewTraces(FrameHessian* newFrame, float*  /*gtDepth*/)
 {
 	pixelSelector->allowFast = true;
 	//int numPointsTotal = makePixelStatus(newFrame->dI, selectionMap, wG[0], hG[0], setting_desiredDensity);
@@ -1327,10 +1343,11 @@ void FullSystem::setPrecalcValues()
 
 void FullSystem::printLogLine()
 {
-	if(frameHessians.size()==0) return;
+	if(frameHessians.empty()) { return;
+	}
 
     if(!setting_debugout_runquiet)
-        printf("LOG %d: %.3f fine. Res: %d A, %d L, %d M; (%'d / %'d) forceDrop. a=%f, b=%f. Window %d (%d)\n",
+        printf("LOG %d: %.3f fine. Res: %d A, %d L, %d M; (%d / %d) forceDrop. a=%f, b=%f. Window %d (%d)\n",
                 allKeyFramesHistory.back()->id,
                 statistics_lastFineTrackRMSE,
                 ef->resInA,
@@ -1346,7 +1363,7 @@ void FullSystem::printLogLine()
 
 	if(!setting_logStuff) return;
 
-	if(numsLog != 0)
+	if(numsLog != nullptr)
 	{
 		(*numsLog) << allKeyFramesHistory.back()->id << " "  <<
 				statistics_lastFineTrackRMSE << " "  <<
@@ -1413,33 +1430,33 @@ void FullSystem::printEigenValLine()
 
 	int nz = std::max(100,setting_maxFrames*10);
 
-	if(eigenAllLog != 0)
+	if(eigenAllLog != nullptr)
 	{
 		VecX ea = VecX::Zero(nz); ea.head(eigenvaluesAll.size()) = eigenvaluesAll;
 		(*eigenAllLog) << allKeyFramesHistory.back()->id << " " <<  ea.transpose() << "\n";
 		eigenAllLog->flush();
 	}
-	if(eigenALog != 0)
+	if(eigenALog != nullptr)
 	{
 		VecX ea = VecX::Zero(nz); ea.head(eigenA.size()) = eigenA;
 		(*eigenALog) << allKeyFramesHistory.back()->id << " " <<  ea.transpose() << "\n";
 		eigenALog->flush();
 	}
-	if(eigenPLog != 0)
+	if(eigenPLog != nullptr)
 	{
 		VecX ea = VecX::Zero(nz); ea.head(eigenP.size()) = eigenP;
 		(*eigenPLog) << allKeyFramesHistory.back()->id << " " <<  ea.transpose() << "\n";
 		eigenPLog->flush();
 	}
 
-	if(DiagonalLog != 0)
+	if(DiagonalLog != nullptr)
 	{
 		VecX ea = VecX::Zero(nz); ea.head(diagonal.size()) = diagonal;
 		(*DiagonalLog) << allKeyFramesHistory.back()->id << " " <<  ea.transpose() << "\n";
 		DiagonalLog->flush();
 	}
 
-	if(variancesLog != 0)
+	if(variancesLog != nullptr)
 	{
 		VecX ea = VecX::Zero(nz); ea.head(diagonal.size()) = ef->lastHS.inverse().diagonal();
 		(*variancesLog) << allKeyFramesHistory.back()->id << " " <<  ea.transpose() << "\n";
@@ -1448,8 +1465,9 @@ void FullSystem::printEigenValLine()
 
 	std::vector<VecX> &nsp = ef->lastNullspaces_forLogging;
 	(*nullspacesLog) << allKeyFramesHistory.back()->id << " ";
-	for(unsigned int i=0;i<nsp.size();i++)
-		(*nullspacesLog) << nsp[i].dot(ef->lastHS * nsp[i]) << " " << nsp[i].dot(ef->lastbS) << " " ;
+	for(auto & i : nsp) {
+		(*nullspacesLog) << i.dot(ef->lastHS * i) << " " << i.dot(ef->lastbS) << " " ;
+	}
 	(*nullspacesLog) << "\n";
 	nullspacesLog->flush();
 
@@ -1460,9 +1478,9 @@ void FullSystem::printFrameLifetimes()
 	if(!setting_logStuff) return;
 
 
-	boost::unique_lock<boost::mutex> lock(trackMutex);
+	std::unique_lock<std::mutex> lock(trackMutex);
 
-	std::ofstream* lg = new std::ofstream();
+	auto* lg = new std::ofstream();
 	lg->open("logs/lifetimeLog.txt", std::ios::trunc | std::ios::out);
 	lg->precision(15);
 
@@ -1491,7 +1509,6 @@ void FullSystem::printFrameLifetimes()
 
 void FullSystem::printEvalLine()
 {
-	return;
 }
 
 

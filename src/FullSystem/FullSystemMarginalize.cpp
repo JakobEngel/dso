@@ -31,7 +31,7 @@
 
 #include "FullSystem/FullSystem.h"
  
-#include "stdio.h"
+#include <cstdio>
 #include "util/globalFuncs.h"
 #include <Eigen/LU>
 #include <algorithm>
@@ -55,7 +55,7 @@ namespace dso
 
 
 
-void FullSystem::flagFramesForMarginalization(FrameHessian* newFH)
+void FullSystem::flagFramesForMarginalization(FrameHessian*  /*newFH*/)
 {
 	if(setting_minFrameAge > setting_maxFrames)
 	{
@@ -108,7 +108,7 @@ void FullSystem::flagFramesForMarginalization(FrameHessian* newFH)
 	if((int)frameHessians.size()-flagged >= setting_maxFrames)
 	{
 		double smallestScore = 1;
-		FrameHessian* toMarginalize=0;
+		FrameHessian* toMarginalize=nullptr;
 		FrameHessian* latest = frameHessians.back();
 
 

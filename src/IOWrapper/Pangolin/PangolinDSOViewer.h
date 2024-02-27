@@ -24,17 +24,18 @@
 
 #pragma once
 #include <pangolin/pangolin.h>
-#include "boost/thread.hpp"
+#include <thread>
+#include <mutex>
 #include "util/MinimalImage.h"
 #include "IOWrapper/Output3DWrapper.h"
 #include <map>
 #include <deque>
-
+#include <chrono>
 
 namespace dso
 {
 
-class FrameHessian;
+struct FrameHessian;
 class CalibHessian;
 class FrameShell;
 
@@ -56,7 +57,7 @@ class PangolinDSOViewer : public Output3DWrapper
 {
 public:
 	EIGEN_MAKE_ALIGNED_OPERATOR_NEW;
-    PangolinDSOViewer(int w, int h, bool startRunThread=true);
+    PangolinDSOViewer(int w, int h, bool startRunThread = true, const std::function<void()>& stoppedCallback = {});
 	virtual ~PangolinDSOViewer();
 
 	void run();
@@ -85,14 +86,14 @@ private:
 	void reset_internal();
 	void drawConstraints();
 
-	boost::thread runThread;
+	std::thread runThread;
 	bool running;
 	int w,h;
 
 
 
 	// images rendering
-	boost::mutex openImagesMutex;
+	std::mutex openImagesMutex;
 	MinimalImageB3* internalVideoImg;
 	MinimalImageB3* internalKFImg;
 	MinimalImageB3* internalResImg;
@@ -101,7 +102,7 @@ private:
 
 
 	// 3D model rendering
-	boost::mutex model3DMutex;
+	std::mutex model3DMutex;
 	KeyFrameDisplay* currentCam;
 	std::vector<KeyFrameDisplay*> keyframes;
 	std::vector<Vec3f,Eigen::aligned_allocator<Vec3f>> allFramePoses;
@@ -126,9 +127,10 @@ private:
 
 
 	// timings
-	struct timeval last_track;
-	struct timeval last_map;
-
+	//struct timeval last_track;
+	//struct timeval last_map;
+    std::chrono::time_point<std::chrono::system_clock> last_track;
+    std::chrono::time_point<std::chrono::system_clock> last_map;
 
 	std::deque<float> lastNTrackingMs;
 	std::deque<float> lastNMappingMs;

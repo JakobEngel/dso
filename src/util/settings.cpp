@@ -24,7 +24,7 @@
 
 
 #include "util/settings.h"
-#include <boost/bind.hpp>
+#include <functional>
 
 
 namespace dso
@@ -192,7 +192,7 @@ bool disableAllDisplay = false;
 bool setting_onlyLogKFPoses = true;
 bool setting_logStuff = true;
 
-
+int setting_viewer_run_loop_sleep_for_ms = 0;
 
 bool goStepByStep = false;
 
